@@ -1,6 +1,8 @@
 use aya::{programs::Lsm, Btf};
 #[rustfmt::skip]
 use log::{debug, warn};
+use aya::maps::Array;
+use ayaya_common::{FilterPath, PATH_BUF_MAX};
 use tokio::signal;
 
 #[tokio::main]
@@ -30,6 +32,19 @@ async fn main() -> anyhow::Result<()> {
         // This can happen if you remove all log statements from your eBPF program.
         warn!("failed to initialize eBPF logger: {}", e);
     }
+
+    let mut array = Array::try_from(ebpf.map_mut("FILTER_PATH").unwrap())?;
+    let filter_path = "/home/menixator/test".as_bytes();
+
+    let mut filter = FilterPath {
+        length: filter_path.len(),
+        buf: [0; PATH_BUF_MAX],
+    };
+
+    (&mut filter.buf[0..filter_path.len()]).copy_from_slice(&filter_path);
+
+    array.set(0, filter, 0)?;
+
     let btf = Btf::from_sys_fs()?;
     let program: &mut Lsm = ebpf.program_mut("file_open").unwrap().try_into()?;
     program.load("file_open", &btf)?;

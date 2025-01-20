@@ -1,7 +1,11 @@
 #![no_std]
 #![no_main]
 
-use aya_ebpf::{macros::lsm, programs::LsmContext};
+use aya_ebpf::{
+    macros::{lsm, map},
+    maps::Array,
+    programs::LsmContext,
+};
 use aya_log_ebpf::info;
 
 #[allow(clippy::all)]
@@ -12,7 +16,10 @@ use aya_log_ebpf::info;
 #[rustfmt::skip]
 mod vmlinux;
 
+use ayaya_common::FilterPath;
 
+#[map]
+pub(crate) static FILTER_PATH: Array<FilterPath> = Array::with_max_entries(1, 0);
 
 #[lsm(hook = "file_open")]
 pub fn file_open(ctx: LsmContext) -> i32 {
@@ -33,7 +40,7 @@ fn try_file_open(ctx: LsmContext) -> Result<i32, i32> {
     // Fetch the file struct being opened
     let file: *const vmlinux::file = unsafe { ctx.arg(0) };
 
-    let mut buf: [u8; 256] = [0; 256];
+    let buf: [u8; 256] = [0; 256];
 
     let written = get_path_from_file(file, &buf as *const u8, 256);
     let written = written as usize;
@@ -42,11 +49,13 @@ fn try_file_open(ctx: LsmContext) -> Result<i32, i32> {
         return Ok(0);
     }
 
-    let filter = "/home/menixator/test/".as_bytes();
+    // Get the first element from the FILTER_PATH
+    // or early exit with a 0
+    let filter_buf = FILTER_PATH.get(0).ok_or(0)?;
 
-    match buf.get(0..21) {
-        Some(buf) if buf != filter => return Ok(0),
-        _ => {}
+    let filter = filter_buf.buf.get(0..filter_buf.length);
+    if buf.get(0..filter_buf.length) != filter || filter.is_none() {
+        return Ok(0);
     }
 
     let path_as_str = unsafe { core::str::from_utf8_unchecked(&buf[0..written]) };
