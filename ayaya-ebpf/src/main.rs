@@ -39,6 +39,7 @@ pub fn file_open(ctx: LsmContext) -> i32 {
     }
 }
 
+#[inline(always)]
 pub fn get_path_from_file(file: *const vmlinux::file, buf: &PathBuffer) -> i64 {
     // Get a pointer to the file path
     let path = unsafe { &((*file).f_path) as *const _ as *mut aya_ebpf::bindings::path };
