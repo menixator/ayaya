@@ -18,13 +18,15 @@ mod vmlinux;
 
 use ayaya_common::{FilterPath, PATH_BUF_MAX};
 
+type PathBuffer = [u8; PATH_BUF_MAX];
+
 #[map]
 pub(crate) static FILTER_PATH: Array<FilterPath> = Array::with_max_entries(1, 0);
 
 macro_rules! path_buf_init {
     ($static_name:ident) => {
         #[map]
-        pub(crate) static $static_name: PerCpuArray<[u8; PATH_BUF_MAX]> =
+        pub(crate) static $static_name: PerCpuArray<PathBuffer> =
             PerCpuArray::with_max_entries(1, 0);
     };
 }
@@ -37,10 +39,12 @@ pub fn file_open(ctx: LsmContext) -> i32 {
     }
 }
 
-pub fn get_path_from_file(file: *const vmlinux::file, buf: *const u8, size: u32) -> i64 {
+pub fn get_path_from_file(file: *const vmlinux::file, buf: &PathBuffer) -> i64 {
     // Get a pointer to the file path
     let path = unsafe { &((*file).f_path) as *const _ as *mut aya_ebpf::bindings::path };
-    let written = unsafe { aya_ebpf::helpers::gen::bpf_d_path(path, buf as *mut i8, size) };
+    let written = unsafe {
+        aya_ebpf::helpers::gen::bpf_d_path(path, buf as *const u8 as *mut i8, buf.len() as u32)
+    };
     return written;
 }
 
@@ -49,12 +53,14 @@ fn try_file_open(ctx: LsmContext) -> Result<i32, i32> {
     let file: *const vmlinux::file = unsafe { ctx.arg(0) };
 
     path_buf_init!(FILE_OPEN_PATH_BUF);
-    let buf = unsafe { FILE_OPEN_PATH_BUF.get(0).ok_or(0)? };
+    // FIXME?: kinda iffy getting an immutable reference here but
+    // getting a mutable one gives a raw ptr
+    let buf = FILE_OPEN_PATH_BUF.get(0).ok_or(0)?;
 
-    let written = get_path_from_file(file, buf as *const u8, buf.len() as u32);
+    let written = get_path_from_file(file, buf);
     let written = written as usize;
 
-    if written >= 256 {
+    if written >= PATH_BUF_MAX {
         return Ok(0);
     }
 
