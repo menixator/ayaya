@@ -1,6 +1,7 @@
 use aya::{programs::Lsm, Btf};
 #[rustfmt::skip]
 use log::{debug, warn};
+use anyhow::anyhow;
 use aya::maps::Array;
 use ayaya_common::{FilterPath, PATH_BUF_MAX};
 use tokio::signal;
@@ -34,15 +35,42 @@ async fn main() -> anyhow::Result<()> {
     }
 
     let mut array = Array::try_from(ebpf.map_mut("FILTER_PATH").unwrap())?;
-    let filter_path = "/home/menixator/test".as_bytes();
+
+    use std::os::unix::ffi::OsStrExt;
+
+    // The first argument will be the filter path
+    let mut filter_path: std::path::PathBuf = match std::env::args_os().nth(1) {
+        Some(filter_path) => filter_path.into(),
+        None => return Err(anyhow!("No filter path provided.")),
+    };
+
+    // Force a trailing slash
+    if !filter_path.as_os_str().is_empty() {
+        let mut name = filter_path
+            .file_name()
+            .map(ToOwned::to_owned)
+            .unwrap_or_default();
+        name.push("/");
+        filter_path.set_file_name(name);
+    }
+
+    println!(
+        "ayaya will watch for file events from: {}",
+        filter_path.display()
+    );
+
+    // Fetch the bytes from filter_path
+    let filter_path = filter_path.as_os_str().as_bytes();
 
     let mut filter = FilterPath {
         length: filter_path.len(),
         buf: [0; PATH_BUF_MAX],
     };
 
+    // Copy it into buf
     (&mut filter.buf[0..filter_path.len()]).copy_from_slice(&filter_path);
 
+    // Set the first element of FILTER_PATH to the created struct
     array.set(0, filter, 0)?;
 
     let btf = Btf::from_sys_fs()?;
