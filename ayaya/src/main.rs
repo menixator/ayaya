@@ -1,4 +1,7 @@
-use aya::{programs::Lsm, Btf};
+use aya::{
+    programs::{FEntry, Lsm},
+    Btf,
+};
 #[rustfmt::skip]
 use log::{debug, warn};
 use anyhow::anyhow;
@@ -77,6 +80,20 @@ async fn main() -> anyhow::Result<()> {
     let btf = Btf::from_sys_fs()?;
     let program: &mut Lsm = ebpf.program_mut("file_open").unwrap().try_into()?;
     program.load("file_open", &btf)?;
+    program.attach()?;
+
+    let program: &mut Lsm = ebpf
+        .program_mut("bprm_creds_for_exec")
+        .unwrap()
+        .try_into()?;
+    program.load("bprm_creds_for_exec", &btf)?;
+    program.attach()?;
+
+    let program: &mut FEntry = ebpf
+        .program_mut("security_file_permission")
+        .unwrap()
+        .try_into()?;
+    program.load("security_file_permission", &btf)?;
     program.attach()?;
 
     println!("started");

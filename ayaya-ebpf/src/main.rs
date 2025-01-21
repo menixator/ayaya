@@ -2,9 +2,9 @@
 #![no_main]
 
 use aya_ebpf::{
-    macros::{lsm, map},
+    macros::{fentry, lsm, map},
     maps::{Array, PerCpuArray, PerfEventArray},
-    programs::LsmContext,
+    programs::{FEntryContext, LsmContext},
     EbpfContext,
 };
 use aya_log_ebpf::info;
@@ -82,6 +82,87 @@ fn try_file_open(ctx: LsmContext) -> Result<i32, i32> {
     fill_event(event, &ctx);
 
     PIPELINE.output(&ctx, event, 0);
+    Ok(0)
+}
+
+#[lsm(hook = "bprm_creds_for_exec")]
+pub fn bprm_creds_for_exec(ctx: LsmContext) -> i32 {
+    match try_bprm_creds_for_exec(ctx) {
+        Ok(ret) => ret,
+        Err(ret) => ret,
+    }
+}
+
+fn try_bprm_creds_for_exec(ctx: LsmContext) -> Result<i32, i32> {
+    // Fetch the file struct being opened
+    let binprm: *const vmlinux::linux_binprm = unsafe { ctx.arg(0) };
+    let file = unsafe { (*binprm).file };
+
+    alloc!(BPRM_CREDS_FOR_EXEC_EVENT_BUF, Event);
+
+    let event: &'static mut Event = unsafe {
+        let raw_ptr = BPRM_CREDS_FOR_EXEC_EVENT_BUF.get_ptr_mut(0).ok_or(0)?;
+        core::mem::transmute(raw_ptr)
+    };
+
+    let written = get_path_from_file(file, &mut event.path)?;
+    if !matches_filtered_path(&event.path) {
+        return Ok(0);
+    }
+
+    event.path_len = written - 1;
+
+    let path_as_str = unsafe { core::str::from_utf8_unchecked(&event.path[0..written]) };
+    info!(&ctx, "lsm/bprm_creds_for_exec called for {}", path_as_str);
+
+    event.variant = EventVariant::Exec;
+    fill_event(event, &ctx);
+
+    PIPELINE.output(&ctx, event, 0);
+
+    Ok(0)
+}
+
+#[fentry(function = "security_file_permission")]
+pub fn security_file_permission(ctx: FEntryContext) -> u32 {
+    match try_security_file_permission(ctx) {
+        Ok(ret) => ret,
+        Err(ret) => ret.try_into().unwrap_or(1),
+    }
+}
+
+fn try_security_file_permission(ctx: FEntryContext) -> Result<u32, i64> {
+    // Fetch the file struct being opened
+    let file: *const vmlinux::file = unsafe { ctx.arg(0) };
+    // information about masks
+    // https://github.com/torvalds/linux/blob/ffd294d346d185b70e28b1a28abe367bbfe53c04/security/selinux/hooks.c#L1957-L2005
+    let mask: u32 = unsafe { ctx.arg(1) };
+
+    alloc!(SECURITY_FILE_PERMISSION_EVENT_BUF, Event);
+
+    let event: &'static mut Event = unsafe {
+        let raw_ptr = SECURITY_FILE_PERMISSION_EVENT_BUF.get_ptr_mut(0).ok_or(0)?;
+        core::mem::transmute(raw_ptr)
+    };
+
+    let written = get_path_from_file(file, &mut event.path)?;
+    if !matches_filtered_path(&event.path) {
+        return Ok(0);
+    }
+
+    event.path_len = written - 1;
+
+    let path_as_str = unsafe { core::str::from_utf8_unchecked(&event.path[0..written]) };
+    info!(
+        &ctx,
+        "fentry/security_file_permission called for {}", path_as_str
+    );
+
+    event.variant = EventVariant::ReadOrWrite;
+    fill_event(event, &ctx);
+
+    PIPELINE.output(&ctx, event, 0);
+
     Ok(0)
 }
 

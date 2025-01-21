@@ -36,4 +36,7 @@ pub struct Event {
 pub enum EventVariant {
     // TODO: add file.f_mode
     Open,
+    // TODO: Split into two based on intent
+    ReadOrWrite,
+    Exec,
 }
