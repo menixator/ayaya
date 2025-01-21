@@ -30,7 +30,7 @@ pub(crate) static FILTER_PATH: Array<FilterPath> = Array::with_max_entries(1, 0)
 macro_rules! alloc {
     ($static_name:ident, $inner:ty) => {
         #[map]
-        pub(crate) static $static_name: PerCpuArray<[u8; ::core::mem::size_of::<$inner>()]> =
+        pub(crate) static $static_name: PerCpuArray<$inner> =
             PerCpuArray::with_max_entries(1, 0);
     };
 }
