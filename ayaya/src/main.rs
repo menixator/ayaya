@@ -89,6 +89,10 @@ async fn main() -> anyhow::Result<()> {
     program.load("bprm_creds_for_exec", &btf)?;
     program.attach()?;
 
+    let program: &mut Lsm = ebpf.program_mut("path_unlink").unwrap().try_into()?;
+    program.load("path_unlink", &btf)?;
+    program.attach()?;
+
     let program: &mut FEntry = ebpf
         .program_mut("security_file_permission")
         .unwrap()
@@ -126,7 +130,13 @@ async fn main() -> anyhow::Result<()> {
 
                     use std::{ffi::OsStr, os::unix::ffi::OsStrExt};
                     let path = OsStr::from_bytes(&event.path[0..event.path_len]);
-                    let path = std::path::Path::new(path);
+                    let mut path = std::path::Path::new(path).to_owned();
+                    // There might be a filename
+                    if event.filename_len > 0 {
+                        let filename = OsStr::from_bytes(&event.filename[0..event.filename_len]);
+                        path.push(filename);
+                    }
+
                     println!("{}", path.display())
                 }
             }

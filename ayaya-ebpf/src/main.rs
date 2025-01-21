@@ -43,11 +43,22 @@ pub fn file_open(ctx: LsmContext) -> i32 {
     }
 }
 
+#[inline(always)]
 pub fn get_path_from_file(file: *const vmlinux::file, buf: &mut [u8]) -> Result<usize, i8> {
     // Get a pointer to the file path
-    let path = unsafe { &((*file).f_path) as *const _ as *mut aya_ebpf::bindings::path };
+    let path = unsafe { &((*file).f_path) as *const _ };
+    get_path_from_path(path, buf)
+}
+
+#[inline(always)]
+pub fn get_path_from_path(path: *const vmlinux::path, buf: &mut [u8]) -> Result<usize, i8> {
+    // Get a pointer to the file path
     let written = unsafe {
-        aya_ebpf::helpers::gen::bpf_d_path(path, buf.as_mut_ptr() as *mut i8, buf.len() as u32)
+        aya_ebpf::helpers::gen::bpf_d_path(
+            path as *mut aya_ebpf::bindings::path,
+            buf.as_mut_ptr() as *mut i8,
+            buf.len() as u32,
+        )
     };
 
     let written = written as usize;
@@ -76,6 +87,60 @@ fn try_file_open(ctx: LsmContext) -> Result<i32, i32> {
     info!(&ctx, "lsm/file_open called for {}", path_as_str);
 
     event.variant = EventVariant::Open;
+    fill_event(event, &ctx);
+
+    PIPELINE.output(&ctx, event, 0);
+    Ok(0)
+}
+
+#[lsm(hook = "path_unlink")]
+pub fn path_unlink(ctx: LsmContext) -> i32 {
+    match try_path_unlink(ctx) {
+        Ok(ret) => ret,
+        Err(ret) => ret,
+    }
+}
+
+fn dentry_name_to_buf(
+    ctx: &LsmContext,
+    event: &mut Event,
+    dentry: *const vmlinux::dentry,
+) -> Result<usize, i32> {
+    let file_name = unsafe { (*dentry).d_name.name };
+    let written = unsafe {
+        aya_ebpf::helpers::bpf_probe_read_kernel_str_bytes(
+            file_name as *const u8,
+            &mut event.filename,
+        )
+        .map_err(|_| 0)?
+    };
+
+    Ok(written.len())
+}
+
+// LSM_HOOK(int, 0, path_unlink, const struct path *dir, struct dentry *dentry)
+fn try_path_unlink(ctx: LsmContext) -> Result<i32, i32> {
+    let path: *const vmlinux::path = unsafe { ctx.arg(0) };
+    let dentry: *const vmlinux::dentry = unsafe { ctx.arg(1) };
+
+    alloc!(PATH_UNLINK_EVENT_BUF, Event);
+    let event = get_event(&PATH_UNLINK_EVENT_BUF)?;
+
+    let written = get_path_from_path(path, &mut event.path)?;
+
+    event.path_len = written - 1;
+
+    let filename_len = dentry_name_to_buf(&ctx, event, dentry)?;
+    event.filename_len = filename_len;
+
+    let path_as_str = unsafe { core::str::from_utf8_unchecked(&event.path[0..written]) };
+
+    if !matches_filtered_path_no_trailing(&event.path) && !matches_filtered_path(&event.path) {
+        return Ok(0);
+    }
+    info!(&ctx, "lsm/path_unlink called for {}", path_as_str);
+
+    event.variant = EventVariant::Unlink;
     fill_event(event, &ctx);
 
     PIPELINE.output(&ctx, event, 0);
@@ -178,6 +243,21 @@ fn matches_filtered_path(path: &[u8]) -> bool {
     let filter = filter_buf.buf.get(0..filter_buf.length);
 
     return filter.is_some() && path.get(0..filter_buf.length) == filter;
+}
+
+// compares path without the trailing slash in the filter path
+fn matches_filtered_path_no_trailing(path: &[u8]) -> bool {
+    // Get the first element from the FILTER_PATH
+    // or early exit with a 0
+    let filter_buf = if let Some(filter_buf) = FILTER_PATH.get(0) {
+        filter_buf
+    } else {
+        return false;
+    };
+
+    let filter = filter_buf.buf.get(0..filter_buf.length - 1);
+
+    return filter.is_some() && path.get(0..filter_buf.length - 1) == filter;
 }
 
 // Fill fields in events from any applicable

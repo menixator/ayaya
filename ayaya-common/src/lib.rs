@@ -1,6 +1,7 @@
 #![no_std]
 
 pub const PATH_BUF_MAX: usize = 4096;
+pub const FILENAME_BUF_MAX: usize = 256;
 
 /// A struct used to share the filter path between the userland program and the ebpf program so as
 /// to allow the filter path to be dynamic without recompiling the ebpf program
@@ -27,6 +28,8 @@ pub struct Event {
     pub timestamp: u64,
     pub path_len: usize,
     pub path: [u8; PATH_BUF_MAX],
+    pub filename_len: usize,
+    pub filename: [u8; FILENAME_BUF_MAX],
     pub variant: EventVariant,
 }
 
@@ -39,4 +42,5 @@ pub enum EventVariant {
     // TODO: Split into two based on intent
     ReadOrWrite,
     Exec,
+    Unlink,
 }
