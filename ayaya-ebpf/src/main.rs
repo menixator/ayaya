@@ -29,35 +29,21 @@ pub(crate) static FILTER_PATH: Array<FilterPath> = Array::with_max_entries(1, 0)
 #[map]
 pub(crate) static BUFFER: PerCpuArray<Event> = PerCpuArray::with_max_entries(1, 0);
 
+// LSM_HOOK(int, 0, file_open, struct file *file)
 #[lsm(hook = "file_open")]
 pub fn file_open(ctx: LsmContext) -> i32 {
-    match try_file_open(ctx) {
-        Ok(ret) => ret,
+    let file: *const vmlinux::file = unsafe { ctx.arg(0) };
+    let path = unsafe { &((*file).f_path) as *const _ };
+
+    match generate_event_from_path(&ctx, path, EventVariant::Open) {
+        Ok(event) => {
+            let path = path_buf_as_str(&event.primary_path);
+            info!(&ctx, "lsm/file_open called for a file in {}", path);
+            0
+        }
         // TODO: maybe set it 0 even on fails since this is a tracing program.
         Err(ret) => ret,
     }
-}
-
-// LSM_HOOK(int, 0, file_open, struct file *file)
-fn try_file_open(ctx: LsmContext) -> Result<i32, i32> {
-    // Fetch the file struct being opened
-    let file: *const vmlinux::file = unsafe { ctx.arg(0) };
-
-    let event = get_event(&BUFFER)?;
-
-    let written = get_path_from_file(file, &mut event.primary_path)?;
-    if !matches_filtered_path(&event.primary_path) {
-        return Ok(0);
-    }
-
-    let path = path_buf_as_str(&event.primary_path);
-    info!(&ctx, "lsm/file_open called for {}", path);
-
-    event.variant = EventVariant::Open;
-    fill_event(event, &ctx);
-
-    PIPELINE.output(&ctx, event, 0);
-    Ok(0)
 }
 
 // LSM_HOOK(int, 0, path_unlink, const struct path *dir, struct dentry *dentry)
@@ -282,6 +268,27 @@ fn split_path_lsm(ctx: &LsmContext, variant: EventVariant) -> Result<&mut Event,
     if !matches_filtered_path_no_trailing(&event.primary_path)
         && !matches_filtered_path(&event.primary_path)
     {
+        return Err(0);
+    }
+
+    event.variant = variant;
+    fill_event(event, ctx);
+
+    PIPELINE.output(ctx, event, 0);
+    Ok(event)
+}
+
+#[inline(always)]
+fn generate_event_from_path(
+    ctx: &impl EbpfContext,
+    path: *const vmlinux::path,
+    variant: EventVariant,
+) -> Result<&mut Event, i32> {
+    let event = get_event(&BUFFER)?;
+
+    get_path_from_path(path, &mut event.primary_path)?;
+
+    if !matches_filtered_path(&event.primary_path) {
         return Err(0);
     }
 
