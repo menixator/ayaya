@@ -43,7 +43,6 @@ pub fn file_open(ctx: LsmContext) -> i32 {
     }
 }
 
-
 // LSM_HOOK(int, 0, file_open, struct file *file)
 fn try_file_open(ctx: LsmContext) -> Result<i32, i32> {
     // Fetch the file struct being opened
@@ -74,7 +73,6 @@ pub fn path_unlink(ctx: LsmContext) -> i32 {
         Err(ret) => ret,
     }
 }
-
 
 // LSM_HOOK(int, 0, path_unlink, const struct path *dir, struct dentry *dentry)
 fn try_path_unlink(ctx: LsmContext) -> Result<i32, i32> {

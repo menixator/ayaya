@@ -1,6 +1,6 @@
 #![no_std]
 
-pub const PATH_BUF_MAX: usize = 4096;
+pub const PATH_BUF_MAX: usize = 2048;
 pub const FILENAME_BUF_MAX: usize = 256;
 
 #[cfg_attr(feature = "user", derive(Debug))]

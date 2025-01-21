@@ -101,6 +101,14 @@ async fn main() -> anyhow::Result<()> {
     program.attach()?;
 
     println!("started");
+    println!("event size is {} bytes", std::mem::size_of::<Event>());
+
+    // This is an arbitrary limit. Could not get around it
+    assert_eq!(
+        std::mem::size_of::<Event>(),
+        8168,
+        "Event size cannot be bigger than 8168."
+    );
 
     // try to convert the PERF_ARRAY map to an AsyncPerfEventArray
     let mut perf_array = AsyncPerfEventArray::try_from(ebpf.take_map("PIPELINE").unwrap())?;
@@ -112,7 +120,7 @@ async fn main() -> anyhow::Result<()> {
         // process each perf buffer in a separate task
         tokio::task::spawn(async move {
             let mut buffers = (0..10)
-                .map(|_| BytesMut::with_capacity(1024))
+                .map(|_| BytesMut::with_capacity(81920))
                 .collect::<Vec<_>>();
 
             loop {
