@@ -128,16 +128,9 @@ async fn main() -> anyhow::Result<()> {
 
                     //println!("{:#?}", event);
 
-                    use std::{ffi::OsStr, os::unix::ffi::OsStrExt};
-                    let path = OsStr::from_bytes(&event.path[0..event.path_len]);
-                    let mut path = std::path::Path::new(path).to_owned();
-                    // There might be a filename
-                    if event.filename_len > 0 {
-                        let filename = OsStr::from_bytes(&event.filename[0..event.filename_len]);
-                        path.push(filename);
-                    }
+                    let primary_path = build_path(event.primary_path, event.primary_filename);
 
-                    println!("{}", path.display())
+                    println!("{}", primary_path.display())
                 }
             }
 
@@ -152,4 +145,21 @@ async fn main() -> anyhow::Result<()> {
     println!("Exiting...");
 
     Ok(())
+}
+
+fn build_path(
+    path_buf: ayaya_common::PathBuf,
+    filename_buf: ayaya_common::FilenameBuf,
+) -> std::path::PathBuf {
+    use std::{ffi::OsStr, os::unix::ffi::OsStrExt};
+
+    let path = OsStr::from_bytes(&path_buf.buf[0..path_buf.len]);
+    let mut path = std::path::Path::new(path).to_owned();
+
+    // There might be a filename
+    if filename_buf.len > 0 {
+        let filename = OsStr::from_bytes(&filename_buf.buf[0..filename_buf.len]);
+        path.push(filename);
+    }
+    return path;
 }

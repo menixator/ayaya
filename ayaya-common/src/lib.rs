@@ -3,6 +3,22 @@
 pub const PATH_BUF_MAX: usize = 4096;
 pub const FILENAME_BUF_MAX: usize = 256;
 
+#[cfg_attr(feature = "user", derive(Debug))]
+#[derive(Copy, Clone)]
+#[repr(C)]
+pub struct PathBuf {
+    pub len: usize,
+    pub buf: [u8; PATH_BUF_MAX],
+}
+
+#[cfg_attr(feature = "user", derive(Debug))]
+#[derive(Copy, Clone)]
+#[repr(C)]
+pub struct FilenameBuf {
+    pub len: usize,
+    pub buf: [u8; FILENAME_BUF_MAX],
+}
+
 /// A struct used to share the filter path between the userland program and the ebpf program so as
 /// to allow the filter path to be dynamic without recompiling the ebpf program
 #[derive(Copy, Clone)]
@@ -26,10 +42,10 @@ pub struct Event {
     pub gid: u32,
     pub tgid: u32,
     pub timestamp: u64,
-    pub path_len: usize,
-    pub path: [u8; PATH_BUF_MAX],
-    pub filename_len: usize,
-    pub filename: [u8; FILENAME_BUF_MAX],
+    pub primary_path: PathBuf,
+    pub primary_filename: FilenameBuf,
+    pub secondary_path: PathBuf,
+    pub secondary_filename: FilenameBuf,
     pub variant: EventVariant,
 }
 

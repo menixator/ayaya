@@ -17,7 +17,7 @@ use aya_log_ebpf::info;
 #[rustfmt::skip]
 mod vmlinux;
 
-use ayaya_common::{Event, EventVariant, FilterPath, PATH_BUF_MAX};
+use ayaya_common::{Event, EventVariant, FilenameBuf, FilterPath, PathBuf, PATH_BUF_MAX};
 
 // The main pipeline to send data to the userland program
 #[map]
@@ -44,27 +44,29 @@ pub fn file_open(ctx: LsmContext) -> i32 {
 }
 
 #[inline(always)]
-pub fn get_path_from_file(file: *const vmlinux::file, buf: &mut [u8]) -> Result<usize, i8> {
+pub fn get_path_from_file(file: *const vmlinux::file, path_buf: &mut PathBuf) -> Result<usize, i8> {
     // Get a pointer to the file path
     let path = unsafe { &((*file).f_path) as *const _ };
-    get_path_from_path(path, buf)
+    get_path_from_path(path, path_buf)
 }
 
 #[inline(always)]
-pub fn get_path_from_path(path: *const vmlinux::path, buf: &mut [u8]) -> Result<usize, i8> {
+pub fn get_path_from_path(path: *const vmlinux::path, path_buf: &mut PathBuf) -> Result<usize, i8> {
     // Get a pointer to the file path
     let written = unsafe {
         aya_ebpf::helpers::gen::bpf_d_path(
             path as *mut aya_ebpf::bindings::path,
-            buf.as_mut_ptr() as *mut i8,
-            buf.len() as u32,
+            path_buf.buf.as_mut_ptr() as *mut i8,
+            path_buf.buf.len() as u32,
         )
     };
 
     let written = written as usize;
-    if written <= 1 || written >= buf.len() {
+    if written <= 1 || written >= path_buf.buf.len() {
         return Err(-1);
     }
+
+    path_buf.len = written;
     return Ok(written);
 }
 
@@ -76,15 +78,13 @@ fn try_file_open(ctx: LsmContext) -> Result<i32, i32> {
     alloc!(FILE_OPEN_EVENT_BUF, Event);
     let event = get_event(&FILE_OPEN_EVENT_BUF)?;
 
-    let written = get_path_from_file(file, &mut event.path)?;
-    if !matches_filtered_path(&event.path) {
+    let written = get_path_from_file(file, &mut event.primary_path)?;
+    if !matches_filtered_path(&event.primary_path) {
         return Ok(0);
     }
 
-    event.path_len = written - 1;
-
-    let path_as_str = unsafe { core::str::from_utf8_unchecked(&event.path[0..written]) };
-    info!(&ctx, "lsm/file_open called for {}", path_as_str);
+    let path = path_buf_as_str(&event.primary_path);
+    info!(&ctx, "lsm/file_open called for {}", path);
 
     event.variant = EventVariant::Open;
     fill_event(event, &ctx);
@@ -102,17 +102,18 @@ pub fn path_unlink(ctx: LsmContext) -> i32 {
 }
 
 fn dentry_name_to_buf(
-    event: &mut Event,
     dentry: *const vmlinux::dentry,
+    filename: &mut FilenameBuf,
 ) -> Result<usize, i32> {
     let file_name = unsafe { (*dentry).d_name.name };
     let written = unsafe {
         aya_ebpf::helpers::bpf_probe_read_kernel_str_bytes(
             file_name as *const u8,
-            &mut event.filename,
+            &mut filename.buf,
         )
         .map_err(|_| 0)?
     };
+    filename.len = written.len();
 
     Ok(written.len())
 }
@@ -125,19 +126,18 @@ fn try_path_unlink(ctx: LsmContext) -> Result<i32, i32> {
     alloc!(PATH_UNLINK_EVENT_BUF, Event);
     let event = get_event(&PATH_UNLINK_EVENT_BUF)?;
 
-    let written = get_path_from_path(path, &mut event.path)?;
+    get_path_from_path(path, &mut event.primary_path)?;
 
-    event.path_len = written - 1;
+    dentry_name_to_buf(dentry, &mut event.primary_filename)?;
 
-    let filename_len = dentry_name_to_buf(event, dentry)?;
-    event.filename_len = filename_len;
-
-    let path_as_str = unsafe { core::str::from_utf8_unchecked(&event.path[0..written]) };
-
-    if !matches_filtered_path_no_trailing(&event.path) && !matches_filtered_path(&event.path) {
+    if !matches_filtered_path_no_trailing(&event.primary_path)
+        && !matches_filtered_path(&event.primary_path)
+    {
         return Ok(0);
     }
-    info!(&ctx, "lsm/path_unlink called for {}", path_as_str);
+
+    let path = path_buf_as_str(&event.primary_path);
+    info!(&ctx, "lsm/path_unlink called for a file in {}", path);
 
     event.variant = EventVariant::Unlink;
     fill_event(event, &ctx);
@@ -163,15 +163,13 @@ fn try_bprm_creds_for_exec(ctx: LsmContext) -> Result<i32, i32> {
 
     let event = get_event(&BPRM_CREDS_FOR_EXEC_EVENT_BUF)?;
 
-    let written = get_path_from_file(file, &mut event.path)?;
-    if !matches_filtered_path(&event.path) {
+    get_path_from_file(file, &mut event.primary_path)?;
+    if !matches_filtered_path(&event.primary_path) {
         return Ok(0);
     }
 
-    event.path_len = written - 1;
-
-    let path_as_str = unsafe { core::str::from_utf8_unchecked(&event.path[0..written]) };
-    info!(&ctx, "lsm/bprm_creds_for_exec called for {}", path_as_str);
+    let path = path_buf_as_str(&event.primary_path);
+    info!(&ctx, "lsm/bprm_creds_for_exec called for {}", path);
 
     event.variant = EventVariant::Exec;
     fill_event(event, &ctx);
@@ -200,17 +198,15 @@ fn try_security_file_permission(ctx: FEntryContext) -> Result<u32, i64> {
 
     let event = get_event(&SECURITY_FILE_PERMISSION_EVENT_BUF)?;
 
-    let written = get_path_from_file(file, &mut event.path)?;
-    if !matches_filtered_path(&event.path) {
+    get_path_from_file(file, &mut event.primary_path)?;
+    if !matches_filtered_path(&event.primary_path) {
         return Ok(0);
     }
 
-    event.path_len = written - 1;
-
-    let path_as_str = unsafe { core::str::from_utf8_unchecked(&event.path[0..written]) };
+    let path = path_buf_as_str(&event.primary_path);
     info!(
         &ctx,
-        "fentry/security_file_permission called for {} with mask={}", path_as_str, mask
+        "fentry/security_file_permission called for {} with mask={}", path, mask
     );
 
     event.variant = EventVariant::ReadOrWrite;
@@ -230,7 +226,7 @@ fn get_event(array: &'static PerCpuArray<Event>) -> Result<&'static mut Event, i
     return Ok(event);
 }
 
-fn matches_filtered_path(path: &[u8]) -> bool {
+fn matches_filtered_path(path: &PathBuf) -> bool {
     // Get the first element from the FILTER_PATH
     // or early exit with a 0
     let filter_buf = if let Some(filter_buf) = FILTER_PATH.get(0) {
@@ -241,11 +237,11 @@ fn matches_filtered_path(path: &[u8]) -> bool {
 
     let filter = filter_buf.buf.get(0..filter_buf.length);
 
-    return filter.is_some() && path.get(0..filter_buf.length) == filter;
+    return filter.is_some() && path.buf.get(0..filter_buf.length) == filter;
 }
 
 // compares path without the trailing slash in the filter path
-fn matches_filtered_path_no_trailing(path: &[u8]) -> bool {
+fn matches_filtered_path_no_trailing(path: &PathBuf) -> bool {
     // Get the first element from the FILTER_PATH
     // or early exit with a 0
     let filter_buf = if let Some(filter_buf) = FILTER_PATH.get(0) {
@@ -256,7 +252,7 @@ fn matches_filtered_path_no_trailing(path: &[u8]) -> bool {
 
     let filter = filter_buf.buf.get(0..filter_buf.length - 1);
 
-    return filter.is_some() && path.get(0..filter_buf.length - 1) == filter;
+    return filter.is_some() && path.buf.get(0..filter_buf.length - 1) == filter;
 }
 
 // Fill fields in events from any applicable
@@ -268,6 +264,16 @@ fn fill_event(event: &mut Event, ctx: &impl EbpfContext) {
     // NOTE: time elapsed since system boot, in nanoseconds. Does not include time the system was
     // suspended.
     event.timestamp = unsafe { aya_ebpf::helpers::gen::bpf_ktime_get_ns() };
+}
+
+#[inline(always)]
+fn path_buf_as_str(path_buf: &PathBuf) -> &str {
+    let len = path_buf.len;
+    if len < path_buf.buf.len() {
+        unsafe { core::str::from_utf8_unchecked(&path_buf.buf[0..len]) }
+    } else {
+        "<PLACEHOLDER>"
+    }
 }
 
 #[cfg(not(test))]
