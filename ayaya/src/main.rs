@@ -93,6 +93,10 @@ async fn main() -> anyhow::Result<()> {
     program.load("path_unlink", &btf)?;
     program.attach()?;
 
+    let program: &mut Lsm = ebpf.program_mut("path_mkdir").unwrap().try_into()?;
+    program.load("path_mkdir", &btf)?;
+    program.attach()?;
+
     let program: &mut FEntry = ebpf
         .program_mut("security_file_permission")
         .unwrap()
@@ -104,9 +108,8 @@ async fn main() -> anyhow::Result<()> {
     println!("event size is {} bytes", std::mem::size_of::<Event>());
 
     // This is an arbitrary limit. Could not get around it
-    assert_eq!(
-        std::mem::size_of::<Event>(),
-        8168,
+    assert!(
+        std::mem::size_of::<Event>() <= 8168,
         "Event size cannot be bigger than 8168."
     );
 

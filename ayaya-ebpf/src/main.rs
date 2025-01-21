@@ -102,6 +102,42 @@ fn try_path_unlink(ctx: LsmContext) -> Result<i32, i32> {
     Ok(0)
 }
 
+#[lsm(hook = "path_mkdir")]
+pub fn path_mkdir(ctx: LsmContext) -> i32 {
+    match try_path_mkdir(ctx) {
+        Ok(ret) => ret,
+        Err(ret) => ret,
+    }
+}
+
+// LSM_HOOK(int, 0, path_mkdir, const struct path *dir, struct dentry *dentry, umode_t mode)
+fn try_path_mkdir(ctx: LsmContext) -> Result<i32, i32> {
+    let path: *const vmlinux::path = unsafe { ctx.arg(0) };
+    let dentry: *const vmlinux::dentry = unsafe { ctx.arg(1) };
+
+    alloc!(PATH_MKDIR_EVENT_BUF, Event);
+    let event = get_event(&PATH_MKDIR_EVENT_BUF)?;
+
+    get_path_from_path(path, &mut event.primary_path)?;
+
+    dentry_name_to_buf(dentry, &mut event.primary_filename)?;
+
+    if !matches_filtered_path_no_trailing(&event.primary_path)
+        && !matches_filtered_path(&event.primary_path)
+    {
+        return Ok(0);
+    }
+
+    let path = path_buf_as_str(&event.primary_path);
+    info!(&ctx, "lsm/path_mkdir called for a file in {}", path);
+
+    event.variant = EventVariant::Unlink;
+    fill_event(event, &ctx);
+
+    PIPELINE.output(&ctx, event, 0);
+    Ok(0)
+}
+
 #[lsm(hook = "bprm_creds_for_exec")]
 pub fn bprm_creds_for_exec(ctx: LsmContext) -> i32 {
     match try_bprm_creds_for_exec(ctx) {

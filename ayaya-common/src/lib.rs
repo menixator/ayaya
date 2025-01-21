@@ -59,4 +59,5 @@ pub enum EventVariant {
     ReadOrWrite,
     Exec,
     Unlink,
+    Mkdir,
 }
