@@ -82,7 +82,7 @@ fn try_file_open(ctx: LsmContext) -> Result<i32, i32> {
         return Ok(0);
     }
 
-    event.path_len = written;
+    event.path_len = written-1;
 
     let path_as_str = unsafe { core::str::from_utf8_unchecked(&event.path[0..written]) };
     info!(&ctx, "lsm/file_open called for {}", path_as_str);
