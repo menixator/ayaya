@@ -131,7 +131,7 @@ async fn main() -> anyhow::Result<()> {
         // process each perf buffer in a separate task
         tokio::task::spawn(async move {
             let mut buffers = (0..10)
-                .map(|_| BytesMut::with_capacity(8192))
+                .map(|_| BytesMut::with_capacity(std::mem::size_of::<Event>().next_power_of_two()))
                 .collect::<Vec<_>>();
 
             loop {
