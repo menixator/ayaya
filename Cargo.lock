@@ -182,6 +182,7 @@ dependencies = [
  "aya-log",
  "ayaya-common",
  "ayaya-ebpf",
+ "bytes",
  "env_logger",
  "libc",
  "log",

@@ -3,7 +3,7 @@
 
 use aya_ebpf::{
     macros::{lsm, map},
-    maps::{Array, PerCpuArray},
+    maps::{Array, PerCpuArray, PerfEventArray},
     programs::LsmContext,
     EbpfContext,
 };
@@ -19,7 +19,9 @@ mod vmlinux;
 
 use ayaya_common::{Event, EventVariant, FilterPath, PATH_BUF_MAX};
 
-type PathBuffer = [u8; PATH_BUF_MAX];
+// The main pipeline to send data to the userland program
+#[map]
+pub static PIPELINE: PerfEventArray<Event> = PerfEventArray::new(0);
 
 #[map]
 pub(crate) static FILTER_PATH: Array<FilterPath> = Array::with_max_entries(1, 0);
@@ -93,6 +95,7 @@ fn try_file_open(ctx: LsmContext) -> Result<i32, i32> {
     // NOTE: time elapsed since system boot, in nanoseconds. Does not include time the system was
     // suspended.
     event.timestamp = unsafe { aya_ebpf::helpers::gen::bpf_ktime_get_ns() };
+    PIPELINE.output(&ctx, event, 0);
     Ok(0)
 }
 

@@ -2,8 +2,9 @@ use aya::{programs::Lsm, Btf};
 #[rustfmt::skip]
 use log::{debug, warn};
 use anyhow::anyhow;
-use aya::maps::Array;
-use ayaya_common::{FilterPath, PATH_BUF_MAX};
+use aya::maps::{perf::PerfBufferError, Array, AsyncPerfEventArray};
+use ayaya_common::{Event, FilterPath, PATH_BUF_MAX};
+use bytes::BytesMut;
 use tokio::signal;
 
 #[tokio::main]
@@ -77,6 +78,44 @@ async fn main() -> anyhow::Result<()> {
     let program: &mut Lsm = ebpf.program_mut("file_open").unwrap().try_into()?;
     program.load("file_open", &btf)?;
     program.attach()?;
+
+    // try to convert the PERF_ARRAY map to an AsyncPerfEventArray
+    let mut perf_array = AsyncPerfEventArray::try_from(ebpf.take_map("PIPELINE").unwrap())?;
+
+    for cpu_id in aya::util::online_cpus().map_err(|(_, error)| error)? {
+        // open a separate perf buffer for each cpu
+        let mut buf = perf_array.open(cpu_id, None)?;
+
+        // process each perf buffer in a separate task
+        tokio::task::spawn(async move {
+            let mut buffers = (0..10)
+                .map(|_| BytesMut::with_capacity(1024))
+                .collect::<Vec<_>>();
+
+            loop {
+                // wait for events
+                let events = buf.read_events(&mut buffers).await?;
+
+                println!("read {} event(s)", events.read);
+                // events.read contains the number of events that have been read,
+                // and is always <= buffers.len()
+                for buf in buffers.iter_mut().take(events.read) {
+                    let ptr = buf.as_ptr() as *const Event;
+                    let event = unsafe { ptr.read_unaligned() };
+
+                    //println!("{:#?}", event);
+
+                    use std::{ffi::OsStr, os::unix::ffi::OsStrExt};
+                    let path = OsStr::from_bytes(&event.path[0..event.path_len]);
+                    let path = std::path::Path::new(path);
+                    println!("{}", path.display())
+                }
+            }
+
+            #[allow(unreachable_code)]
+            Ok::<_, PerfBufferError>(())
+        });
+    }
 
     let ctrl_c = signal::ctrl_c();
     println!("Waiting for Ctrl-C...");

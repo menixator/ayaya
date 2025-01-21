@@ -15,6 +15,7 @@ pub struct FilterPath {
 #[cfg(feature = "user")]
 unsafe impl aya::Pod for FilterPath {}
 
+#[cfg_attr(feature = "user", derive(Debug))]
 /// Common data to be shared between the ebpf context and userspace context for all events
 #[derive(Copy, Clone)]
 #[repr(C)]
@@ -29,6 +30,7 @@ pub struct Event {
     pub variant: EventVariant,
 }
 
+#[cfg_attr(feature = "user", derive(Debug))]
 #[derive(Copy, Clone)]
 #[repr(C)]
 pub enum EventVariant {
