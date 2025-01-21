@@ -42,7 +42,12 @@ pub fn file_open(ctx: LsmContext) -> i32 {
             0
         }
         // TODO: maybe set it 0 even on fails since this is a tracing program.
-        Err(ret) => ret,
+        Err(ret) => {
+            if ret != -4095 {
+                info!(&ctx, "lsm/file_open failed");
+            }
+            0
+        }
     }
 }
 
@@ -55,7 +60,12 @@ pub fn path_unlink(ctx: LsmContext) -> i32 {
             info!(&ctx, "lsm/path_unlink called for a file in {}", path);
             0
         }
-        Err(ret) => ret,
+        Err(ret) => {
+            if ret != -4095 {
+                info!(&ctx, "lsm/path_unlink failed ");
+            }
+            0
+        }
     }
 }
 
@@ -68,7 +78,12 @@ pub fn path_mkdir(ctx: LsmContext) -> i32 {
             info!(&ctx, "lsm/path_mkdir called for a file in {}", path);
             0
         }
-        Err(ret) => ret,
+        Err(ret) => {
+            if ret != -4095 {
+                info!(&ctx, "lsm/path_mkdir failed");
+            }
+            0
+        }
     }
 }
 
@@ -81,75 +96,63 @@ pub fn path_rmdir(ctx: LsmContext) -> i32 {
             info!(&ctx, "lsm/path_rmdir called for a file in {}", path);
             0
         }
-        Err(ret) => ret,
+        Err(ret) => {
+            if ret != -4095 {
+                info!(&ctx, "lsm/path_rmdir failed");
+            }
+            0
+        }
     }
 }
 
+// LSM_HOOK(int, 0, bprm_creds_for_exec, struct linux_binprm *bprm)
 #[lsm(hook = "bprm_creds_for_exec")]
 pub fn bprm_creds_for_exec(ctx: LsmContext) -> i32 {
-    match try_bprm_creds_for_exec(ctx) {
-        Ok(ret) => ret,
-        Err(ret) => ret,
-    }
-}
-
-fn try_bprm_creds_for_exec(ctx: LsmContext) -> Result<i32, i32> {
-    // Fetch the file struct being opened
     let binprm: *const vmlinux::linux_binprm = unsafe { ctx.arg(0) };
     let file = unsafe { (*binprm).file };
+    let path = unsafe { &((*file).f_path) as *const _ };
 
-    let event = get_event(&BUFFER)?;
-
-    get_path_from_file(file, &mut event.primary_path)?;
-    if !matches_filtered_path(&event.primary_path) {
-        return Ok(0);
+    match generate_event_from_path(&ctx, path, EventVariant::Exec) {
+        Ok(event) => {
+            let path = path_buf_as_str(&event.primary_path);
+            info!(&ctx, "lsm/bprm_creds_for_exec called for a file {}", path);
+            0
+        }
+        // TODO: maybe set it 0 even on fails since this is a tracing program.
+        Err(ret) => {
+            if ret != -4095 {
+                info!(&ctx, "lsm/bprm_creds_for_exec failed");
+            }
+            0
+        }
     }
-
-    let path = path_buf_as_str(&event.primary_path);
-    info!(&ctx, "lsm/bprm_creds_for_exec called for {}", path);
-
-    event.variant = EventVariant::Exec;
-    fill_event(event, &ctx);
-
-    PIPELINE.output(&ctx, event, 0);
-
-    Ok(0)
 }
 
 #[fentry(function = "security_file_permission")]
-pub fn security_file_permission(ctx: FEntryContext) -> u32 {
-    match try_security_file_permission(ctx) {
-        Ok(ret) => ret,
-        Err(ret) => ret.try_into().unwrap_or(1),
-    }
-}
-
-fn try_security_file_permission(ctx: FEntryContext) -> Result<u32, i64> {
-    // Fetch the file struct being opened
+pub fn security_file_permission(ctx: FEntryContext) -> i32 {
     let file: *const vmlinux::file = unsafe { ctx.arg(0) };
+    let path = unsafe { &((*file).f_path) as *const _ };
+
     // information about masks
     // https://github.com/torvalds/linux/blob/ffd294d346d185b70e28b1a28abe367bbfe53c04/security/selinux/hooks.c#L1957-L2005
     let mask: u32 = unsafe { ctx.arg(1) };
 
-    let event = get_event(&BUFFER)?;
-
-    get_path_from_file(file, &mut event.primary_path)?;
-    if !matches_filtered_path(&event.primary_path) {
-        return Ok(0);
+    match generate_event_from_path(&ctx, path, EventVariant::ReadOrWrite) {
+        Ok(event) => {
+            let path = path_buf_as_str(&event.primary_path);
+            info!(
+                &ctx,
+                "fentry/security_file_permission called for a file {}", path
+            );
+            0
+        }
+        Err(ret) => {
+            if ret != -4095 {
+                info!(&ctx, "fentry/security_file_permission failed");
+            }
+            0
+        }
     }
-
-    let path = path_buf_as_str(&event.primary_path);
-    info!(
-        &ctx,
-        "fentry/security_file_permission called for {} with mask={}", path, mask
-    );
-
-    event.variant = EventVariant::ReadOrWrite;
-    fill_event(event, &ctx);
-
-    PIPELINE.output(&ctx, event, 0);
-
-    Ok(0)
 }
 
 fn get_event(array: &'static PerCpuArray<Event>) -> Result<&'static mut Event, i8> {
@@ -229,13 +232,6 @@ fn dentry_name_to_buf(
 }
 
 #[inline(always)]
-pub fn get_path_from_file(file: *const vmlinux::file, path_buf: &mut PathBuf) -> Result<usize, i8> {
-    // Get a pointer to the file path
-    let path = unsafe { &((*file).f_path) as *const _ };
-    get_path_from_path(path, path_buf)
-}
-
-#[inline(always)]
 pub fn get_path_from_path(path: *const vmlinux::path, path_buf: &mut PathBuf) -> Result<usize, i8> {
     // Get a pointer to the file path
     let written = unsafe {
@@ -268,7 +264,7 @@ fn split_path_lsm(ctx: &LsmContext, variant: EventVariant) -> Result<&mut Event,
     if !matches_filtered_path_no_trailing(&event.primary_path)
         && !matches_filtered_path(&event.primary_path)
     {
-        return Err(0);
+        return Err(-4095);
     }
 
     event.variant = variant;
@@ -289,7 +285,7 @@ fn generate_event_from_path(
     get_path_from_path(path, &mut event.primary_path)?;
 
     if !matches_filtered_path(&event.primary_path) {
-        return Err(0);
+        return Err(-4095);
     }
 
     event.variant = variant;

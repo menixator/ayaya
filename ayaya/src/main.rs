@@ -145,7 +145,7 @@ async fn main() -> anyhow::Result<()> {
 
                     let primary_path = build_path(event.primary_path, event.primary_filename);
 
-                    println!("{}", primary_path.display())
+                    println!("{:#?} {}", event.variant, primary_path.display())
                 }
             }
 
