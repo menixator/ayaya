@@ -60,74 +60,43 @@ fn try_file_open(ctx: LsmContext) -> Result<i32, i32> {
     Ok(0)
 }
 
+// LSM_HOOK(int, 0, path_unlink, const struct path *dir, struct dentry *dentry)
 #[lsm(hook = "path_unlink")]
 pub fn path_unlink(ctx: LsmContext) -> i32 {
-    match try_path_unlink(ctx) {
-        Ok(ret) => ret,
-        Err(ret) => ret,
-    }
-}
-
-// LSM_HOOK(int, 0, path_unlink, const struct path *dir, struct dentry *dentry)
-fn try_path_unlink(ctx: LsmContext) -> Result<i32, i32> {
-    let path: *const vmlinux::path = unsafe { ctx.arg(0) };
-    let dentry: *const vmlinux::dentry = unsafe { ctx.arg(1) };
-
-    let event = get_event(&BUFFER)?;
-
-    get_path_from_path(path, &mut event.primary_path)?;
-
-    dentry_name_to_buf(dentry, &mut event.primary_filename)?;
-
-    if !matches_filtered_path_no_trailing(&event.primary_path)
-        && !matches_filtered_path(&event.primary_path)
-    {
-        return Ok(0);
-    }
-
-    let path = path_buf_as_str(&event.primary_path);
-    info!(&ctx, "lsm/path_unlink called for a file in {}", path);
-
-    event.variant = EventVariant::Unlink;
-    fill_event(event, &ctx);
-
-    PIPELINE.output(&ctx, event, 0);
-    Ok(0)
-}
-
-#[lsm(hook = "path_mkdir")]
-pub fn path_mkdir(ctx: LsmContext) -> i32 {
-    match try_path_mkdir(ctx) {
-        Ok(ret) => ret,
+    match split_path_lsm(&ctx, EventVariant::Unlink) {
+        Ok(event) => {
+            let path = path_buf_as_str(&event.primary_path);
+            info!(&ctx, "lsm/path_unlink called for a file in {}", path);
+            0
+        }
         Err(ret) => ret,
     }
 }
 
 // LSM_HOOK(int, 0, path_mkdir, const struct path *dir, struct dentry *dentry, umode_t mode)
-fn try_path_mkdir(ctx: LsmContext) -> Result<i32, i32> {
-    let path: *const vmlinux::path = unsafe { ctx.arg(0) };
-    let dentry: *const vmlinux::dentry = unsafe { ctx.arg(1) };
-
-    let event = get_event(&BUFFER)?;
-
-    get_path_from_path(path, &mut event.primary_path)?;
-
-    dentry_name_to_buf(dentry, &mut event.primary_filename)?;
-
-    if !matches_filtered_path_no_trailing(&event.primary_path)
-        && !matches_filtered_path(&event.primary_path)
-    {
-        return Ok(0);
+#[lsm(hook = "path_mkdir")]
+pub fn path_mkdir(ctx: LsmContext) -> i32 {
+    match split_path_lsm(&ctx, EventVariant::Mkdir) {
+        Ok(event) => {
+            let path = path_buf_as_str(&event.primary_path);
+            info!(&ctx, "lsm/path_mkdir called for a file in {}", path);
+            0
+        }
+        Err(ret) => ret,
     }
+}
 
-    let path = path_buf_as_str(&event.primary_path);
-    info!(&ctx, "lsm/path_mkdir called for a file in {}", path);
-
-    event.variant = EventVariant::Unlink;
-    fill_event(event, &ctx);
-
-    PIPELINE.output(&ctx, event, 0);
-    Ok(0)
+// LSM_HOOK(int, 0, path_rmdir, const struct path *dir, struct dentry *dentry)
+#[lsm(hook = "path_rmdir")]
+pub fn path_rmdir(ctx: LsmContext) -> i32 {
+    match split_path_lsm(&ctx, EventVariant::Rmdir) {
+        Ok(event) => {
+            let path = path_buf_as_str(&event.primary_path);
+            info!(&ctx, "lsm/path_rmdir called for a file in {}", path);
+            0
+        }
+        Err(ret) => ret,
+    }
 }
 
 #[lsm(hook = "bprm_creds_for_exec")]
@@ -298,6 +267,29 @@ pub fn get_path_from_path(path: *const vmlinux::path, path_buf: &mut PathBuf) ->
 
     path_buf.len = written;
     return Ok(written);
+}
+
+#[inline(always)]
+fn split_path_lsm(ctx: &LsmContext, variant: EventVariant) -> Result<&mut Event, i32> {
+    let path: *const vmlinux::path = unsafe { ctx.arg(0) };
+    let dentry: *const vmlinux::dentry = unsafe { ctx.arg(1) };
+
+    let event = get_event(&BUFFER)?;
+
+    get_path_from_path(path, &mut event.primary_path)?;
+    dentry_name_to_buf(dentry, &mut event.primary_filename)?;
+
+    if !matches_filtered_path_no_trailing(&event.primary_path)
+        && !matches_filtered_path(&event.primary_path)
+    {
+        return Err(0);
+    }
+
+    event.variant = variant;
+    fill_event(event, ctx);
+
+    PIPELINE.output(ctx, event, 0);
+    Ok(event)
 }
 
 #[cfg(not(test))]

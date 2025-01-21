@@ -97,6 +97,10 @@ async fn main() -> anyhow::Result<()> {
     program.load("path_mkdir", &btf)?;
     program.attach()?;
 
+    let program: &mut Lsm = ebpf.program_mut("path_rmdir").unwrap().try_into()?;
+    program.load("path_rmdir", &btf)?;
+    program.attach()?;
+
     let program: &mut FEntry = ebpf
         .program_mut("security_file_permission")
         .unwrap()

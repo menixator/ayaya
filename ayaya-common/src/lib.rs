@@ -60,4 +60,5 @@ pub enum EventVariant {
     Exec,
     Unlink,
     Mkdir,
+    Rmdir,
 }
