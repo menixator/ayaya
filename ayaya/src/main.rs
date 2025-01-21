@@ -120,9 +120,13 @@ async fn main() -> anyhow::Result<()> {
     // try to convert the PERF_ARRAY map to an AsyncPerfEventArray
     let mut perf_array = AsyncPerfEventArray::try_from(ebpf.take_map("PIPELINE").unwrap())?;
 
+    // getconf PAGESIZE to get PAGESIZE
+    // size of (struct * max_bufferered_events)/ PAGE_SIZE
+    let optimal_page_count = ((std::mem::size_of::<Event>() * 20) / 4096).next_power_of_two();
+
     for cpu_id in aya::util::online_cpus().map_err(|(_, error)| error)? {
         // open a separate perf buffer for each cpu
-        let mut buf = perf_array.open(cpu_id, None)?;
+        let mut buf = perf_array.open(cpu_id, Some(optimal_page_count))?;
 
         // process each perf buffer in a separate task
         tokio::task::spawn(async move {
