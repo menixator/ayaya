@@ -5,6 +5,7 @@ use aya_ebpf::{
     macros::{lsm, map},
     maps::{Array, PerCpuArray},
     programs::LsmContext,
+    EbpfContext,
 };
 use aya_log_ebpf::info;
 
@@ -16,7 +17,7 @@ use aya_log_ebpf::info;
 #[rustfmt::skip]
 mod vmlinux;
 
-use ayaya_common::{FilterPath, PATH_BUF_MAX};
+use ayaya_common::{Event, EventVariant, FilterPath, PATH_BUF_MAX};
 
 type PathBuffer = [u8; PATH_BUF_MAX];
 
@@ -27,6 +28,14 @@ macro_rules! path_buf_init {
     ($static_name:ident) => {
         #[map]
         pub(crate) static $static_name: PerCpuArray<PathBuffer> =
+            PerCpuArray::with_max_entries(1, 0);
+    };
+}
+
+macro_rules! gen_buf_init {
+    ($static_name:ident, $inner:ty) => {
+        #[map]
+        pub(crate) static $static_name: PerCpuArray<[u8; ::core::mem::size_of::<$inner>()]> =
             PerCpuArray::with_max_entries(1, 0);
     };
 }
@@ -52,6 +61,30 @@ pub fn get_path_from_file(file: *const vmlinux::file, buf: &PathBuffer) -> i64 {
 fn try_file_open(ctx: LsmContext) -> Result<i32, i32> {
     // Fetch the file struct being opened
     let file: *const vmlinux::file = unsafe { ctx.arg(0) };
+
+    gen_buf_init!(FILE_OPEN_EVENT_BUF, Event);
+
+    let event_buf: &'static mut Event = unsafe {
+        let raw_ptr = FILE_OPEN_EVENT_BUF.get_ptr_mut(0).ok_or(0)?;
+        core::mem::transmute(raw_ptr)
+    };
+
+    event_buf.pid = ctx.pid();
+    event_buf.gid = ctx.gid();
+    event_buf.tgid = ctx.tgid();
+    event_buf.uid = ctx.uid();
+    event_buf.variant = EventVariant::Open;
+    // NOTE: time elapsed since system boot, in nanoseconds. Does not include time the system was suspended.
+    event_buf.timestamp = unsafe { aya_ebpf::helpers::gen::bpf_ktime_get_ns() };
+
+    info!(
+        &ctx,
+        "pid={}, gid={}, tid={}, uid={}",
+        event_buf.pid,
+        event_buf.gid,
+        event_buf.tgid,
+        event_buf.uid
+    );
 
     path_buf_init!(FILE_OPEN_PATH_BUF);
     // FIXME?: kinda iffy getting an immutable reference here but
