@@ -63,10 +63,7 @@ fn try_file_open(ctx: LsmContext) -> Result<i32, i32> {
     let file: *const vmlinux::file = unsafe { ctx.arg(0) };
 
     alloc!(FILE_OPEN_EVENT_BUF, Event);
-    let event: &'static mut Event = unsafe {
-        let raw_ptr = FILE_OPEN_EVENT_BUF.get_ptr_mut(0).ok_or(0)?;
-        core::mem::transmute(raw_ptr)
-    };
+    let event = get_event(&FILE_OPEN_EVENT_BUF)?;
 
     let written = get_path_from_file(file, &mut event.path)?;
     if !matches_filtered_path(&event.path) {
@@ -100,10 +97,7 @@ fn try_bprm_creds_for_exec(ctx: LsmContext) -> Result<i32, i32> {
 
     alloc!(BPRM_CREDS_FOR_EXEC_EVENT_BUF, Event);
 
-    let event: &'static mut Event = unsafe {
-        let raw_ptr = BPRM_CREDS_FOR_EXEC_EVENT_BUF.get_ptr_mut(0).ok_or(0)?;
-        core::mem::transmute(raw_ptr)
-    };
+    let event = get_event(&BPRM_CREDS_FOR_EXEC_EVENT_BUF)?;
 
     let written = get_path_from_file(file, &mut event.path)?;
     if !matches_filtered_path(&event.path) {
@@ -140,10 +134,7 @@ fn try_security_file_permission(ctx: FEntryContext) -> Result<u32, i64> {
 
     alloc!(SECURITY_FILE_PERMISSION_EVENT_BUF, Event);
 
-    let event: &'static mut Event = unsafe {
-        let raw_ptr = SECURITY_FILE_PERMISSION_EVENT_BUF.get_ptr_mut(0).ok_or(0)?;
-        core::mem::transmute(raw_ptr)
-    };
+    let event = get_event(&SECURITY_FILE_PERMISSION_EVENT_BUF)?;
 
     let written = get_path_from_file(file, &mut event.path)?;
     if !matches_filtered_path(&event.path) {
@@ -155,7 +146,7 @@ fn try_security_file_permission(ctx: FEntryContext) -> Result<u32, i64> {
     let path_as_str = unsafe { core::str::from_utf8_unchecked(&event.path[0..written]) };
     info!(
         &ctx,
-        "fentry/security_file_permission called for {}", path_as_str
+        "fentry/security_file_permission called for {} with mask={}", path_as_str, mask
     );
 
     event.variant = EventVariant::ReadOrWrite;
@@ -164,6 +155,15 @@ fn try_security_file_permission(ctx: FEntryContext) -> Result<u32, i64> {
     PIPELINE.output(&ctx, event, 0);
 
     Ok(0)
+}
+
+fn get_event(array: &'static PerCpuArray<Event>) -> Result<&'static mut Event, i8> {
+    let event: &'static mut Event = unsafe {
+        let raw_ptr = array.get_ptr_mut(0).ok_or(0)?;
+        core::mem::transmute(raw_ptr)
+    };
+
+    return Ok(event);
 }
 
 fn matches_filtered_path(path: &[u8]) -> bool {
