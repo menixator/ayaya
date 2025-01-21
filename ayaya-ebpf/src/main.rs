@@ -39,6 +39,7 @@ macro_rules! alloc {
 pub fn file_open(ctx: LsmContext) -> i32 {
     match try_file_open(ctx) {
         Ok(ret) => ret,
+        // TODO: maybe set it 0 even on fails since this is a tracing program.
         Err(ret) => ret,
     }
 }
@@ -85,16 +86,22 @@ fn try_file_open(ctx: LsmContext) -> Result<i32, i32> {
     let path_as_str = unsafe { core::str::from_utf8_unchecked(&event.path[0..written]) };
     info!(&ctx, "lsm/file_open called for {}", path_as_str);
 
+    event.variant = EventVariant::Open;
+    fill_event(event, &ctx);
+
+    PIPELINE.output(&ctx, event, 0);
+    Ok(0)
+}
+
+// Fill fields in events from any applicable
+fn fill_event(event: &mut Event, ctx: &impl EbpfContext) {
     event.pid = ctx.pid();
     event.gid = ctx.gid();
     event.tgid = ctx.tgid();
     event.uid = ctx.uid();
-    event.variant = EventVariant::Open;
     // NOTE: time elapsed since system boot, in nanoseconds. Does not include time the system was
     // suspended.
     event.timestamp = unsafe { aya_ebpf::helpers::gen::bpf_ktime_get_ns() };
-    PIPELINE.output(&ctx, event, 0);
-    Ok(0)
 }
 
 #[cfg(not(test))]
