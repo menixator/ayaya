@@ -24,6 +24,7 @@ pub struct Event {
     pub gid: u32,
     pub tgid: u32,
     pub timestamp: u64,
+    pub path_len: usize,
     pub path: [u8; PATH_BUF_MAX],
     pub variant: EventVariant,
 }
@@ -31,5 +32,6 @@ pub struct Event {
 #[derive(Copy, Clone)]
 #[repr(C)]
 pub enum EventVariant {
+    // TODO: add file.f_mode
     Open,
 }
