@@ -26,13 +26,8 @@ pub static PIPELINE: PerfEventArray<Event> = PerfEventArray::new(0);
 #[map]
 pub(crate) static FILTER_PATH: Array<FilterPath> = Array::with_max_entries(1, 0);
 
-/// Allocates a PerCpuArray for a specific type
-macro_rules! alloc {
-    ($static_name:ident, $inner:ty) => {
-        #[map]
-        pub(crate) static $static_name: PerCpuArray<$inner> = PerCpuArray::with_max_entries(1, 0);
-    };
-}
+#[map]
+pub(crate) static BUFFER: PerCpuArray<Event> = PerCpuArray::with_max_entries(1, 0);
 
 #[lsm(hook = "file_open")]
 pub fn file_open(ctx: LsmContext) -> i32 {
@@ -48,8 +43,7 @@ fn try_file_open(ctx: LsmContext) -> Result<i32, i32> {
     // Fetch the file struct being opened
     let file: *const vmlinux::file = unsafe { ctx.arg(0) };
 
-    alloc!(FILE_OPEN_EVENT_BUF, Event);
-    let event = get_event(&FILE_OPEN_EVENT_BUF)?;
+    let event = get_event(&BUFFER)?;
 
     let written = get_path_from_file(file, &mut event.primary_path)?;
     if !matches_filtered_path(&event.primary_path) {
@@ -79,8 +73,7 @@ fn try_path_unlink(ctx: LsmContext) -> Result<i32, i32> {
     let path: *const vmlinux::path = unsafe { ctx.arg(0) };
     let dentry: *const vmlinux::dentry = unsafe { ctx.arg(1) };
 
-    alloc!(PATH_UNLINK_EVENT_BUF, Event);
-    let event = get_event(&PATH_UNLINK_EVENT_BUF)?;
+    let event = get_event(&BUFFER)?;
 
     get_path_from_path(path, &mut event.primary_path)?;
 
@@ -115,8 +108,7 @@ fn try_path_mkdir(ctx: LsmContext) -> Result<i32, i32> {
     let path: *const vmlinux::path = unsafe { ctx.arg(0) };
     let dentry: *const vmlinux::dentry = unsafe { ctx.arg(1) };
 
-    alloc!(PATH_MKDIR_EVENT_BUF, Event);
-    let event = get_event(&PATH_MKDIR_EVENT_BUF)?;
+    let event = get_event(&BUFFER)?;
 
     get_path_from_path(path, &mut event.primary_path)?;
 
@@ -151,9 +143,7 @@ fn try_bprm_creds_for_exec(ctx: LsmContext) -> Result<i32, i32> {
     let binprm: *const vmlinux::linux_binprm = unsafe { ctx.arg(0) };
     let file = unsafe { (*binprm).file };
 
-    alloc!(BPRM_CREDS_FOR_EXEC_EVENT_BUF, Event);
-
-    let event = get_event(&BPRM_CREDS_FOR_EXEC_EVENT_BUF)?;
+    let event = get_event(&BUFFER)?;
 
     get_path_from_file(file, &mut event.primary_path)?;
     if !matches_filtered_path(&event.primary_path) {
@@ -186,9 +176,7 @@ fn try_security_file_permission(ctx: FEntryContext) -> Result<u32, i64> {
     // https://github.com/torvalds/linux/blob/ffd294d346d185b70e28b1a28abe367bbfe53c04/security/selinux/hooks.c#L1957-L2005
     let mask: u32 = unsafe { ctx.arg(1) };
 
-    alloc!(SECURITY_FILE_PERMISSION_EVENT_BUF, Event);
-
-    let event = get_event(&SECURITY_FILE_PERMISSION_EVENT_BUF)?;
+    let event = get_event(&BUFFER)?;
 
     get_path_from_file(file, &mut event.primary_path)?;
     if !matches_filtered_path(&event.primary_path) {
