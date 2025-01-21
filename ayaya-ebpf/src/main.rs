@@ -43,15 +43,18 @@ pub fn file_open(ctx: LsmContext) -> i32 {
     }
 }
 
-#[inline(always)]
-pub fn get_path_from_file(file: *const vmlinux::file, buf: &mut [u8]) -> i64 {
+pub fn get_path_from_file(file: *const vmlinux::file, buf: &mut [u8]) -> Result<usize, i8> {
     // Get a pointer to the file path
     let path = unsafe { &((*file).f_path) as *const _ as *mut aya_ebpf::bindings::path };
     let written = unsafe {
         aya_ebpf::helpers::gen::bpf_d_path(path, buf.as_mut_ptr() as *mut i8, buf.len() as u32)
     };
-    // TODO: Error checking here
-    return written;
+
+    let written = written as usize;
+    if written <= 1 || written >= buf.len() {
+        return Err(-1);
+    }
+    return Ok(written);
 }
 
 // LSM_HOOK(int, 0, file_open, struct file *file)
@@ -66,12 +69,7 @@ fn try_file_open(ctx: LsmContext) -> Result<i32, i32> {
 
     alloc!(FILE_OPEN_EVENT_BUF, Event);
 
-    let written = get_path_from_file(file, &mut event.path);
-    let written = written as usize;
-
-    if written >= PATH_BUF_MAX {
-        return Ok(0);
-    }
+    let written = get_path_from_file(file, &mut event.path)?;
 
     // Get the first element from the FILTER_PATH
     // or early exit with a 0
@@ -82,7 +80,7 @@ fn try_file_open(ctx: LsmContext) -> Result<i32, i32> {
         return Ok(0);
     }
 
-    event.path_len = written-1;
+    event.path_len = written - 1;
 
     let path_as_str = unsafe { core::str::from_utf8_unchecked(&event.path[0..written]) };
     info!(&ctx, "lsm/file_open called for {}", path_as_str);
