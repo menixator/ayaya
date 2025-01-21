@@ -63,12 +63,12 @@ fn try_file_open(ctx: LsmContext) -> Result<i32, i32> {
     // Fetch the file struct being opened
     let file: *const vmlinux::file = unsafe { ctx.arg(0) };
 
+    alloc!(FILE_OPEN_EVENT_BUF, Event);
     let event: &'static mut Event = unsafe {
         let raw_ptr = FILE_OPEN_EVENT_BUF.get_ptr_mut(0).ok_or(0)?;
         core::mem::transmute(raw_ptr)
     };
 
-    alloc!(FILE_OPEN_EVENT_BUF, Event);
 
     let written = get_path_from_file(file, &mut event.path)?;
 
