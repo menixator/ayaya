@@ -30,8 +30,7 @@ pub(crate) static FILTER_PATH: Array<FilterPath> = Array::with_max_entries(1, 0)
 macro_rules! alloc {
     ($static_name:ident, $inner:ty) => {
         #[map]
-        pub(crate) static $static_name: PerCpuArray<$inner> =
-            PerCpuArray::with_max_entries(1, 0);
+        pub(crate) static $static_name: PerCpuArray<$inner> = PerCpuArray::with_max_entries(1, 0);
     };
 }
 
@@ -69,15 +68,8 @@ fn try_file_open(ctx: LsmContext) -> Result<i32, i32> {
         core::mem::transmute(raw_ptr)
     };
 
-
     let written = get_path_from_file(file, &mut event.path)?;
-
-    // Get the first element from the FILTER_PATH
-    // or early exit with a 0
-    let filter_buf = FILTER_PATH.get(0).ok_or(0)?;
-
-    let filter = filter_buf.buf.get(0..filter_buf.length);
-    if event.path.get(0..filter_buf.length) != filter || filter.is_none() {
+    if !matches_filtered_path(&event.path) {
         return Ok(0);
     }
 
@@ -91,6 +83,20 @@ fn try_file_open(ctx: LsmContext) -> Result<i32, i32> {
 
     PIPELINE.output(&ctx, event, 0);
     Ok(0)
+}
+
+fn matches_filtered_path(path: &[u8]) -> bool {
+    // Get the first element from the FILTER_PATH
+    // or early exit with a 0
+    let filter_buf = if let Some(filter_buf) = FILTER_PATH.get(0) {
+        filter_buf
+    } else {
+        return false;
+    };
+
+    let filter = filter_buf.buf.get(0..filter_buf.length);
+
+    return filter.is_some() && path.get(0..filter_buf.length) == filter;
 }
 
 // Fill fields in events from any applicable
