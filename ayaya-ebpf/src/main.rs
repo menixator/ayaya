@@ -102,7 +102,6 @@ pub fn path_unlink(ctx: LsmContext) -> i32 {
 }
 
 fn dentry_name_to_buf(
-    ctx: &LsmContext,
     event: &mut Event,
     dentry: *const vmlinux::dentry,
 ) -> Result<usize, i32> {
@@ -130,7 +129,7 @@ fn try_path_unlink(ctx: LsmContext) -> Result<i32, i32> {
 
     event.path_len = written - 1;
 
-    let filename_len = dentry_name_to_buf(&ctx, event, dentry)?;
+    let filename_len = dentry_name_to_buf(event, dentry)?;
     event.filename_len = filename_len;
 
     let path_as_str = unsafe { core::str::from_utf8_unchecked(&event.path[0..written]) };
