@@ -79,6 +79,8 @@ async fn main() -> anyhow::Result<()> {
     program.load("file_open", &btf)?;
     program.attach()?;
 
+    println!("started");
+
     // try to convert the PERF_ARRAY map to an AsyncPerfEventArray
     let mut perf_array = AsyncPerfEventArray::try_from(ebpf.take_map("PIPELINE").unwrap())?;
 
