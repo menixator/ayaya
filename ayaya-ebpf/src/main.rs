@@ -43,32 +43,6 @@ pub fn file_open(ctx: LsmContext) -> i32 {
     }
 }
 
-#[inline(always)]
-pub fn get_path_from_file(file: *const vmlinux::file, path_buf: &mut PathBuf) -> Result<usize, i8> {
-    // Get a pointer to the file path
-    let path = unsafe { &((*file).f_path) as *const _ };
-    get_path_from_path(path, path_buf)
-}
-
-#[inline(always)]
-pub fn get_path_from_path(path: *const vmlinux::path, path_buf: &mut PathBuf) -> Result<usize, i8> {
-    // Get a pointer to the file path
-    let written = unsafe {
-        aya_ebpf::helpers::gen::bpf_d_path(
-            path as *mut aya_ebpf::bindings::path,
-            path_buf.buf.as_mut_ptr() as *mut i8,
-            path_buf.buf.len() as u32,
-        )
-    };
-
-    let written = written as usize;
-    if written <= 1 || written >= path_buf.buf.len() {
-        return Err(-1);
-    }
-
-    path_buf.len = written;
-    return Ok(written);
-}
 
 // LSM_HOOK(int, 0, file_open, struct file *file)
 fn try_file_open(ctx: LsmContext) -> Result<i32, i32> {
@@ -101,22 +75,6 @@ pub fn path_unlink(ctx: LsmContext) -> i32 {
     }
 }
 
-fn dentry_name_to_buf(
-    dentry: *const vmlinux::dentry,
-    filename: &mut FilenameBuf,
-) -> Result<usize, i32> {
-    let file_name = unsafe { (*dentry).d_name.name };
-    let written = unsafe {
-        aya_ebpf::helpers::bpf_probe_read_kernel_str_bytes(
-            file_name as *const u8,
-            &mut filename.buf,
-        )
-        .map_err(|_| 0)?
-    };
-    filename.len = written.len();
-
-    Ok(written.len())
-}
 
 // LSM_HOOK(int, 0, path_unlink, const struct path *dir, struct dentry *dentry)
 fn try_path_unlink(ctx: LsmContext) -> Result<i32, i32> {
@@ -274,6 +232,50 @@ fn path_buf_as_str(path_buf: &PathBuf) -> &str {
     } else {
         "<PLACEHOLDER>"
     }
+}
+
+fn dentry_name_to_buf(
+    dentry: *const vmlinux::dentry,
+    filename: &mut FilenameBuf,
+) -> Result<usize, i32> {
+    let file_name = unsafe { (*dentry).d_name.name };
+    let written = unsafe {
+        aya_ebpf::helpers::bpf_probe_read_kernel_str_bytes(
+            file_name as *const u8,
+            &mut filename.buf,
+        )
+        .map_err(|_| 0)?
+    };
+    filename.len = written.len();
+
+    Ok(written.len())
+}
+
+#[inline(always)]
+pub fn get_path_from_file(file: *const vmlinux::file, path_buf: &mut PathBuf) -> Result<usize, i8> {
+    // Get a pointer to the file path
+    let path = unsafe { &((*file).f_path) as *const _ };
+    get_path_from_path(path, path_buf)
+}
+
+#[inline(always)]
+pub fn get_path_from_path(path: *const vmlinux::path, path_buf: &mut PathBuf) -> Result<usize, i8> {
+    // Get a pointer to the file path
+    let written = unsafe {
+        aya_ebpf::helpers::gen::bpf_d_path(
+            path as *mut aya_ebpf::bindings::path,
+            path_buf.buf.as_mut_ptr() as *mut i8,
+            path_buf.buf.len() as u32,
+        )
+    };
+
+    let written = written as usize;
+    if written <= 1 || written >= path_buf.buf.len() {
+        return Err(-1);
+    }
+
+    path_buf.len = written;
+    return Ok(written);
 }
 
 #[cfg(not(test))]
