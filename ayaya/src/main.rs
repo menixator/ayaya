@@ -117,6 +117,10 @@ async fn main() -> anyhow::Result<()> {
     program.load("path_rename", &btf)?;
     program.attach()?;
 
+    let program: &mut Lsm = ebpf.program_mut("path_link").unwrap().try_into()?;
+    program.load("path_link", &btf)?;
+    program.attach()?;
+
     let program: &mut FEntry = ebpf
         .program_mut("security_file_permission")
         .unwrap()
