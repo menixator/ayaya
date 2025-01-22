@@ -232,7 +232,7 @@ fn dentry_name_to_buf(
 }
 
 #[inline(always)]
-pub fn get_path_from_path(path: *const vmlinux::path, path_buf: &mut PathBuf) -> Result<usize, i8> {
+pub fn bpf_d_path(path: *const vmlinux::path, path_buf: &mut PathBuf) -> Result<usize, i8> {
     // Get a pointer to the file path
     let written = unsafe {
         aya_ebpf::helpers::gen::bpf_d_path(
@@ -258,7 +258,7 @@ fn split_path_lsm(ctx: &LsmContext, variant: EventVariant) -> Result<&mut Event,
 
     let event = get_event(&BUFFER)?;
 
-    get_path_from_path(path, &mut event.primary_path)?;
+    bpf_d_path(path, &mut event.primary_path)?;
     dentry_name_to_buf(dentry, &mut event.primary_filename)?;
 
     if !matches_filtered_path_no_trailing(&event.primary_path)
@@ -282,7 +282,7 @@ fn generate_event_from_path(
 ) -> Result<&mut Event, i32> {
     let event = get_event(&BUFFER)?;
 
-    get_path_from_path(path, &mut event.primary_path)?;
+    bpf_d_path(path, &mut event.primary_path)?;
 
     if !matches_filtered_path(&event.primary_path) {
         return Err(-4095);
