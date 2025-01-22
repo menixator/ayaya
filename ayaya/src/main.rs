@@ -8,11 +8,17 @@ use anyhow::anyhow;
 use aya::maps::{perf::PerfBufferError, Array, AsyncPerfEventArray};
 use ayaya_common::{Event, FilterPath, PATH_BUF_MAX};
 use bytes::BytesMut;
+use sqlx::PgPool;
 use tokio::signal;
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
     env_logger::init();
+
+    let pool = PgPool::connect(&std::env::var("DATABASE_URL")?).await?;
+
+    // TODO: the migrations along with this macro will be moved to the backend
+    sqlx::migrate!("../migrations").run(&pool).await?;
 
     // Bump the memlock rlimit. This is needed for older kernels that don't use the
     // new memcg based accounting, see https://lwn.net/Articles/837122/
