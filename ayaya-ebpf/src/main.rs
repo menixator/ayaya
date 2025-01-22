@@ -161,6 +161,9 @@ fn get_event(array: &'static PerCpuArray<Event>) -> Result<&'static mut Event, i
         core::mem::transmute(raw_ptr)
     };
 
+    event.primary_filename.len = 0;
+    event.secondary_filename.len = 0;
+
     return Ok(event);
 }
 
