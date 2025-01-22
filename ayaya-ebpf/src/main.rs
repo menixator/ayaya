@@ -35,7 +35,7 @@ pub fn file_open(ctx: LsmContext) -> i32 {
     let file: *const vmlinux::file = unsafe { ctx.arg(0) };
     let path = unsafe { &((*file).f_path) as *const _ };
 
-    match generate_event_from_path(&ctx, path, EventVariant::Open) {
+    match event_from_path(&ctx, path, EventVariant::Open) {
         Ok(event) => {
             let path = path_buf_as_str(&event.primary_path);
             info!(&ctx, "lsm/file_open called for a file in {}", path);
@@ -87,6 +87,25 @@ pub fn path_mkdir(ctx: LsmContext) -> i32 {
     }
 }
 
+// LSM_HOOK(int, 0, path_truncate, const struct path *path)
+#[lsm(hook = "path_truncate")]
+pub fn path_truncate(ctx: LsmContext) -> i32 {
+    let path: *const vmlinux::path = unsafe { ctx.arg(0) };
+            match event_from_path(&ctx, path, EventVariant::Truncate) {
+        Ok(event) => {
+            let path = path_buf_as_str(&event.primary_path);
+            info!(&ctx, "lsm/path_truncate called for a file {}", path);
+            0
+        }
+        Err(ret) => {
+            if ret != -4095 {
+                info!(&ctx, "lsm/path_truncate failed");
+            }
+            0
+        }
+    }
+}
+
 // LSM_HOOK(int, 0, path_rmdir, const struct path *dir, struct dentry *dentry)
 #[lsm(hook = "path_rmdir")]
 pub fn path_rmdir(ctx: LsmContext) -> i32 {
@@ -112,7 +131,7 @@ pub fn bprm_creds_for_exec(ctx: LsmContext) -> i32 {
     let file = unsafe { (*binprm).file };
     let path = unsafe { &((*file).f_path) as *const _ };
 
-    match generate_event_from_path(&ctx, path, EventVariant::Exec) {
+    match event_from_path(&ctx, path, EventVariant::Exec) {
         Ok(event) => {
             let path = path_buf_as_str(&event.primary_path);
             info!(&ctx, "lsm/bprm_creds_for_exec called for a file {}", path);
@@ -137,7 +156,7 @@ pub fn security_file_permission(ctx: FEntryContext) -> i32 {
     // https://github.com/torvalds/linux/blob/ffd294d346d185b70e28b1a28abe367bbfe53c04/security/selinux/hooks.c#L1957-L2005
     let mask: u32 = unsafe { ctx.arg(1) };
 
-    match generate_event_from_path(&ctx, path, EventVariant::ReadOrWrite) {
+    match event_from_path(&ctx, path, EventVariant::ReadOrWrite) {
         Ok(event) => {
             let path = path_buf_as_str(&event.primary_path);
             info!(
@@ -278,7 +297,7 @@ fn split_path_lsm(ctx: &LsmContext, variant: EventVariant) -> Result<&mut Event,
 }
 
 #[inline(always)]
-fn generate_event_from_path(
+fn event_from_path(
     ctx: &impl EbpfContext,
     path: *const vmlinux::path,
     variant: EventVariant,
