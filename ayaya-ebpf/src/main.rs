@@ -124,7 +124,61 @@ pub fn path_rmdir(ctx: LsmContext) -> i32 {
     }
 }
 // LSM_HOOK(int, 0, path_symlink, const struct path *dir, struct dentry *dentry, const char *old_name)
+#[lsm(hook = "path_symlink")]
+pub fn path_symlink(ctx: LsmContext) -> i32 {
+    match try_path_symlink(&ctx) {
+        Ok(event) => {
+            let path = path_buf_as_str(&event.primary_path);
+            info!(&ctx, "lsm/path_symlink called for a file in {}", path);
+            0
+        }
+        // TODO: maybe set it 0 even on fails since this is a tracing program.
+        Err(ret) => {
+            if ret != -4095 {
+                info!(&ctx, "lsm/path_symlink failed");
+            }
+            0
+        }
+    }
+}
 
+fn try_path_symlink(ctx: &LsmContext) -> Result<&'static mut Event, i32> {
+    let event = get_event(&BUFFER)?;
+
+    let primary_path: *const vmlinux::path = unsafe { ctx.arg(0) };
+    let primary_dentry: *const vmlinux::dentry = unsafe { ctx.arg(1) };
+
+    bpf_d_path(primary_path, &mut event.primary_path)?;
+    dentry_name_to_buf(primary_dentry, &mut event.primary_path.filename)?;
+
+    {
+        let old_path: *const u8 = unsafe { ctx.arg(2) };
+        let written = unsafe {
+            aya_ebpf::helpers::bpf_probe_read_kernel_str_bytes(
+                old_path,
+                &mut event.secondary_path.buf,
+            )
+            .map_err(|_| 0)?
+        };
+
+        event.secondary_path.len = written.len();
+    }
+
+    if !matches_filtered_path_no_trailing(&event.primary_path)
+        && !matches_filtered_path(&event.primary_path)
+    {
+        return Err(-4095);
+    }
+
+    event.variant = EventVariant::Symlink;
+    fill_event(event, ctx);
+
+    PIPELINE.output(ctx, event, 0);
+    return Ok(event);
+}
+
+// path_link does provide the old d_entry but since we don't like traversing the dentry tree
+// we will be ignoring it.
 // LSM_HOOK(int, 0, path_link, struct dentry *old_dentry, const struct path *new_dir, struct dentry *new_dentry)
 #[lsm(hook = "path_link")]
 pub fn path_link(ctx: LsmContext) -> i32 {

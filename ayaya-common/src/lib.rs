@@ -65,4 +65,5 @@ pub enum EventVariant {
     Chmod,
     Rename,
     Link,
+    Symlink,
 }
