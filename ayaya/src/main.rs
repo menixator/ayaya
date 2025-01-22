@@ -113,6 +113,10 @@ async fn main() -> anyhow::Result<()> {
     program.load("path_chown", &btf)?;
     program.attach()?;
 
+    let program: &mut Lsm = ebpf.program_mut("path_rename").unwrap().try_into()?;
+    program.load("path_rename", &btf)?;
+    program.attach()?;
+
     let program: &mut FEntry = ebpf
         .program_mut("security_file_permission")
         .unwrap()
@@ -159,7 +163,7 @@ async fn main() -> anyhow::Result<()> {
 
                     //println!("{:#?}", event);
 
-                    let primary_path = build_path(event.primary_path, event.primary_filename);
+                    let primary_path = build_path(event.primary_path);
 
                     println!("{:#?} {}", event.variant, primary_path.display())
                 }
@@ -178,14 +182,13 @@ async fn main() -> anyhow::Result<()> {
     Ok(())
 }
 
-fn build_path(
-    path_buf: ayaya_common::PathBuf,
-    filename_buf: ayaya_common::FilenameBuf,
-) -> std::path::PathBuf {
+fn build_path(path_buf: ayaya_common::PathBuf) -> std::path::PathBuf {
     use std::{ffi::OsStr, os::unix::ffi::OsStrExt};
 
     let path = OsStr::from_bytes(&path_buf.buf[0..path_buf.len]);
     let mut path = std::path::Path::new(path).to_owned();
+
+    let filename_buf = path_buf.filename;
 
     // There might be a filename
     if filename_buf.len > 0 {

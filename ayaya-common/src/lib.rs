@@ -9,6 +9,7 @@ pub const FILENAME_BUF_MAX: usize = 256;
 pub struct PathBuf {
     pub len: usize,
     pub buf: [u8; PATH_BUF_MAX],
+    pub filename: FilenameBuf,
 }
 
 #[cfg_attr(feature = "user", derive(Debug))]
@@ -43,9 +44,7 @@ pub struct Event {
     pub tgid: u32,
     pub timestamp: u64,
     pub primary_path: PathBuf,
-    pub primary_filename: FilenameBuf,
     pub secondary_path: PathBuf,
-    pub secondary_filename: FilenameBuf,
     pub variant: EventVariant,
 }
 
@@ -64,4 +63,5 @@ pub enum EventVariant {
     Truncate,
     Chown,
     Chmod,
+    Rename,
 }

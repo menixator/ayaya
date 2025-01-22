@@ -125,7 +125,57 @@ pub fn path_rmdir(ctx: LsmContext) -> i32 {
 }
 // LSM_HOOK(int, 0, path_symlink, const struct path *dir, struct dentry *dentry, const char *old_name)
 // LSM_HOOK(int, 0, path_link, struct dentry *old_dentry, const struct path *new_dir, struct dentry *new_dentry)
+
 // LSM_HOOK(int, 0, path_rename, const struct path *old_dir, struct dentry *old_dentry, const struct path *new_dir, struct dentry *new_dentry, unsigned int flags)
+#[lsm(hook = "path_rename")]
+pub fn path_rename(ctx: LsmContext) -> i32 {
+    match try_path_rename(&ctx) {
+        Ok(event) => {
+            let path = path_buf_as_str(&event.primary_path);
+            info!(&ctx, "lsm/path_rename called for a file in {}", path);
+            0
+        }
+        // TODO: maybe set it 0 even on fails since this is a tracing program.
+        Err(ret) => {
+            if ret != -4095 {
+                info!(&ctx, "lsm/path_rename failed");
+            }
+            0
+        }
+    }
+}
+
+fn try_path_rename(ctx: &LsmContext) -> Result<&'static mut Event, i32> {
+    let event = get_event(&BUFFER)?;
+
+    // old path
+    let secondary_path: *const vmlinux::path = unsafe { ctx.arg(0) };
+    let secondary_dentry: *const vmlinux::dentry = unsafe { ctx.arg(1) };
+
+    bpf_d_path(secondary_path, &mut event.secondary_path)?;
+    dentry_name_to_buf(secondary_dentry, &mut event.secondary_path.filename)?;
+
+    // new path
+    let primary_path: *const vmlinux::path = unsafe { ctx.arg(2) };
+    let primary_dentry: *const vmlinux::dentry = unsafe { ctx.arg(3) };
+
+    bpf_d_path(primary_path, &mut event.primary_path)?;
+    dentry_name_to_buf(primary_dentry, &mut event.primary_path.filename)?;
+
+    if !matches_filtered_path_no_trailing(&event.primary_path)
+        && !matches_filtered_path(&event.primary_path)
+        && !matches_filtered_path_no_trailing(&event.secondary_path)
+        && !matches_filtered_path(&event.secondary_path)
+    {
+        return Err(-4095);
+    }
+
+    event.variant = EventVariant::Rename;
+    fill_event(event, ctx);
+
+    PIPELINE.output(ctx, event, 0);
+    return Ok(event);
+}
 
 // LSM_HOOK(int, 0, path_chmod, const struct path *path, umode_t mode)
 #[lsm(hook = "path_chmod")]
@@ -225,8 +275,8 @@ fn get_event(array: &'static PerCpuArray<Event>) -> Result<&'static mut Event, i
         core::mem::transmute(raw_ptr)
     };
 
-    event.primary_filename.len = 0;
-    event.secondary_filename.len = 0;
+    event.primary_path.filename.len = 0;
+    event.secondary_path.filename.len = 0;
 
     return Ok(event);
 }
@@ -283,17 +333,17 @@ fn path_buf_as_str(path_buf: &PathBuf) -> &str {
 
 fn dentry_name_to_buf(
     dentry: *const vmlinux::dentry,
-    filename: &mut FilenameBuf,
+    filename_buf: &mut FilenameBuf,
 ) -> Result<usize, i32> {
     let file_name = unsafe { (*dentry).d_name.name };
     let written = unsafe {
         aya_ebpf::helpers::bpf_probe_read_kernel_str_bytes(
             file_name as *const u8,
-            &mut filename.buf,
+            &mut filename_buf.buf,
         )
         .map_err(|_| 0)?
     };
-    filename.len = written.len();
+    filename_buf.len = written.len();
 
     Ok(written.len())
 }
@@ -326,7 +376,7 @@ fn split_path_lsm(ctx: &LsmContext, variant: EventVariant) -> Result<&mut Event,
     let event = get_event(&BUFFER)?;
 
     bpf_d_path(path, &mut event.primary_path)?;
-    dentry_name_to_buf(dentry, &mut event.primary_filename)?;
+    dentry_name_to_buf(dentry, &mut event.primary_path.filename)?;
 
     if !matches_filtered_path_no_trailing(&event.primary_path)
         && !matches_filtered_path(&event.primary_path)
