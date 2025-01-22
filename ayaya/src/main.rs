@@ -179,12 +179,37 @@ async fn main() -> anyhow::Result<()> {
 
                     let primary_path = build_path(event.primary_path);
 
-                    println!("{:#?} {}", event.variant, primary_path.display())
+                    // TODO: invalids to errors
+                    let user = users::get_user_by_uid(event.uid).ok_or_else(|| {
+                        anyhow!("failed to resolve uid({}) into a username", event.uid)
+                    })?;
+                    let username = user.name().to_str().ok_or_else(|| {
+                        anyhow!(
+                            "uid({}) has invalid utf8 sequences in the usernmae",
+                            event.uid
+                        )
+                    })?;
+
+                    let group = users::get_group_by_gid(event.gid).ok_or_else(|| {
+                        anyhow!("failed to resolve gid({}) into a groupname", event.gid)
+                    })?;
+                    let groupname = group.name().to_str().ok_or_else(|| {
+                        anyhow!(
+                            "gid({}) has invalid utf8 sequences in the groupname",
+                            event.gid
+                        )
+                    })?;
+
+                    println!(
+                        "{:#?} {username}:{groupname} {}",
+                        event.variant,
+                        primary_path.display()
+                    )
                 }
             }
 
             #[allow(unreachable_code)]
-            Ok::<_, PerfBufferError>(())
+            Ok::<_, anyhow::Error>(())
         });
     }
 
