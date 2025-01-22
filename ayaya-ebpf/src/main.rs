@@ -91,7 +91,7 @@ pub fn path_mkdir(ctx: LsmContext) -> i32 {
 #[lsm(hook = "path_truncate")]
 pub fn path_truncate(ctx: LsmContext) -> i32 {
     let path: *const vmlinux::path = unsafe { ctx.arg(0) };
-            match event_from_path(&ctx, path, EventVariant::Truncate) {
+    match event_from_path(&ctx, path, EventVariant::Truncate) {
         Ok(event) => {
             let path = path_buf_as_str(&event.primary_path);
             info!(&ctx, "lsm/path_truncate called for a file {}", path);
@@ -118,6 +118,51 @@ pub fn path_rmdir(ctx: LsmContext) -> i32 {
         Err(ret) => {
             if ret != -4095 {
                 info!(&ctx, "lsm/path_rmdir failed");
+            }
+            0
+        }
+    }
+}
+// LSM_HOOK(int, 0, path_symlink, const struct path *dir, struct dentry *dentry, const char *old_name)
+// LSM_HOOK(int, 0, path_link, struct dentry *old_dentry, const struct path *new_dir, struct dentry *new_dentry)
+// LSM_HOOK(int, 0, path_rename, const struct path *old_dir, struct dentry *old_dentry, const struct path *new_dir, struct dentry *new_dentry, unsigned int flags)
+
+// LSM_HOOK(int, 0, path_chmod, const struct path *path, umode_t mode)
+#[lsm(hook = "path_chmod")]
+pub fn path_chmod(ctx: LsmContext) -> i32 {
+    let path: *const vmlinux::path = unsafe { ctx.arg(0) };
+
+    match event_from_path(&ctx, path, EventVariant::Chmod) {
+        Ok(event) => {
+            let path = path_buf_as_str(&event.primary_path);
+            info!(&ctx, "lsm/path_chmod called for a file in {}", path);
+            0
+        }
+        // TODO: maybe set it 0 even on fails since this is a tracing program.
+        Err(ret) => {
+            if ret != -4095 {
+                info!(&ctx, "lsm/path_chmod failed");
+            }
+            0
+        }
+    }
+}
+
+// LSM_HOOK(int, 0, path_chown, const struct path *path, kuid_t uid, kgid_t gid)
+#[lsm(hook = "path_chown")]
+pub fn path_chown(ctx: LsmContext) -> i32 {
+    let path: *const vmlinux::path = unsafe { ctx.arg(0) };
+
+    match event_from_path(&ctx, path, EventVariant::Chown) {
+        Ok(event) => {
+            let path = path_buf_as_str(&event.primary_path);
+            info!(&ctx, "lsm/path_chown called for a file in {}", path);
+            0
+        }
+        // TODO: maybe set it 0 even on fails since this is a tracing program.
+        Err(ret) => {
+            if ret != -4095 {
+                info!(&ctx, "lsm/path_chown failed");
             }
             0
         }

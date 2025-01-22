@@ -61,5 +61,7 @@ pub enum EventVariant {
     Unlink,
     Mkdir,
     Rmdir,
-    Truncate
+    Truncate,
+    Chown,
+    Chmod,
 }

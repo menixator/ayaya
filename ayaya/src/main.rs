@@ -105,6 +105,14 @@ async fn main() -> anyhow::Result<()> {
     program.load("path_truncate", &btf)?;
     program.attach()?;
 
+    let program: &mut Lsm = ebpf.program_mut("path_chmod").unwrap().try_into()?;
+    program.load("path_chmod", &btf)?;
+    program.attach()?;
+
+    let program: &mut Lsm = ebpf.program_mut("path_chown").unwrap().try_into()?;
+    program.load("path_chown", &btf)?;
+    program.attach()?;
+
     let program: &mut FEntry = ebpf
         .program_mut("security_file_permission")
         .unwrap()
