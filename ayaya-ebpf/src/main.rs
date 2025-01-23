@@ -371,6 +371,8 @@ fn get_event(array: &'static PerCpuArray<Event>) -> Result<&'static mut Event, i
 
     event.primary_path.filename.len = 0;
     event.secondary_path.filename.len = 0;
+    event.primary_path.len = 0;
+    event.secondary_path.len = 0;
 
     return Ok(event);
 }
