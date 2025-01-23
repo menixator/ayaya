@@ -11,6 +11,8 @@ use bytes::BytesMut;
 use sqlx::PgPool;
 use tokio::signal;
 
+mod event_proxy;
+
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
     env_logger::init();
@@ -168,64 +170,22 @@ async fn main() -> anyhow::Result<()> {
                     let ptr = buf.as_ptr() as *const Event;
                     let event = unsafe { ptr.read_unaligned() };
 
-                    let primary_path = build_path(event.primary_path);
+                    let primary_path = build_path(event.primary_path)
+                        .ok_or_else(|| anyhow!("primary path of event is missing"))?;
+                    let secondary_path = build_path(event.secondary_path);
 
-                    // TODO: cache
-                    let user = users::get_user_by_uid(event.uid).ok_or_else(|| {
-                        anyhow!("failed to resolve uid({}) into a username", event.uid)
-                    })?;
-                    let username = user.name().to_str().ok_or_else(|| {
-                        anyhow!(
-                            "uid({}) has invalid utf8 sequences in the usernmae",
-                            event.uid
-                        )
-                    })?;
+                    let event_proxy = event_proxy::EventProxy {
+                        pid: event.pid,
+                        uid: event.uid,
+                        gid: event.gid,
+                        tgid: event.tgid,
+                        timestamp: event.timestamp,
+                        primary_path: primary_path,
+                        secondary_path: secondary_path,
+                        variant: event.variant,
+                    };
 
-                    let group = users::get_group_by_gid(event.gid).ok_or_else(|| {
-                        anyhow!("failed to resolve gid({}) into a groupname", event.gid)
-                    })?;
-
-                    let groupname = group.name().to_str().ok_or_else(|| {
-                        anyhow!(
-                            "gid({}) has invalid utf8 sequences in the groupname",
-                            event.gid
-                        )
-                    })?;
-                    use time::{format_description::well_known::Iso8601, OffsetDateTime};
-
-                    // event.timestamp uses bpf_ktime_get_boot_ns. IT DOES include the time that
-                    let uptime = nix::time::clock_gettime(nix::time::ClockId::CLOCK_BOOTTIME)?;
-                    // We're associating the above uptime duration with this utc timestamp
-                    // and pretending that they happened at the same instant.
-                    // There WILL be neglibile differences between the "true" time because these
-                    // are two different calls and the time will drift between events by a
-                    // _neglibile_ amount too. But hey, tradeoffs...
-                    // The alternative is getting a OffsetDateTime to exactly when the system was
-                    // booted and using that as reference but if the time was changed (eg: user
-                    // interverion, ntpd) that will fuck all subsequent events.
-                    let utc_now = time::OffsetDateTime::now_utc();
-
-                    let uptime = time::Duration::new(
-                        uptime.tv_sec(),
-                        uptime
-                            .tv_nsec()
-                            .try_into()
-                            .with_context(|| "uptime nanosecond conversion failure")?,
-                    );
-                    let event_timestamp = time::Duration::nanoseconds(event.timestamp as i64);
-
-                    // TODO: replace offset with a localoffset
-                    let timestamp =
-                        utc_now.to_offset(time::macros::offset!(+5)) - (uptime - event_timestamp);
-
-                    let timestamp = timestamp.format(&Iso8601::DEFAULT)?;
-
-                    println!(
-                        "{} {:#?} {username}:{groupname} {}",
-                        timestamp,
-                        event.variant,
-                        primary_path.display()
-                    )
+                    tokio::task::spawn(async move { process_event(event_proxy) });
                 }
             }
 
@@ -242,8 +202,12 @@ async fn main() -> anyhow::Result<()> {
     Ok(())
 }
 
-fn build_path(path_buf: ayaya_common::PathBuf) -> std::path::PathBuf {
+fn build_path(path_buf: ayaya_common::PathBuf) -> Option<std::path::PathBuf> {
     use std::{ffi::OsStr, os::unix::ffi::OsStrExt};
+
+    if path_buf.len == 0 {
+        return None;
+    }
 
     let path = OsStr::from_bytes(&path_buf.buf[0..path_buf.len]);
     let mut path = std::path::Path::new(path).to_owned();
@@ -255,5 +219,62 @@ fn build_path(path_buf: ayaya_common::PathBuf) -> std::path::PathBuf {
         let filename = OsStr::from_bytes(&filename_buf.buf[0..filename_buf.len]);
         path.push(filename);
     }
-    return path;
+    return Some(path);
+}
+
+fn process_event(event: event_proxy::EventProxy) -> Result<(), anyhow::Error> {
+    // TODO: cache
+    let user = users::get_user_by_uid(event.uid)
+        .ok_or_else(|| anyhow!("failed to resolve uid({}) into a username", event.uid))?;
+    let username = user.name().to_str().ok_or_else(|| {
+        anyhow!(
+            "uid({}) has invalid utf8 sequences in the usernmae",
+            event.uid
+        )
+    })?;
+
+    let group = users::get_group_by_gid(event.gid)
+        .ok_or_else(|| anyhow!("failed to resolve gid({}) into a groupname", event.gid))?;
+
+    let groupname = group.name().to_str().ok_or_else(|| {
+        anyhow!(
+            "gid({}) has invalid utf8 sequences in the groupname",
+            event.gid
+        )
+    })?;
+    use time::{format_description::well_known::Iso8601, OffsetDateTime};
+
+    // event.timestamp uses bpf_ktime_get_boot_ns. IT DOES include the time that
+    let uptime = nix::time::clock_gettime(nix::time::ClockId::CLOCK_BOOTTIME)?;
+    // We're associating the above uptime duration with this utc timestamp
+    // and pretending that they happened at the same instant.
+    // There WILL be neglibile differences between the "true" time because these
+    // are two different calls and the time will drift between events by a
+    // _neglibile_ amount too. But hey, tradeoffs...
+    // The alternative is getting a OffsetDateTime to exactly when the system was
+    // booted and using that as reference but if the time was changed (eg: user
+    // interverion, ntpd) that will fuck all subsequent events.
+    let utc_now = time::OffsetDateTime::now_utc();
+
+    let uptime = time::Duration::new(
+        uptime.tv_sec(),
+        uptime
+            .tv_nsec()
+            .try_into()
+            .with_context(|| "uptime nanosecond conversion failure")?,
+    );
+    let event_timestamp = time::Duration::nanoseconds(event.timestamp as i64);
+
+    // TODO: replace offset with a localoffset
+    let timestamp = utc_now.to_offset(time::macros::offset!(+5)) - (uptime - event_timestamp);
+
+    let timestamp = timestamp.format(&Iso8601::DEFAULT)?;
+
+    println!(
+        "{} {:#?} {username}:{groupname} {}",
+        timestamp,
+        event.variant,
+        event.primary_path.display()
+    );
+    Ok(())
 }
