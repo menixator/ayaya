@@ -140,12 +140,6 @@ async fn main() -> anyhow::Result<()> {
     println!("started");
     println!("event size is {} bytes", std::mem::size_of::<Event>());
 
-    // This is an arbitrary limit. Could not get around it
-    // assert!(
-    //     std::mem::size_of::<Event>() <= 8168,
-    //     "Event size cannot be bigger than 8168."
-    // );
-
     // try to convert the PERF_ARRAY map to an AsyncPerfEventArray
     let mut perf_array = AsyncPerfEventArray::try_from(ebpf.take_map("PIPELINE").unwrap())?;
 
