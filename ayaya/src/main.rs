@@ -79,7 +79,7 @@ async fn main() -> anyhow::Result<()> {
     };
 
     // Copy it into buf
-    (&mut filter.buf[0..filter_path.len()]).copy_from_slice(&filter_path);
+    filter.buf[0..filter_path.len()].copy_from_slice(filter_path);
 
     // Set the first element of FILTER_PATH to the created struct
     array.set(0, filter, 0)?;
@@ -180,8 +180,8 @@ async fn main() -> anyhow::Result<()> {
                         gid: event.gid,
                         tgid: event.tgid,
                         timestamp: event.timestamp,
-                        primary_path: primary_path,
-                        secondary_path: secondary_path,
+                        primary_path,
+                        secondary_path,
                         variant: event.variant,
                     };
 
