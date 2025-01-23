@@ -410,9 +410,9 @@ fn fill_event(event: &mut Event, ctx: &impl EbpfContext) {
     event.gid = ctx.gid();
     event.tgid = ctx.tgid();
     event.uid = ctx.uid();
-    // NOTE: time elapsed since system boot, in nanoseconds. Does not include time the system was
+    // NOTE: time elapsed since system boot, in nanoseconds. DOES include time the system was
     // suspended.
-    event.timestamp = unsafe { aya_ebpf::helpers::gen::bpf_ktime_get_ns() };
+    event.timestamp = unsafe { aya_ebpf::helpers::gen::bpf_ktime_get_boot_ns() };
 }
 
 #[inline(always)]

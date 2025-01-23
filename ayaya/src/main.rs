@@ -4,7 +4,7 @@ use aya::{
 };
 #[rustfmt::skip]
 use log::{debug, warn};
-use anyhow::anyhow;
+use anyhow::{anyhow, Context};
 use aya::maps::{perf::PerfBufferError, Array, AsyncPerfEventArray};
 use ayaya_common::{Event, FilterPath, PATH_BUF_MAX};
 use bytes::BytesMut;
@@ -45,7 +45,6 @@ async fn main() -> anyhow::Result<()> {
     }
 
     let mut array = Array::try_from(ebpf.map_mut("FILTER_PATH").unwrap())?;
-
     use std::os::unix::ffi::OsStrExt;
 
     // The first argument will be the filter path
@@ -151,7 +150,7 @@ async fn main() -> anyhow::Result<()> {
     let mut perf_array = AsyncPerfEventArray::try_from(ebpf.take_map("PIPELINE").unwrap())?;
 
     // getconf PAGESIZE to get PAGESIZE
-    // size of (struct * max_bufferered_events)/ PAGE_SIZE
+    // (size ofstruct * max_bufferered_events)/ PAGE_SIZE
     let optimal_page_count = ((std::mem::size_of::<Event>() * 20) / 4096).next_power_of_two();
 
     for cpu_id in aya::util::online_cpus().map_err(|(_, error)| error)? {
@@ -175,11 +174,9 @@ async fn main() -> anyhow::Result<()> {
                     let ptr = buf.as_ptr() as *const Event;
                     let event = unsafe { ptr.read_unaligned() };
 
-                    //println!("{:#?}", event);
-
                     let primary_path = build_path(event.primary_path);
 
-                    // TODO: invalids to errors
+                    // TODO: cache
                     let user = users::get_user_by_uid(event.uid).ok_or_else(|| {
                         anyhow!("failed to resolve uid({}) into a username", event.uid)
                     })?;
@@ -193,15 +190,45 @@ async fn main() -> anyhow::Result<()> {
                     let group = users::get_group_by_gid(event.gid).ok_or_else(|| {
                         anyhow!("failed to resolve gid({}) into a groupname", event.gid)
                     })?;
+
                     let groupname = group.name().to_str().ok_or_else(|| {
                         anyhow!(
                             "gid({}) has invalid utf8 sequences in the groupname",
                             event.gid
                         )
                     })?;
+                    use time::{format_description::well_known::Iso8601, OffsetDateTime};
+
+                    // event.timestamp uses bpf_ktime_get_boot_ns. IT DOES include the time that
+                    let uptime = nix::time::clock_gettime(nix::time::ClockId::CLOCK_BOOTTIME)?;
+                    // We're associating the above uptime duration with this utc timestamp
+                    // and pretending that they happened at the same instant.
+                    // There WILL be neglibile differences between the "true" time because these
+                    // are two different calls and the time will drift between events by a
+                    // _neglibile_ amount too. But hey, tradeoffs...
+                    // The alternative is getting a OffsetDateTime to exactly when the system was
+                    // booted and using that as reference but if the time was changed (eg: user
+                    // interverion, ntpd) that will fuck all subsequent events.
+                    let utc_now = time::OffsetDateTime::now_utc();
+
+                    let uptime = time::Duration::new(
+                        uptime.tv_sec(),
+                        uptime
+                            .tv_nsec()
+                            .try_into()
+                            .with_context(|| "uptime nanosecond conversion failure")?,
+                    );
+                    let event_timestamp = time::Duration::nanoseconds(event.timestamp as i64);
+
+                    // TODO: replace offset with a localoffset
+                    let timestamp =
+                        utc_now.to_offset(time::macros::offset!(+5)) - (uptime - event_timestamp);
+
+                    let timestamp = timestamp.format(&Iso8601::DEFAULT)?;
 
                     println!(
-                        "{:#?} {username}:{groupname} {}",
+                        "{} {:#?} {username}:{groupname} {}",
+                        timestamp,
                         event.variant,
                         primary_path.display()
                     )
