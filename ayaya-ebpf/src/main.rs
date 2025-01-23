@@ -458,7 +458,7 @@ pub fn bpf_d_path(path: *const vmlinux::path, path_buf: &mut PathBuf) -> Result<
         return Err(-1);
     }
 
-    path_buf.len = written;
+    path_buf.len = written-1;
     return Ok(written);
 }
 
