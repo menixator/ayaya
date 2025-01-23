@@ -153,6 +153,7 @@ async fn main() -> anyhow::Result<()> {
         // open a separate perf buffer for each cpu
         let mut buf = perf_array.open(cpu_id, Some(optimal_page_count))?;
 
+        let pool = pool.clone();
         // process each perf buffer in a separate task
         tokio::task::spawn(async move {
             let mut buffers = (0..10)
@@ -185,7 +186,8 @@ async fn main() -> anyhow::Result<()> {
                         variant: event.variant,
                     };
 
-                    tokio::task::spawn(async move { process_event(event_proxy) });
+                    let pool = pool.clone();
+                    tokio::task::spawn(process_event(pool.clone(), event_proxy));
                 }
             }
 
@@ -221,8 +223,17 @@ fn build_path(path_buf: ayaya_common::PathBuf) -> Option<std::path::PathBuf> {
     }
     return Some(path);
 }
+async fn process_event(pool: sqlx::PgPool, event: event_proxy::EventProxy) -> () {
+    if let Err(e) = try_process_event(pool, event).await {
+        println!("{}", e);
+    }
+    ()
+}
 
-fn process_event(event: event_proxy::EventProxy) -> Result<(), anyhow::Error> {
+async fn try_process_event(
+    pool: sqlx::PgPool,
+    event: event_proxy::EventProxy,
+) -> Result<(), anyhow::Error> {
     // TODO: cache
     let user = users::get_user_by_uid(event.uid)
         .ok_or_else(|| anyhow!("failed to resolve uid({}) into a username", event.uid))?;
@@ -268,7 +279,29 @@ fn process_event(event: event_proxy::EventProxy) -> Result<(), anyhow::Error> {
     // TODO: replace offset with a localoffset
     let timestamp = utc_now.to_offset(time::macros::offset!(+5)) - (uptime - event_timestamp);
 
-    let timestamp = timestamp.format(&Iso8601::DEFAULT)?;
+    // let timestamp = timestamp.format(&Iso8601::DEFAULT)?;
+    sqlx::query!(
+        "INSERT INTO 
+            events(
+                timestamp,
+                username,
+                groupname,
+                event,
+                path,
+                path_secondary
+            )
+            VALUES($1, $2, $3, $4, $5, $6)",
+        timestamp,
+        username,
+        groupname,
+        format!("{:#?}", event.variant),
+        event.primary_path.to_string_lossy().into_owned(),
+        event
+            .secondary_path
+            .map(|v| v.to_string_lossy().into_owned())
+    )
+    .execute(&pool)
+    .await?;
 
     println!(
         "{} {:#?} {username}:{groupname} {}",
