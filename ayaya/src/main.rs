@@ -276,8 +276,7 @@ async fn try_process_event(
     );
     let event_timestamp = time::Duration::nanoseconds(event.timestamp as i64);
 
-    // TODO: replace offset with a localoffset
-    let timestamp = utc_now.to_offset(time::macros::offset!(+5)) - (uptime - event_timestamp);
+    let timestamp = utc_now - (uptime - event_timestamp);
 
     // let timestamp = timestamp.format(&Iso8601::DEFAULT)?;
     sqlx::query!(
