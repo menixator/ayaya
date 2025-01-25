@@ -1,11 +1,9 @@
 use sqlx::PgPool;
 use tonic::{transport::Server, Request, Response, Status};
 
-pub mod ayaya_collection {
-    tonic::include_proto!("ayaya_collection");
-}
+mod grpc;
 
-use ayaya_collection::{
+use grpc::{
     ayaya_trace_collection_server::{AyayaTraceCollection, AyayaTraceCollectionServer},
     CollectRequest, CollectionReply, Trace,
 };
@@ -38,7 +36,7 @@ impl AyayaTraceCollection for TraceCollector {
                 .map_err(|_| {
                     tonic::Status::new(tonic::Code::InvalidArgument, "timestamp is invalid")
                 })?;
-            timestamp
+            let timestamp = timestamp
                 .replace_nanosecond(trace_timestamp.nanos as u32)
                 .map_err(|_| {
                     tonic::Status::new(tonic::Code::InvalidArgument, "timestamp is invalid")
@@ -78,7 +76,7 @@ async fn main() -> Result<(), anyhow::Error> {
 
     // TODO: the migrations along with this macro will be moved to the backend
     sqlx::migrate!("../migrations").run(&pool).await?;
-    let addr = "[::1]:50051".parse()?;
+    let addr = "127.0.0.1:50051".parse()?;
     let service = TraceCollector { pool };
 
     Server::builder()
