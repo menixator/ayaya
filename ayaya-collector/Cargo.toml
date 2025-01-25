@@ -5,6 +5,7 @@ edition = "2021"
 
 [dependencies]
 prost = "0.13.4"
+prost-types = "0.13.4"
 tokio = { workspace = true, features = ["macros", "rt", "rt-multi-thread", "net", "signal"] }
 tonic = "0.12.3"
 
