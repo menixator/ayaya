@@ -5,7 +5,7 @@ use aya::{
 #[rustfmt::skip]
 use log::{debug, warn};
 use anyhow::{anyhow, Context};
-use aya::maps::{perf::PerfBufferError, Array, AsyncPerfEventArray};
+use aya::maps::{Array, AsyncPerfEventArray};
 use ayaya_collector::{
     ayaya_trace_collection_client::AyayaTraceCollectionClient, CollectRequest, Trace,
 };
@@ -280,7 +280,7 @@ fn event_proxy_to_trace(event: event_proxy::EventProxy) -> Result<Trace, anyhow:
             )
         })?
         .to_string();
-    use time::{format_description::well_known::Iso8601, OffsetDateTime};
+    
 
     // event.timestamp uses bpf_ktime_get_boot_ns. IT DOES include the time that
     // system was sleeping for

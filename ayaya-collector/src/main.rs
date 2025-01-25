@@ -1,12 +1,12 @@
 use anyhow::Context;
 use sqlx::PgPool;
-use tonic::{transport::Server, Request, Response, Status};
+use tonic::transport::Server;
 
 mod grpc;
 
 use grpc::{
     ayaya_trace_collection_server::{AyayaTraceCollection, AyayaTraceCollectionServer},
-    CollectRequest, CollectionReply, Trace,
+    CollectRequest, CollectionReply,
 };
 
 #[derive(Debug)]

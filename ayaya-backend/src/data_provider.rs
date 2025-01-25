@@ -1,4 +1,4 @@
-use std::{collections::VecDeque, ops::Range};
+use std::ops::Range;
 
 use leptos::*;
 use leptos_struct_table::*;
