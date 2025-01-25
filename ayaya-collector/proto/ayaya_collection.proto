@@ -18,7 +18,7 @@ message Trace {
     string groupname = 3;
     string event = 4;
     string path = 5;
-    string path_secondary = 6;
+    optional string path_secondary = 6;
 }
 
 message CollectionReply {
