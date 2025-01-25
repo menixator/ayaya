@@ -48,7 +48,7 @@
             "rustfmt"
             "rust-analyzer"
           ];
-          targets = [ "x86_64-unknown-linux-gnu" ];
+          targets = [ "x86_64-unknown-linux-gnu" "wasm32-unknown-unknown" ];
         };
       in
       with pkgs;
@@ -77,22 +77,22 @@
 
             # This script will cater to that with some path precedence abuse
             # and finally ditch rustup.
-            (pkgs.writeShellScriptBin "cargo" ''
-              if [ "$1" == "+nightly" ]; then
-                shift
-                PATH=${nightlyToolchain}/bin:$PATH
-                cargo "$@"
-              else
-                PATH=${toolchain}/bin:$PATH
-                cargo "$@"
-              fi
-            '')
+            #(pkgs.writeShellScriptBin "cargo" ''
+            #  if [ "$1" == "+nightly" ]; then
+            #    shift
+            #    PATH=${nightlyToolchain}/bin:$PATH
+            #    cargo "$@"
+            #  else
+            #    PATH=${toolchain}/bin:$PATH
+            #    cargo "$@"
+            #  fi
+            #'')
 
             pkg-config
             openssl
             gcc
             cmake
-            toolchain
+            #toolchain
             bpf-linker
             bpftools
             cargo-generate
@@ -102,6 +102,7 @@
             (pkgs.callPackage ./nix/cargo-leptos.nix { })
             protobuf
             tailwindcss
+            rustup
           ];
           LIBCLANG_PATH = "${pkgs.llvmPackages_16.libclang.lib}/lib";
           #shellHook= self.checks.${system}.pre-commit-check.shellHook;
