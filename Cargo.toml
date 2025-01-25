@@ -1,6 +1,6 @@
 [workspace]
 resolver = "2"
-members = ["ayaya", "ayaya-common", "ayaya-ebpf", "ayaya-backend"]
+members = ["ayaya", "ayaya-common", "ayaya-ebpf", "ayaya-backend", "ayaya-collector"]
 default-members = ["ayaya", "ayaya-common"]
 
 [workspace.dependencies]
