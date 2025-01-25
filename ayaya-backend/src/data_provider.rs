@@ -11,7 +11,7 @@ use crate::classes::ClassesPreset;
 #[derive(TableRow, Clone, Serialize, Deserialize)]
 #[cfg_attr(feature = "ssr", derive(sqlx::FromRow))]
 #[table(classes_provider = ClassesPreset)]
-pub struct Customer {
+pub struct Event {
     timestamp: ::time::OffsetDateTime,
     username: String,
     groupname: String,
@@ -21,23 +21,21 @@ pub struct Customer {
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
-pub struct CustomerQuery {
+pub struct TraceQuery {
     #[serde(default)]
-    sort: VecDeque<(usize, ColumnSort)>,
     range: Range<usize>,
-    name: String,
+    path_query: String,
     start_timestamp: ::time::OffsetDateTime,
 }
 
 #[server]
-pub async fn list_customers(query: CustomerQuery) -> Result<Vec<Customer>, ServerFnError<String>> {
+pub async fn list_traces(query: TraceQuery) -> Result<Vec<Event>, ServerFnError<String>> {
     use crate::database::get_db;
 
-    let CustomerQuery {
+    let TraceQuery {
         start_timestamp,
-        sort,
         range,
-        name,
+        path_query,
     } = query;
 
     let mut query = QueryBuilder::new(
@@ -45,6 +43,16 @@ pub async fn list_customers(query: CustomerQuery) -> Result<Vec<Customer>, Serve
     );
 
     query.push_bind(start_timestamp);
+
+    if !path_query.is_empty() {
+        query.push(" AND ( path LIKE concat('%', ");
+        query.push_bind(&path_query);
+        query.push(", '%') ");
+
+        query.push(" OR path_secondary LIKE concat('%', ");
+        query.push_bind(&path_query);
+        query.push(", '%') )");
+    }
 
     query.push(" ORDER BY timestamp DESC ");
 
@@ -54,7 +62,7 @@ pub async fn list_customers(query: CustomerQuery) -> Result<Vec<Customer>, Serve
     query.push_bind(range.start as i64);
 
     let rows = query
-        .build_query_as::<Customer>()
+        .build_query_as::<Event>()
         .fetch_all(get_db())
         .await
         .map(|rows| {
@@ -71,7 +79,7 @@ pub async fn list_customers(query: CustomerQuery) -> Result<Vec<Customer>, Serve
 }
 
 #[server]
-pub async fn customer_count() -> Result<usize, ServerFnError<String>> {
+pub async fn trace_count() -> Result<usize, ServerFnError<String>> {
     use crate::database::get_db;
 
     let count: i64 = sqlx::query("SELECT COUNT(*) FROM events")
@@ -83,30 +91,27 @@ pub async fn customer_count() -> Result<usize, ServerFnError<String>> {
     Ok(count as usize)
 }
 
-pub struct CustomerTableDataProvider {
-    sort: VecDeque<(usize, ColumnSort)>,
+pub struct AyayaTableDataProvider {
     pub last_uuid: RwSignal<String>,
-    pub name: RwSignal<String>,
+    pub path_query: RwSignal<String>,
     start_timestamp: ::time::OffsetDateTime,
 }
 
-impl Default for CustomerTableDataProvider {
+impl Default for AyayaTableDataProvider {
     fn default() -> Self {
         Self {
-            sort: Default::default(),
             last_uuid: Default::default(),
-            name: Default::default(),
+            path_query: Default::default(),
             start_timestamp: ::time::OffsetDateTime::now_local()
                 .expect("failed to get local offset"),
         }
     }
 }
 
-impl TableDataProvider<Customer> for CustomerTableDataProvider {
-    async fn get_rows(&self, range: Range<usize>) -> Result<(Vec<Customer>, Range<usize>), String> {
-        list_customers(CustomerQuery {
-            name: self.name.get_untracked().trim().to_string(),
-            sort: self.sort.clone(),
+impl TableDataProvider<Event> for AyayaTableDataProvider {
+    async fn get_rows(&self, range: Range<usize>) -> Result<(Vec<Event>, Range<usize>), String> {
+        list_traces(TraceQuery {
+            path_query: self.path_query.get_untracked().trim().to_string(),
             range: range.clone(),
             start_timestamp: self.start_timestamp,
         })
@@ -119,14 +124,10 @@ impl TableDataProvider<Customer> for CustomerTableDataProvider {
     }
 
     async fn row_count(&self) -> Option<usize> {
-        customer_count().await.ok()
-    }
-
-    fn set_sorting(&mut self, sorting: &VecDeque<(usize, ColumnSort)>) {
-        self.sort = sorting.clone();
+        trace_count().await.ok()
     }
 
     fn track(&self) {
-        self.name.track();
+        self.path_query.track();
     }
 }

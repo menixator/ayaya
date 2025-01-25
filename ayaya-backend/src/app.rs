@@ -4,7 +4,7 @@ use leptos_router::*;
 use leptos_struct_table::*;
 
 use crate::{
-    data_provider::CustomerTableDataProvider,
+    data_provider::AyayaTableDataProvider,
     error_template::{AppError, ErrorTemplate},
 };
 
@@ -17,7 +17,7 @@ pub fn App() -> impl IntoView {
         <Stylesheet id="leptos" href="/pkg/ayaya-backend.css"/>
 
         // sets the document title
-        <Title text="Welcome to Leptos Struct Table"/>
+        <Title text="Ayaya"/>
 
         // content for this welcome page
         <Router fallback=|| {
@@ -39,9 +39,9 @@ pub fn App() -> impl IntoView {
 fn HomePage() -> impl IntoView {
     let scroll_container = create_node_ref::<Div>();
 
-    let rows = CustomerTableDataProvider::default();
+    let rows = AyayaTableDataProvider::default();
 
-    let name = rows.name;
+    let path_query = rows.path_query;
 
     view! {
         <div class="flex flex-col h-[100vh] bg-white">
@@ -62,10 +62,10 @@ fn HomePage() -> impl IntoView {
                     </span>
                     <input
                         class="w-full bg-white placeholder:font-italitc border border-slate-300 rounded-full py-2 pl-10 pr-4 focus:outline-none"
-                        placeholder="Search by name or company"
+                        placeholder="Search by Path"
                         type="text"
-                        value=name
-                        on:change=move |e| name.set(event_target_value(&e))
+                        value=path_query
+                        on:change=move |e| path_query.set(event_target_value(&e))
                     />
                 </label>
             </div>
