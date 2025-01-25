@@ -256,6 +256,7 @@ async fn try_process_event(
     use time::{format_description::well_known::Iso8601, OffsetDateTime};
 
     // event.timestamp uses bpf_ktime_get_boot_ns. IT DOES include the time that
+    // system was sleeping for
     let uptime = nix::time::clock_gettime(nix::time::ClockId::CLOCK_BOOTTIME)?;
     // We're associating the above uptime duration with this utc timestamp
     // and pretending that they happened at the same instant.

@@ -8,6 +8,9 @@ prost = "0.13.4"
 prost-types = "0.13.4"
 tokio = { workspace = true, features = ["macros", "rt", "rt-multi-thread", "net", "signal"] }
 tonic = "0.12.3"
+anyhow = { workspace = true, default-features = true }
+sqlx = { version = "0.8", features = [ "runtime-tokio", "tls-native-tls", "postgres", "derive", "migrate", "time", "uuid" ] }
+time = { version = "0.3.37", features = ["formatting", "macros"] }
 
 [build-dependencies]
 tonic-build = "*"

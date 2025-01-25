@@ -384,8 +384,11 @@ dependencies = [
 name = "ayaya-collector"
 version = "0.1.0"
 dependencies = [
+ "anyhow",
  "prost",
  "prost-types",
+ "sqlx",
+ "time",
  "tokio",
  "tonic",
  "tonic-build",
