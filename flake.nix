@@ -17,23 +17,37 @@
     };
   };
 
-  outputs = { self, nixpkgs, rust-overlay, flake-utils, pre-commit-hooks, ... }:
-    flake-utils.lib.eachDefaultSystem (system:
+  outputs =
+    {
+      self,
+      nixpkgs,
+      rust-overlay,
+      flake-utils,
+      pre-commit-hooks,
+      ...
+    }:
+    flake-utils.lib.eachDefaultSystem (
+      system:
       let
         overlays = [ (import rust-overlay) ];
-        pkgs = import nixpkgs {
-          inherit system overlays;
-        };
+        pkgs = import nixpkgs { inherit system overlays; };
 
         # stable
         toolchainFromFile = (pkgs.rust-bin.fromRustupToolchainFile "${self}/rust-toolchain.toml");
         # nightly 
-        nightlyToolchain = pkgs.rust-bin.selectLatestNightlyWith (toolchain: toolchain.default.override {
-          extensions = ["rust-src"];
-        });
+        nightlyToolchain = pkgs.rust-bin.selectLatestNightlyWith (
+          toolchain: toolchain.default.override { extensions = [ "rust-src" ]; }
+        );
 
         toolchain = toolchainFromFile.override {
-          extensions = [ "rust-src" "rustc" "cargo" "clippy" "rustfmt" "rust-analyzer" ];
+          extensions = [
+            "rust-src"
+            "rustc"
+            "cargo"
+            "clippy"
+            "rustfmt"
+            "rust-analyzer"
+          ];
           targets = [ "x86_64-unknown-linux-gnu" ];
         };
       in
@@ -57,20 +71,37 @@
             openssl
             gcc
             cmake
-            #toolchain
-            #nightlyToolchain
+            toolchain
             bpf-linker
             bpftools
-            rustup
             cargo-generate
             libclang
             # aya-tool missing
             sqlx-cli
-            (pkgs.callPackage ./nix/cargo-leptos.nix {})
+            (pkgs.callPackage ./nix/cargo-leptos.nix { })
             protobuf
             tailwindcss
+            # aya's ebpf component requires nightly to compile. but since rust
+            # does not have a stable ABI, having both nightly and stable is not
+            # a proper usecase for cargo itself - rustup is the one that sort
+            # of caters to this with +nightly. 
 
-            
+            # The aya-based program that loads the ebpf program will call cargo +nightly and 
+            # embed the program within the binary itself.
+
+            # This script will cater to that with some path precedence abuse
+            # and finally ditch rustup.
+            (pkgs.writeShellScriptBin "cargo" ''
+              if [ "$1" == "+nightly" ]; then
+                shift
+                PATH=${nightlyToolchain}/bin:$PATH
+                cargo $@
+              else
+                PATH=${toolchain}/bin:$PATH
+                cargo $@
+              fi
+            '')
+
           ];
           LIBCLANG_PATH = "${pkgs.llvmPackages_16.libclang.lib}/lib";
           #shellHook= self.checks.${system}.pre-commit-check.shellHook;

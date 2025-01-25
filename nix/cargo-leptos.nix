@@ -6,11 +6,7 @@
   stdenv,
 }:
 let
-  inherit (darwin.apple_sdk.frameworks)
-    CoreServices
-    SystemConfiguration
-    Security
-    ;
+  inherit (darwin.apple_sdk.frameworks) CoreServices SystemConfiguration Security;
   inherit (lib) optionals;
   inherit (stdenv.hostPlatform) isDarwin;
 in
