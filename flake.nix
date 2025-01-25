@@ -67,20 +67,6 @@
         devShells.default = mkShell {
           name = "ayaya";
           buildInputs = [
-            pkg-config
-            openssl
-            gcc
-            cmake
-            toolchain
-            bpf-linker
-            bpftools
-            cargo-generate
-            libclang
-            # aya-tool missing
-            sqlx-cli
-            (pkgs.callPackage ./nix/cargo-leptos.nix { })
-            protobuf
-            tailwindcss
             # aya's ebpf component requires nightly to compile. but since rust
             # does not have a stable ABI, having both nightly and stable is not
             # a proper usecase for cargo itself - rustup is the one that sort
@@ -95,13 +81,27 @@
               if [ "$1" == "+nightly" ]; then
                 shift
                 PATH=${nightlyToolchain}/bin:$PATH
-                cargo $@
+                cargo "$@"
               else
                 PATH=${toolchain}/bin:$PATH
-                cargo $@
+                cargo "$@"
               fi
             '')
 
+            pkg-config
+            openssl
+            gcc
+            cmake
+            toolchain
+            bpf-linker
+            bpftools
+            cargo-generate
+            libclang
+            # aya-tool missing
+            sqlx-cli
+            (pkgs.callPackage ./nix/cargo-leptos.nix { })
+            protobuf
+            tailwindcss
           ];
           LIBCLANG_PATH = "${pkgs.llvmPackages_16.libclang.lib}/lib";
           #shellHook= self.checks.${system}.pre-commit-check.shellHook;
