@@ -163,6 +163,7 @@ async fn main() -> anyhow::Result<()> {
                 println!("read {} event(s)", events.read);
                 // events.read contains the number of events that have been read,
                 // and is always <= buffers.len()
+                let mut to_send = Vec::with_capacity(events.read);
                 for buf in buffers.iter_mut().take(events.read) {
                     let ptr = buf.as_ptr() as *const Event;
                     let event = unsafe { ptr.read_unaligned() };
@@ -181,9 +182,10 @@ async fn main() -> anyhow::Result<()> {
                         secondary_path,
                         variant: event.variant,
                     };
-
-                    tokio::task::spawn(process_event(event_proxy));
+                    to_send.push(event_proxy);
                 }
+
+                tokio::task::spawn(process_events(to_send));
             }
 
             #[allow(unreachable_code)]
@@ -218,14 +220,34 @@ fn build_path(path_buf: ayaya_common::PathBuf) -> Option<std::path::PathBuf> {
     }
     return Some(path);
 }
-async fn process_event(event: event_proxy::EventProxy) -> () {
-    if let Err(e) = try_process_event(event).await {
-        println!("{}", e);
+
+async fn process_events(events: Vec<event_proxy::EventProxy>) {
+    if let Err(err) = try_process_events(events).await {
+        eprintln!("failed to process events: {}", err);
     }
-    ()
+}
+async fn try_process_events(events: Vec<event_proxy::EventProxy>) -> Result<(), anyhow::Error> {
+    let mut client = AyayaTraceCollectionClient::connect("http://127.0.0.1:50051").await?;
+
+    let traces = events
+        .into_iter()
+        .map(|event| event_proxy_to_trace(event))
+        .filter_map(|event| match event {
+            Ok(trace) => Some(trace),
+            // Ignoring failed conversions
+            Err(err) => {
+                eprintln!("failed to convert: {}", err);
+                None
+            }
+        })
+        .collect();
+
+    let request = CollectRequest { traces };
+    let response = client.collect(request).await?;
+    Ok(())
 }
 
-async fn try_process_event(event: event_proxy::EventProxy) -> Result<(), anyhow::Error> {
+fn event_proxy_to_trace(event: event_proxy::EventProxy) -> Result<Trace, anyhow::Error> {
     // TODO: cache
     let user = users::get_user_by_uid(event.uid)
         .ok_or_else(|| anyhow!("failed to resolve uid({}) into a username", event.uid))?;
@@ -279,31 +301,19 @@ async fn try_process_event(event: event_proxy::EventProxy) -> Result<(), anyhow:
 
     let timestamp = utc_now - (uptime - event_timestamp);
 
-    let mut client = AyayaTraceCollectionClient::connect("http://127.0.0.1:50051").await?;
     let timestamp = prost_types::Timestamp {
         seconds: timestamp.unix_timestamp(),
         nanos: timestamp.nanosecond() as i32,
     };
 
-    println!(
-        "{} {:#?} {username}:{groupname} {}",
-        timestamp,
-        event.variant,
-        event.primary_path.display()
-    );
-    let request = CollectRequest {
-        traces: vec![Trace {
-            timestamp: Some(timestamp),
-            username,
-            groupname,
-            event: format!("{:#?}", event.variant),
-            path: event.primary_path.to_string_lossy().into_owned(),
-            path_secondary: event
-                .secondary_path
-                .map(|v| v.to_string_lossy().into_owned()),
-        }],
-    };
-
-    let response = client.collect(request).await?;
-    Ok(())
+    Ok(Trace {
+        timestamp: Some(timestamp),
+        username,
+        groupname,
+        event: format!("{:#?}", event.variant),
+        path: event.primary_path.to_string_lossy().into_owned(),
+        path_secondary: event
+            .secondary_path
+            .map(|v| v.to_string_lossy().into_owned()),
+    })
 }
