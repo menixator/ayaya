@@ -51,7 +51,7 @@
         };
 
         devShells.default = mkShell {
-          name = "redhan";
+          name = "ayaya";
           buildInputs = [
             pkg-config
             openssl
@@ -66,7 +66,9 @@
             libclang
             # aya-tool missing
             sqlx-cli
-            cargo-leptos
+            cargo-leptos # TODO: correct the version
+            protobuf
+
             
           ];
           LIBCLANG_PATH = "${pkgs.llvmPackages_16.libclang.lib}/lib";
