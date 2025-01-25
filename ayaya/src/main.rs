@@ -227,7 +227,12 @@ async fn process_events(events: Vec<event_proxy::EventProxy>) {
     }
 }
 async fn try_process_events(events: Vec<event_proxy::EventProxy>) -> Result<(), anyhow::Error> {
-    let mut client = AyayaTraceCollectionClient::connect("http://127.0.0.1:50051").await?;
+    let endpoint = format!(
+        "http://{}",
+        std::env::var("AYAYA_COLLECTOR")
+            .with_context(|| "AYAYA_COLLECTOR env variable is not set")?
+    );
+    let mut client = AyayaTraceCollectionClient::connect(endpoint).await?;
 
     let traces = events
         .into_iter()

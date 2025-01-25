@@ -1,3 +1,4 @@
+use anyhow::Context;
 use sqlx::PgPool;
 use tonic::{transport::Server, Request, Response, Status};
 
@@ -72,11 +73,15 @@ impl AyayaTraceCollection for TraceCollector {
 
 #[tokio::main]
 async fn main() -> Result<(), anyhow::Error> {
-    let pool = PgPool::connect(&std::env::var("DATABASE_URL")?).await?;
+    let pool =
+        PgPool::connect(&std::env::var("DATABASE_URL").with_context(|| "DATABASE_URL is not set")?)
+            .await?;
 
     // TODO: the migrations along with this macro will be moved to the backend
     sqlx::migrate!("../migrations").run(&pool).await?;
-    let addr = "127.0.0.1:50051".parse()?;
+    let addr = std::env::var("AYAYA_COLLECTOR")
+        .with_context(|| "AYAYA_COLLECTOR env variable is not set")?
+        .parse()?;
     let service = TraceCollector { pool };
 
     Server::builder()
