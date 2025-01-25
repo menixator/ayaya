@@ -66,8 +66,9 @@
             libclang
             # aya-tool missing
             sqlx-cli
-            cargo-leptos # TODO: correct the version
+            (pkgs.callPackage ./nix/cargo-leptos.nix {})
             protobuf
+            tailwindcss
 
             
           ];
