@@ -5,7 +5,7 @@ import "google/protobuf/timestamp.proto";
 package ayaya_collection;
 
 service AyayaTraceCollection {
-    rpc Collect (CollectRequest) returns (ColletionReply);
+    rpc Collect (CollectRequest) returns (CollectionReply);
 }
 
 message CollectRequest {
@@ -21,6 +21,6 @@ message Trace {
     string path_secondary = 6;
 }
 
-message ColletionReply {
-  int64  inserted = 1;
+message CollectionReply {
+  int64  count = 1;
 }

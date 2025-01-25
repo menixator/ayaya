@@ -7,7 +7,7 @@ pub mod ayaya_collection {
 
 use ayaya_collection::{
     ayaya_trace_collection_server::{AyayaTraceCollection, AyayaTraceCollectionServer},
-    CollectRequest, ColletionReply, Trace,
+    CollectRequest, CollectionReply, Trace,
 };
 
 #[derive(Debug)]
@@ -20,8 +20,10 @@ impl AyayaTraceCollection for TraceCollector {
     async fn collect(
         &self,
         request: tonic::Request<CollectRequest>,
-    ) -> std::result::Result<tonic::Response<ColletionReply>, tonic::Status> {
+    ) -> std::result::Result<tonic::Response<CollectionReply>, tonic::Status> {
         let message = request.get_ref();
+        let mut count = 0;
+        // TODO: Do a bulk insert
         for trace in message.traces.iter() {
             let trace_timestamp = if let Some(timestamp) = trace.timestamp {
                 timestamp
@@ -44,15 +46,15 @@ impl AyayaTraceCollection for TraceCollector {
 
             sqlx::query!(
                 "INSERT INTO 
-            events(
-                timestamp,
-                username,
-                groupname,
-                event,
-                path,
-                path_secondary
-            )
-            VALUES($1, $2, $3, $4, $5, $6)",
+                events(
+                    timestamp,
+                    username,
+                    groupname,
+                    event,
+                    path,
+                    path_secondary
+                )
+                VALUES($1, $2, $3, $4, $5, $6)",
                 timestamp,
                 trace.username,
                 trace.groupname,
@@ -63,9 +65,10 @@ impl AyayaTraceCollection for TraceCollector {
             .execute(&self.pool)
             .await
             .map_err(|_| tonic::Status::new(tonic::Code::Internal, "failed"))?;
-        }
 
-        unimplemented!()
+            count += 1;
+        }
+        Ok(tonic::Response::new(CollectionReply { count }))
     }
 }
 
