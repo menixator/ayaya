@@ -11,7 +11,6 @@ use ayaya_collector::{
 };
 use ayaya_common::{Event, FilterPath, PATH_BUF_MAX};
 use bytes::BytesMut;
-use sqlx::PgPool;
 use tokio::signal;
 
 mod event_proxy;
@@ -19,11 +18,6 @@ mod event_proxy;
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
     env_logger::init();
-
-    let pool = PgPool::connect(&std::env::var("DATABASE_URL")?).await?;
-
-    // TODO: the migrations along with this macro will be moved to the backend
-    sqlx::migrate!("../migrations").run(&pool).await?;
 
     // Bump the memlock rlimit. This is needed for older kernels that don't use the
     // new memcg based accounting, see https://lwn.net/Articles/837122/
@@ -156,7 +150,6 @@ async fn main() -> anyhow::Result<()> {
         // open a separate perf buffer for each cpu
         let mut buf = perf_array.open(cpu_id, Some(optimal_page_count))?;
 
-        let pool = pool.clone();
         // process each perf buffer in a separate task
         tokio::task::spawn(async move {
             let mut buffers = (0..10)
@@ -189,8 +182,7 @@ async fn main() -> anyhow::Result<()> {
                         variant: event.variant,
                     };
 
-                    let pool = pool.clone();
-                    tokio::task::spawn(process_event(pool.clone(), event_proxy));
+                    tokio::task::spawn(process_event(event_proxy));
                 }
             }
 
@@ -226,17 +218,14 @@ fn build_path(path_buf: ayaya_common::PathBuf) -> Option<std::path::PathBuf> {
     }
     return Some(path);
 }
-async fn process_event(pool: sqlx::PgPool, event: event_proxy::EventProxy) -> () {
-    if let Err(e) = try_process_event(pool, event).await {
+async fn process_event(event: event_proxy::EventProxy) -> () {
+    if let Err(e) = try_process_event(event).await {
         println!("{}", e);
     }
     ()
 }
 
-async fn try_process_event(
-    pool: sqlx::PgPool,
-    event: event_proxy::EventProxy,
-) -> Result<(), anyhow::Error> {
+async fn try_process_event(event: event_proxy::EventProxy) -> Result<(), anyhow::Error> {
     // TODO: cache
     let user = users::get_user_by_uid(event.uid)
         .ok_or_else(|| anyhow!("failed to resolve uid({}) into a username", event.uid))?;

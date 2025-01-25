@@ -376,7 +376,6 @@ dependencies = [
  "log",
  "nix",
  "prost-types",
- "sqlx",
  "time",
  "tokio",
  "users",

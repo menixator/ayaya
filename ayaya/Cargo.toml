@@ -14,7 +14,6 @@ libc = { workspace = true }
 log = { workspace = true }
 tokio = { workspace = true, features = ["macros", "rt", "rt-multi-thread", "net", "signal"] }
 bytes = "1.9.0"
-sqlx = { version = "0.8", features = [ "runtime-tokio", "tls-native-tls", "postgres", "derive", "migrate", "time", "uuid" ] }
 users = "0.11.0"
 time = { version = "0.3.37", features = ["formatting", "macros"] }
 nix = { version = "0.29.0", features = ["time"] }
