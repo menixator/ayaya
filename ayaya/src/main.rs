@@ -6,6 +6,9 @@ use aya::{
 use log::{debug, warn};
 use anyhow::{anyhow, Context};
 use aya::maps::{perf::PerfBufferError, Array, AsyncPerfEventArray};
+use ayaya_collector::{
+    ayaya_trace_collection_client::AyayaTraceCollectionClient, CollectRequest, Trace,
+};
 use ayaya_common::{Event, FilterPath, PATH_BUF_MAX};
 use bytes::BytesMut;
 use sqlx::PgPool;
@@ -237,22 +240,30 @@ async fn try_process_event(
     // TODO: cache
     let user = users::get_user_by_uid(event.uid)
         .ok_or_else(|| anyhow!("failed to resolve uid({}) into a username", event.uid))?;
-    let username = user.name().to_str().ok_or_else(|| {
-        anyhow!(
-            "uid({}) has invalid utf8 sequences in the usernmae",
-            event.uid
-        )
-    })?;
+    let username = user
+        .name()
+        .to_str()
+        .ok_or_else(|| {
+            anyhow!(
+                "uid({}) has invalid utf8 sequences in the usernmae",
+                event.uid
+            )
+        })?
+        .to_string();
 
     let group = users::get_group_by_gid(event.gid)
         .ok_or_else(|| anyhow!("failed to resolve gid({}) into a groupname", event.gid))?;
 
-    let groupname = group.name().to_str().ok_or_else(|| {
-        anyhow!(
-            "gid({}) has invalid utf8 sequences in the groupname",
-            event.gid
-        )
-    })?;
+    let groupname = group
+        .name()
+        .to_str()
+        .ok_or_else(|| {
+            anyhow!(
+                "gid({}) has invalid utf8 sequences in the groupname",
+                event.gid
+            )
+        })?
+        .to_string();
     use time::{format_description::well_known::Iso8601, OffsetDateTime};
 
     // event.timestamp uses bpf_ktime_get_boot_ns. IT DOES include the time that
@@ -279,29 +290,11 @@ async fn try_process_event(
 
     let timestamp = utc_now - (uptime - event_timestamp);
 
-    // let timestamp = timestamp.format(&Iso8601::DEFAULT)?;
-    sqlx::query!(
-        "INSERT INTO 
-            events(
-                timestamp,
-                username,
-                groupname,
-                event,
-                path,
-                path_secondary
-            )
-            VALUES($1, $2, $3, $4, $5, $6)",
-        timestamp,
-        username,
-        groupname,
-        format!("{:#?}", event.variant),
-        event.primary_path.to_string_lossy().into_owned(),
-        event
-            .secondary_path
-            .map(|v| v.to_string_lossy().into_owned())
-    )
-    .execute(&pool)
-    .await?;
+    let mut client = AyayaTraceCollectionClient::connect("http://127.0.0.1:50051").await?;
+    let timestamp = prost_types::Timestamp {
+        seconds: timestamp.unix_timestamp(),
+        nanos: timestamp.nanosecond() as i32,
+    };
 
     println!(
         "{} {:#?} {username}:{groupname} {}",
@@ -309,5 +302,19 @@ async fn try_process_event(
         event.variant,
         event.primary_path.display()
     );
+    let request = CollectRequest {
+        traces: vec![Trace {
+            timestamp: Some(timestamp),
+            username,
+            groupname,
+            event: format!("{:#?}", event.variant),
+            path: event.primary_path.to_string_lossy().into_owned(),
+            path_secondary: event
+                .secondary_path
+                .map(|v| v.to_string_lossy().into_owned()),
+        }],
+    };
+
+    let response = client.collect(request).await?;
     Ok(())
 }

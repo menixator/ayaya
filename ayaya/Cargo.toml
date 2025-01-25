@@ -18,6 +18,8 @@ sqlx = { version = "0.8", features = [ "runtime-tokio", "tls-native-tls", "postg
 users = "0.11.0"
 time = { version = "0.3.37", features = ["formatting", "macros"] }
 nix = { version = "0.29.0", features = ["time"] }
+ayaya-collector = { path = "../ayaya-collector" }
+prost-types = "0.13.4"
 
 [build-dependencies]
 anyhow = { workspace = true }
