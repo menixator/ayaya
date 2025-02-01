@@ -77,16 +77,18 @@
 
             # This script will cater to that with some path precedence abuse
             # and finally ditch rustup.
-            #(pkgs.writeShellScriptBin "cargo" ''
-            #  if [ "$1" == "+nightly" ]; then
-            #    shift
-            #    PATH=${nightlyToolchain}/bin:$PATH
-            #    cargo "$@"
-            #  else
-            #    PATH=${toolchain}/bin:$PATH
-            #    cargo "$@"
-            #  fi
-            #'')
+            (pkgs.writeShellScriptBin "cargo" ''
+              CURRENT_PATH=$(dirname "$0")
+
+              if [ "$1" == "+nightly" ]; then
+                shift
+                PATH=${nightlyToolchain}/bin:$PATH
+                ${nightlyToolchain}/bin/cargo "$@"
+              else
+                PATH=$CURRENT_PATH:${toolchain}/bin:$PATH
+                ${toolchain}/bin/cargo "$@"
+              fi
+            '')
 
             pkg-config
             openssl
