@@ -1704,8 +1704,12 @@ pub struct sched_entity {
     pub run_node: rb_node,
     pub deadline: u64_,
     pub min_vruntime: u64_,
+    pub min_slice: u64_,
     pub group_node: list_head,
-    pub on_rq: ::aya_ebpf::cty::c_uint,
+    pub on_rq: ::aya_ebpf::cty::c_uchar,
+    pub sched_delayed: ::aya_ebpf::cty::c_uchar,
+    pub rel_deadline: ::aya_ebpf::cty::c_uchar,
+    pub custom_slice: ::aya_ebpf::cty::c_uchar,
     pub exec_start: u64_,
     pub sum_exec_runtime: u64_,
     pub prev_sum_exec_runtime: u64_,
@@ -1719,13 +1723,13 @@ pub struct sched_entity {
     pub my_q: *mut cfs_rq,
     pub runnable_weight: ::aya_ebpf::cty::c_ulong,
     pub _bitfield_align_1: [u8; 0],
-    pub _bitfield_1: __BindgenBitfieldUnit<[u8; 16usize]>,
+    pub _bitfield_1: __BindgenBitfieldUnit<[u8; 8usize]>,
     pub avg: sched_avg,
 }
 impl sched_entity {
     #[inline]
-    pub fn new_bitfield_1() -> __BindgenBitfieldUnit<[u8; 16usize]> {
-        let mut __bindgen_bitfield_unit: __BindgenBitfieldUnit<[u8; 16usize]> = Default::default();
+    pub fn new_bitfield_1() -> __BindgenBitfieldUnit<[u8; 8usize]> {
+        let mut __bindgen_bitfield_unit: __BindgenBitfieldUnit<[u8; 8usize]> = Default::default();
         __bindgen_bitfield_unit
     }
 }
@@ -1786,7 +1790,7 @@ pub struct sched_dl_entity {
     pub inactive_timer: hrtimer,
     pub rq: *mut rq,
     pub server_has_tasks: dl_server_has_tasks_f,
-    pub server_pick: dl_server_pick_f,
+    pub server_pick_task: dl_server_pick_f,
     pub pi_se: *mut sched_dl_entity,
 }
 impl sched_dl_entity {
@@ -1956,12 +1960,114 @@ impl sched_dl_entity {
         }
     }
     #[inline]
+    pub fn dl_defer(&self) -> ::aya_ebpf::cty::c_uint {
+        unsafe { ::core::mem::transmute(self._bitfield_1.get(5usize, 1u8) as u32) }
+    }
+    #[inline]
+    pub fn set_dl_defer(&mut self, val: ::aya_ebpf::cty::c_uint) {
+        unsafe {
+            let val: u32 = ::core::mem::transmute(val);
+            self._bitfield_1.set(5usize, 1u8, val as u64)
+        }
+    }
+    #[inline]
+    pub unsafe fn dl_defer_raw(this: *const Self) -> ::aya_ebpf::cty::c_uint {
+        unsafe {
+            ::core::mem::transmute(<__BindgenBitfieldUnit<[u8; 1usize]>>::raw_get(
+                ::core::ptr::addr_of!((*this)._bitfield_1),
+                5usize,
+                1u8,
+            ) as u32)
+        }
+    }
+    #[inline]
+    pub unsafe fn set_dl_defer_raw(this: *mut Self, val: ::aya_ebpf::cty::c_uint) {
+        unsafe {
+            let val: u32 = ::core::mem::transmute(val);
+            <__BindgenBitfieldUnit<[u8; 1usize]>>::raw_set(
+                ::core::ptr::addr_of_mut!((*this)._bitfield_1),
+                5usize,
+                1u8,
+                val as u64,
+            )
+        }
+    }
+    #[inline]
+    pub fn dl_defer_armed(&self) -> ::aya_ebpf::cty::c_uint {
+        unsafe { ::core::mem::transmute(self._bitfield_1.get(6usize, 1u8) as u32) }
+    }
+    #[inline]
+    pub fn set_dl_defer_armed(&mut self, val: ::aya_ebpf::cty::c_uint) {
+        unsafe {
+            let val: u32 = ::core::mem::transmute(val);
+            self._bitfield_1.set(6usize, 1u8, val as u64)
+        }
+    }
+    #[inline]
+    pub unsafe fn dl_defer_armed_raw(this: *const Self) -> ::aya_ebpf::cty::c_uint {
+        unsafe {
+            ::core::mem::transmute(<__BindgenBitfieldUnit<[u8; 1usize]>>::raw_get(
+                ::core::ptr::addr_of!((*this)._bitfield_1),
+                6usize,
+                1u8,
+            ) as u32)
+        }
+    }
+    #[inline]
+    pub unsafe fn set_dl_defer_armed_raw(this: *mut Self, val: ::aya_ebpf::cty::c_uint) {
+        unsafe {
+            let val: u32 = ::core::mem::transmute(val);
+            <__BindgenBitfieldUnit<[u8; 1usize]>>::raw_set(
+                ::core::ptr::addr_of_mut!((*this)._bitfield_1),
+                6usize,
+                1u8,
+                val as u64,
+            )
+        }
+    }
+    #[inline]
+    pub fn dl_defer_running(&self) -> ::aya_ebpf::cty::c_uint {
+        unsafe { ::core::mem::transmute(self._bitfield_1.get(7usize, 1u8) as u32) }
+    }
+    #[inline]
+    pub fn set_dl_defer_running(&mut self, val: ::aya_ebpf::cty::c_uint) {
+        unsafe {
+            let val: u32 = ::core::mem::transmute(val);
+            self._bitfield_1.set(7usize, 1u8, val as u64)
+        }
+    }
+    #[inline]
+    pub unsafe fn dl_defer_running_raw(this: *const Self) -> ::aya_ebpf::cty::c_uint {
+        unsafe {
+            ::core::mem::transmute(<__BindgenBitfieldUnit<[u8; 1usize]>>::raw_get(
+                ::core::ptr::addr_of!((*this)._bitfield_1),
+                7usize,
+                1u8,
+            ) as u32)
+        }
+    }
+    #[inline]
+    pub unsafe fn set_dl_defer_running_raw(this: *mut Self, val: ::aya_ebpf::cty::c_uint) {
+        unsafe {
+            let val: u32 = ::core::mem::transmute(val);
+            <__BindgenBitfieldUnit<[u8; 1usize]>>::raw_set(
+                ::core::ptr::addr_of_mut!((*this)._bitfield_1),
+                7usize,
+                1u8,
+                val as u64,
+            )
+        }
+    }
+    #[inline]
     pub fn new_bitfield_1(
         dl_throttled: ::aya_ebpf::cty::c_uint,
         dl_yielded: ::aya_ebpf::cty::c_uint,
         dl_non_contending: ::aya_ebpf::cty::c_uint,
         dl_overrun: ::aya_ebpf::cty::c_uint,
         dl_server: ::aya_ebpf::cty::c_uint,
+        dl_defer: ::aya_ebpf::cty::c_uint,
+        dl_defer_armed: ::aya_ebpf::cty::c_uint,
+        dl_defer_running: ::aya_ebpf::cty::c_uint,
     ) -> __BindgenBitfieldUnit<[u8; 1usize]> {
         let mut __bindgen_bitfield_unit: __BindgenBitfieldUnit<[u8; 1usize]> = Default::default();
         __bindgen_bitfield_unit.set(0usize, 1u8, {
@@ -1984,8 +2090,53 @@ impl sched_dl_entity {
             let dl_server: u32 = unsafe { ::core::mem::transmute(dl_server) };
             dl_server as u64
         });
+        __bindgen_bitfield_unit.set(5usize, 1u8, {
+            let dl_defer: u32 = unsafe { ::core::mem::transmute(dl_defer) };
+            dl_defer as u64
+        });
+        __bindgen_bitfield_unit.set(6usize, 1u8, {
+            let dl_defer_armed: u32 = unsafe { ::core::mem::transmute(dl_defer_armed) };
+            dl_defer_armed as u64
+        });
+        __bindgen_bitfield_unit.set(7usize, 1u8, {
+            let dl_defer_running: u32 = unsafe { ::core::mem::transmute(dl_defer_running) };
+            dl_defer_running as u64
+        });
         __bindgen_bitfield_unit
     }
+}
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct scx_dsq_list_node {
+    pub node: list_head,
+    pub flags: u32_,
+    pub priv_: u32_,
+}
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct sched_ext_entity {
+    pub dsq: *mut scx_dispatch_q,
+    pub dsq_list: scx_dsq_list_node,
+    pub dsq_priq: rb_node,
+    pub dsq_seq: u32_,
+    pub dsq_flags: u32_,
+    pub flags: u32_,
+    pub weight: u32_,
+    pub sticky_cpu: s32,
+    pub holding_cpu: s32,
+    pub kf_mask: u32_,
+    pub kf_tasks: [*mut task_struct; 2usize],
+    pub ops_state: atomic_long_t,
+    pub runnable_node: list_head,
+    pub runnable_at: ::aya_ebpf::cty::c_ulong,
+    pub core_sched_at: u64_,
+    pub ddsp_dsq_id: u64_,
+    pub ddsp_enq_flags: u64_,
+    pub slice: u64_,
+    pub dsq_vtime: u64_,
+    pub disallow: bool_,
+    pub cgrp_moving_from: *mut cgroup,
+    pub tasks_node: list_head,
 }
 #[repr(C)]
 #[repr(align(4))]
@@ -2908,6 +3059,7 @@ pub struct task_struct {
     pub rt: sched_rt_entity,
     pub dl: sched_dl_entity,
     pub dl_server: *mut sched_dl_entity,
+    pub scx: sched_ext_entity,
     pub sched_class: *const sched_class,
     pub core_node: rb_node,
     pub core_cookie: ::aya_ebpf::cty::c_ulong,
@@ -2916,7 +3068,7 @@ pub struct task_struct {
     pub uclamp_req: [uclamp_se; 2usize],
     pub uclamp: [uclamp_se; 2usize],
     pub _bitfield_align_1: [u8; 0],
-    pub _bitfield_1: __BindgenBitfieldUnit<[u8; 8usize]>,
+    pub _bitfield_1: __BindgenBitfieldUnit<[u8; 56usize]>,
     pub stats: sched_statistics,
     pub preempt_notifiers: hlist_head,
     pub btrace_seq: ::aya_ebpf::cty::c_uint,
@@ -3047,7 +3199,6 @@ pub struct task_struct {
     pub mems_allowed: nodemask_t,
     pub mems_allowed_seq: seqcount_spinlock_t,
     pub cpuset_mem_spread_rotor: ::aya_ebpf::cty::c_int,
-    pub cpuset_slab_spread_rotor: ::aya_ebpf::cty::c_int,
     pub cgroups: *mut css_set,
     pub cg_list: list_head,
     pub closid: u32_,
@@ -3134,16 +3285,9 @@ pub struct task_struct {
     pub kretprobe_instances: llist_head,
     pub rethooks: llist_head,
     pub l1d_flush_kill: callback_head,
-    pub _bitfield_align_4: [u8; 0],
-    pub _bitfield_4: __BindgenBitfieldUnit<[u8; 56usize]>,
     pub thread: thread_struct,
 }
 impl task_struct {
-    #[inline]
-    pub fn new_bitfield_1() -> __BindgenBitfieldUnit<[u8; 8usize]> {
-        let mut __bindgen_bitfield_unit: __BindgenBitfieldUnit<[u8; 8usize]> = Default::default();
-        __bindgen_bitfield_unit
-    }
     #[inline]
     pub fn sched_reset_on_fork(&self) -> ::aya_ebpf::cty::c_uint {
         unsafe { ::core::mem::transmute(self._bitfield_2.get(0usize, 1u8) as u32) }
@@ -4164,8 +4308,8 @@ pub struct ratelimit_state {
     pub burst: ::aya_ebpf::cty::c_int,
     pub printed: ::aya_ebpf::cty::c_int,
     pub missed: ::aya_ebpf::cty::c_int,
+    pub flags: ::aya_ebpf::cty::c_uint,
     pub begin: ::aya_ebpf::cty::c_ulong,
-    pub flags: ::aya_ebpf::cty::c_ulong,
 }
 #[repr(C, packed)]
 #[derive(Debug, Copy, Clone)]
@@ -4931,6 +5075,267 @@ pub union static_call_key__bindgen_ty_1 {
     pub sites: *mut static_call_site,
 }
 pub type cpumask_var_t = [cpumask; 1usize];
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct seqlock_t {
+    pub seqcount: seqcount_spinlock_t,
+    pub lock: spinlock_t,
+}
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct free_area {
+    pub free_list: [list_head; 6usize],
+    pub nr_free: ::aya_ebpf::cty::c_ulong,
+}
+#[repr(C)]
+pub struct zone {
+    pub _watermark: [::aya_ebpf::cty::c_ulong; 4usize],
+    pub watermark_boost: ::aya_ebpf::cty::c_ulong,
+    pub nr_reserved_highatomic: ::aya_ebpf::cty::c_ulong,
+    pub nr_free_highatomic: ::aya_ebpf::cty::c_ulong,
+    pub lowmem_reserve: [::aya_ebpf::cty::c_long; 5usize],
+    pub node: ::aya_ebpf::cty::c_int,
+    pub zone_pgdat: *mut pglist_data,
+    pub per_cpu_pageset: *mut per_cpu_pages,
+    pub per_cpu_zonestats: *mut per_cpu_zonestat,
+    pub pageset_high_min: ::aya_ebpf::cty::c_int,
+    pub pageset_high_max: ::aya_ebpf::cty::c_int,
+    pub pageset_batch: ::aya_ebpf::cty::c_int,
+    pub zone_start_pfn: ::aya_ebpf::cty::c_ulong,
+    pub managed_pages: atomic_long_t,
+    pub spanned_pages: ::aya_ebpf::cty::c_ulong,
+    pub present_pages: ::aya_ebpf::cty::c_ulong,
+    pub present_early_pages: ::aya_ebpf::cty::c_ulong,
+    pub cma_pages: ::aya_ebpf::cty::c_ulong,
+    pub name: *const ::aya_ebpf::cty::c_char,
+    pub nr_isolate_pageblock: ::aya_ebpf::cty::c_ulong,
+    pub span_seqlock: seqlock_t,
+    pub initialized: ::aya_ebpf::cty::c_int,
+    pub _bitfield_align_1: [u8; 0],
+    pub _bitfield_1: __BindgenBitfieldUnit<[u8; 32usize]>,
+    pub __bindgen_padding_0: [u8; 4usize],
+    pub _pad1_: cacheline_padding,
+    pub free_area: [free_area; 11usize],
+    pub unaccepted_pages: list_head,
+    pub flags: ::aya_ebpf::cty::c_ulong,
+    pub lock: spinlock_t,
+    pub _bitfield_align_2: [u8; 0],
+    pub _bitfield_2: __BindgenBitfieldUnit<[u8; 40usize]>,
+    pub __bindgen_padding_1: [u8; 4usize],
+    pub _pad2_: cacheline_padding,
+    pub percpu_drift_mark: ::aya_ebpf::cty::c_ulong,
+    pub compact_cached_free_pfn: ::aya_ebpf::cty::c_ulong,
+    pub compact_cached_migrate_pfn: [::aya_ebpf::cty::c_ulong; 2usize],
+    pub compact_init_migrate_pfn: ::aya_ebpf::cty::c_ulong,
+    pub compact_init_free_pfn: ::aya_ebpf::cty::c_ulong,
+    pub compact_considered: ::aya_ebpf::cty::c_uint,
+    pub compact_defer_shift: ::aya_ebpf::cty::c_uint,
+    pub compact_order_failed: ::aya_ebpf::cty::c_int,
+    pub compact_blockskip_flush: bool_,
+    pub contiguous: bool_,
+    pub __bindgen_padding_2: [u8; 2usize],
+    pub _pad3_: cacheline_padding,
+    pub vm_stat: [atomic_long_t; 12usize],
+    pub vm_numa_event: [atomic_long_t; 6usize],
+    pub _bitfield_align_3: [u8; 0],
+    pub _bitfield_3: __BindgenBitfieldUnit<[u8; 48usize]>,
+}
+impl zone {
+    #[inline]
+    pub fn new_bitfield_1() -> __BindgenBitfieldUnit<[u8; 32usize]> {
+        let mut __bindgen_bitfield_unit: __BindgenBitfieldUnit<[u8; 32usize]> = Default::default();
+        __bindgen_bitfield_unit
+    }
+}
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct zoneref {
+    pub zone: *mut zone,
+    pub zone_idx: ::aya_ebpf::cty::c_int,
+}
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct zonelist {
+    pub _zonerefs: [zoneref; 321usize],
+}
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct wait_queue_head {
+    pub lock: spinlock_t,
+    pub head: list_head,
+}
+pub type wait_queue_head_t = wait_queue_head;
+pub mod zone_type {
+    pub type Type = ::aya_ebpf::cty::c_uint;
+    pub const ZONE_DMA: Type = 0;
+    pub const ZONE_DMA32: Type = 1;
+    pub const ZONE_NORMAL: Type = 2;
+    pub const ZONE_MOVABLE: Type = 3;
+    pub const ZONE_DEVICE: Type = 4;
+    pub const __MAX_NR_ZONES: Type = 5;
+}
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct deferred_split {
+    pub split_queue_lock: spinlock_t,
+    pub split_queue: list_head,
+    pub split_queue_len: ::aya_ebpf::cty::c_ulong,
+}
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct hlist_nulls_node {
+    pub next: *mut hlist_nulls_node,
+    pub pprev: *mut *mut hlist_nulls_node,
+}
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct lru_gen_folio {
+    pub max_seq: ::aya_ebpf::cty::c_ulong,
+    pub min_seq: [::aya_ebpf::cty::c_ulong; 2usize],
+    pub timestamps: [::aya_ebpf::cty::c_ulong; 4usize],
+    pub folios: [list_head; 40usize],
+    pub nr_pages: [::aya_ebpf::cty::c_long; 40usize],
+    pub avg_refaulted: [::aya_ebpf::cty::c_ulong; 8usize],
+    pub avg_total: [::aya_ebpf::cty::c_ulong; 8usize],
+    pub protected: [::aya_ebpf::cty::c_ulong; 6usize],
+    pub evicted: [atomic_long_t; 8usize],
+    pub refaulted: [atomic_long_t; 8usize],
+    pub enabled: bool_,
+    pub gen: u8_,
+    pub seg: u8_,
+    pub list: hlist_nulls_node,
+}
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct lru_gen_mm_state {
+    pub seq: ::aya_ebpf::cty::c_ulong,
+    pub head: *mut list_head,
+    pub tail: *mut list_head,
+    pub filters: [*mut ::aya_ebpf::cty::c_ulong; 2usize],
+    pub stats: [::aya_ebpf::cty::c_ulong; 4usize],
+}
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct zswap_lruvec_state {
+    pub nr_disk_swapins: atomic_long_t,
+}
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct lruvec {
+    pub lists: [list_head; 5usize],
+    pub lru_lock: spinlock_t,
+    pub anon_cost: ::aya_ebpf::cty::c_ulong,
+    pub file_cost: ::aya_ebpf::cty::c_ulong,
+    pub nonresident_age: atomic_long_t,
+    pub refaults: [::aya_ebpf::cty::c_ulong; 2usize],
+    pub flags: ::aya_ebpf::cty::c_ulong,
+    pub lrugen: lru_gen_folio,
+    pub mm_state: lru_gen_mm_state,
+    pub pgdat: *mut pglist_data,
+    pub zswap_lruvec_state: zswap_lruvec_state,
+}
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct lru_gen_mm_walk {
+    pub lruvec: *mut lruvec,
+    pub seq: ::aya_ebpf::cty::c_ulong,
+    pub next_addr: ::aya_ebpf::cty::c_ulong,
+    pub nr_pages: [::aya_ebpf::cty::c_int; 40usize],
+    pub mm_stats: [::aya_ebpf::cty::c_int; 4usize],
+    pub batched: ::aya_ebpf::cty::c_int,
+    pub can_swap: bool_,
+    pub force_scan: bool_,
+}
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct hlist_nulls_head {
+    pub first: *mut hlist_nulls_node,
+}
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct lru_gen_memcg {
+    pub seq: ::aya_ebpf::cty::c_ulong,
+    pub nr_memcgs: [::aya_ebpf::cty::c_ulong; 3usize],
+    pub fifo: [hlist_nulls_head; 24usize],
+    pub lock: spinlock_t,
+}
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct memory_failure_stats {
+    pub total: ::aya_ebpf::cty::c_ulong,
+    pub ignored: ::aya_ebpf::cty::c_ulong,
+    pub failed: ::aya_ebpf::cty::c_ulong,
+    pub delayed: ::aya_ebpf::cty::c_ulong,
+    pub recovered: ::aya_ebpf::cty::c_ulong,
+}
+#[repr(C)]
+pub struct pglist_data {
+    pub node_zones: [zone; 5usize],
+    pub node_zonelists: [zonelist; 2usize],
+    pub nr_zones: ::aya_ebpf::cty::c_int,
+    pub node_size_lock: spinlock_t,
+    pub node_start_pfn: ::aya_ebpf::cty::c_ulong,
+    pub node_present_pages: ::aya_ebpf::cty::c_ulong,
+    pub node_spanned_pages: ::aya_ebpf::cty::c_ulong,
+    pub node_id: ::aya_ebpf::cty::c_int,
+    pub kswapd_wait: wait_queue_head_t,
+    pub pfmemalloc_wait: wait_queue_head_t,
+    pub reclaim_wait: [wait_queue_head_t; 4usize],
+    pub nr_writeback_throttled: atomic_t,
+    pub nr_reclaim_start: ::aya_ebpf::cty::c_ulong,
+    pub kswapd_lock: mutex,
+    pub kswapd: *mut task_struct,
+    pub kswapd_order: ::aya_ebpf::cty::c_int,
+    pub kswapd_highest_zoneidx: zone_type::Type,
+    pub kswapd_failures: ::aya_ebpf::cty::c_int,
+    pub kcompactd_max_order: ::aya_ebpf::cty::c_int,
+    pub kcompactd_highest_zoneidx: zone_type::Type,
+    pub kcompactd_wait: wait_queue_head_t,
+    pub kcompactd: *mut task_struct,
+    pub proactive_compact_trigger: bool_,
+    pub totalreserve_pages: ::aya_ebpf::cty::c_ulong,
+    pub min_unmapped_pages: ::aya_ebpf::cty::c_ulong,
+    pub min_slab_pages: ::aya_ebpf::cty::c_ulong,
+    pub _bitfield_align_1: [u8; 0],
+    pub _bitfield_1: __BindgenBitfieldUnit<[u8; 24usize]>,
+    pub _pad1_: cacheline_padding,
+    pub deferred_split_queue: deferred_split,
+    pub nbp_rl_start: ::aya_ebpf::cty::c_uint,
+    pub nbp_rl_nr_cand: ::aya_ebpf::cty::c_ulong,
+    pub nbp_threshold: ::aya_ebpf::cty::c_uint,
+    pub nbp_th_start: ::aya_ebpf::cty::c_uint,
+    pub nbp_th_nr_cand: ::aya_ebpf::cty::c_ulong,
+    pub __lruvec: lruvec,
+    pub flags: ::aya_ebpf::cty::c_ulong,
+    pub mm_walk: lru_gen_mm_walk,
+    pub memcg_lru: lru_gen_memcg,
+    pub _bitfield_align_2: [u8; 0],
+    pub _bitfield_2: __BindgenBitfieldUnit<[u8; 32usize]>,
+    pub _pad2_: cacheline_padding,
+    pub per_cpu_nodestats: *mut per_cpu_nodestat,
+    pub vm_stat: [atomic_long_t; 47usize],
+    pub memtier: *mut memory_tier,
+    pub mf_stats: memory_failure_stats,
+    pub _bitfield_align_3: [u8; 0],
+    pub _bitfield_3: __BindgenBitfieldUnit<[u8; 16usize]>,
+}
+impl pglist_data {
+    #[inline]
+    pub fn new_bitfield_1() -> __BindgenBitfieldUnit<[u8; 24usize]> {
+        let mut __bindgen_bitfield_unit: __BindgenBitfieldUnit<[u8; 24usize]> = Default::default();
+        __bindgen_bitfield_unit
+    }
+    #[inline]
+    pub fn new_bitfield_2() -> __BindgenBitfieldUnit<[u8; 32usize]> {
+        let mut __bindgen_bitfield_unit: __BindgenBitfieldUnit<[u8; 32usize]> = Default::default();
+        __bindgen_bitfield_unit
+    }
+    #[inline]
+    pub fn new_bitfield_3() -> __BindgenBitfieldUnit<[u8; 16usize]> {
+        let mut __bindgen_bitfield_unit: __BindgenBitfieldUnit<[u8; 16usize]> = Default::default();
+        __bindgen_bitfield_unit
+    }
+}
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct attribute_group {
@@ -6565,6 +6970,7 @@ pub union hw_perf_event__bindgen_ty_1 {
     pub __bindgen_anon_4: hw_perf_event__bindgen_ty_1__bindgen_ty_4,
     pub __bindgen_anon_5: hw_perf_event__bindgen_ty_1__bindgen_ty_5,
     pub __bindgen_anon_6: hw_perf_event__bindgen_ty_1__bindgen_ty_6,
+    pub __bindgen_anon_7: hw_perf_event__bindgen_ty_1__bindgen_ty_7,
 }
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
@@ -6583,28 +6989,33 @@ pub struct hw_perf_event__bindgen_ty_1__bindgen_ty_1 {
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct hw_perf_event__bindgen_ty_1__bindgen_ty_2 {
-    pub hrtimer: hrtimer,
+    pub aux_config: u64_,
 }
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct hw_perf_event__bindgen_ty_1__bindgen_ty_3 {
-    pub tp_list: list_head,
+    pub hrtimer: hrtimer,
 }
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct hw_perf_event__bindgen_ty_1__bindgen_ty_4 {
+    pub tp_list: list_head,
+}
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct hw_perf_event__bindgen_ty_1__bindgen_ty_5 {
     pub pwr_acc: u64_,
     pub ptsc: u64_,
 }
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
-pub struct hw_perf_event__bindgen_ty_1__bindgen_ty_5 {
+pub struct hw_perf_event__bindgen_ty_1__bindgen_ty_6 {
     pub info: arch_hw_breakpoint,
     pub bp_list: rhlist_head,
 }
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
-pub struct hw_perf_event__bindgen_ty_1__bindgen_ty_6 {
+pub struct hw_perf_event__bindgen_ty_1__bindgen_ty_7 {
     pub iommu_bank: u8_,
     pub iommu_cntr: u8_,
     pub padding: u16_,
@@ -6629,13 +7040,6 @@ pub struct hw_perf_event__bindgen_ty_2__bindgen_ty_2 {
     pub saved_metric: u64_,
     pub saved_slots: u64_,
 }
-#[repr(C)]
-#[derive(Copy, Clone)]
-pub struct wait_queue_head {
-    pub lock: spinlock_t,
-    pub head: list_head,
-}
-pub type wait_queue_head_t = wait_queue_head;
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct rcuwait {
@@ -7031,15 +7435,186 @@ pub struct rseq {
     pub end: __IncompleteArrayField<::aya_ebpf::cty::c_char>,
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-pub struct seqlock_t {
-    pub seqcount: seqcount_spinlock_t,
-    pub lock: spinlock_t,
-}
-#[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct kgid_t {
     pub val: gid_t,
+}
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct rhashtable_compare_arg {
+    pub ht: *mut rhashtable,
+    pub key: *const ::aya_ebpf::cty::c_void,
+}
+pub type rht_hashfn_t = ::core::option::Option<
+    unsafe extern "C" fn(arg1: *const ::aya_ebpf::cty::c_void, arg2: u32_, arg3: u32_) -> u32_,
+>;
+pub type rht_obj_hashfn_t = ::core::option::Option<
+    unsafe extern "C" fn(arg1: *const ::aya_ebpf::cty::c_void, arg2: u32_, arg3: u32_) -> u32_,
+>;
+pub type rht_obj_cmpfn_t = ::core::option::Option<
+    unsafe extern "C" fn(
+        arg1: *mut rhashtable_compare_arg,
+        arg2: *const ::aya_ebpf::cty::c_void,
+    ) -> ::aya_ebpf::cty::c_int,
+>;
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct rhashtable_params {
+    pub nelem_hint: u16_,
+    pub key_len: u16_,
+    pub key_offset: u16_,
+    pub head_offset: u16_,
+    pub max_size: ::aya_ebpf::cty::c_uint,
+    pub min_size: u16_,
+    pub automatic_shrinking: bool_,
+    pub hashfn: rht_hashfn_t,
+    pub obj_hashfn: rht_obj_hashfn_t,
+    pub obj_cmpfn: rht_obj_cmpfn_t,
+}
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct rhashtable {
+    pub tbl: *mut bucket_table,
+    pub key_len: ::aya_ebpf::cty::c_uint,
+    pub max_elems: ::aya_ebpf::cty::c_uint,
+    pub p: rhashtable_params,
+    pub rhlist: bool_,
+    pub run_work: work_struct,
+    pub mutex: mutex,
+    pub lock: spinlock_t,
+    pub nelems: atomic_t,
+}
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct scx_dispatch_q {
+    pub lock: raw_spinlock_t,
+    pub list: list_head,
+    pub priq: rb_root,
+    pub nr: u32_,
+    pub seq: u32_,
+    pub id: u64_,
+    pub hash_node: rhash_head,
+    pub free_node: llist_node,
+    pub rcu: callback_head,
+}
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct percpu_ref {
+    pub percpu_count_ptr: ::aya_ebpf::cty::c_ulong,
+    pub data: *mut percpu_ref_data,
+}
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct rcu_work {
+    pub work: work_struct,
+    pub rcu: callback_head,
+    pub wq: *mut workqueue_struct,
+}
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct cgroup_subsys_state {
+    pub cgroup: *mut cgroup,
+    pub ss: *mut cgroup_subsys,
+    pub refcnt: percpu_ref,
+    pub sibling: list_head,
+    pub children: list_head,
+    pub rstat_css_node: list_head,
+    pub id: ::aya_ebpf::cty::c_int,
+    pub flags: ::aya_ebpf::cty::c_uint,
+    pub serial_nr: u64_,
+    pub online_cnt: atomic_t,
+    pub destroy_work: work_struct,
+    pub destroy_rwork: rcu_work,
+    pub parent: *mut cgroup_subsys_state,
+    pub nr_descendants: ::aya_ebpf::cty::c_int,
+}
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct cgroup_file {
+    pub kn: *mut kernfs_node,
+    pub notified_at: ::aya_ebpf::cty::c_ulong,
+    pub notify_timer: timer_list,
+}
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct cgroup_base_stat {
+    pub cputime: task_cputime,
+    pub forceidle_sum: u64_,
+}
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct cgroup_bpf {
+    pub effective: [*mut bpf_prog_array; 38usize],
+    pub progs: [hlist_head; 38usize],
+    pub flags: [u8_; 38usize],
+    pub storages: list_head,
+    pub inactive: *mut bpf_prog_array,
+    pub refcnt: percpu_ref,
+    pub release_work: work_struct,
+}
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct cgroup_freezer_state {
+    pub freeze: bool_,
+    pub e_freeze: ::aya_ebpf::cty::c_int,
+    pub nr_frozen_descendants: ::aya_ebpf::cty::c_int,
+    pub nr_frozen_tasks: ::aya_ebpf::cty::c_int,
+}
+#[repr(C)]
+pub struct cgroup {
+    pub self_: cgroup_subsys_state,
+    pub flags: ::aya_ebpf::cty::c_ulong,
+    pub level: ::aya_ebpf::cty::c_int,
+    pub max_depth: ::aya_ebpf::cty::c_int,
+    pub nr_descendants: ::aya_ebpf::cty::c_int,
+    pub nr_dying_descendants: ::aya_ebpf::cty::c_int,
+    pub max_descendants: ::aya_ebpf::cty::c_int,
+    pub nr_populated_csets: ::aya_ebpf::cty::c_int,
+    pub nr_populated_domain_children: ::aya_ebpf::cty::c_int,
+    pub nr_populated_threaded_children: ::aya_ebpf::cty::c_int,
+    pub nr_threaded_children: ::aya_ebpf::cty::c_int,
+    pub kn: *mut kernfs_node,
+    pub procs_file: cgroup_file,
+    pub events_file: cgroup_file,
+    pub psi_files: [cgroup_file; 4usize],
+    pub subtree_control: u16_,
+    pub subtree_ss_mask: u16_,
+    pub old_subtree_control: u16_,
+    pub old_subtree_ss_mask: u16_,
+    pub subsys: [*mut cgroup_subsys_state; 15usize],
+    pub nr_dying_subsys: [::aya_ebpf::cty::c_int; 15usize],
+    pub root: *mut cgroup_root,
+    pub cset_links: list_head,
+    pub e_csets: [list_head; 15usize],
+    pub dom_cgrp: *mut cgroup,
+    pub old_dom_cgrp: *mut cgroup,
+    pub rstat_cpu: *mut cgroup_rstat_cpu,
+    pub rstat_css_list: list_head,
+    pub _bitfield_align_1: [u8; 0],
+    pub _bitfield_1: __BindgenBitfieldUnit<[u8; 56usize]>,
+    pub _pad_: cacheline_padding,
+    pub rstat_flush_next: *mut cgroup,
+    pub last_bstat: cgroup_base_stat,
+    pub bstat: cgroup_base_stat,
+    pub prev_cputime: prev_cputime,
+    pub pidlists: list_head,
+    pub pidlist_mutex: mutex,
+    pub offline_waitq: wait_queue_head_t,
+    pub release_agent_work: work_struct,
+    pub psi: *mut psi_group,
+    pub bpf: cgroup_bpf,
+    pub freezer: cgroup_freezer_state,
+    pub bpf_cgrp_storage: *mut bpf_local_storage,
+    pub ancestors: __IncompleteArrayField<*mut cgroup>,
+    pub _bitfield_align_2: [u8; 0],
+    pub _bitfield_2: __BindgenBitfieldUnit<[u8; 8usize]>,
+}
+impl cgroup {
+    #[inline]
+    pub fn new_bitfield_2() -> __BindgenBitfieldUnit<[u8; 8usize]> {
+        let mut __bindgen_bitfield_unit: __BindgenBitfieldUnit<[u8; 8usize]> = Default::default();
+        __bindgen_bitfield_unit
+    }
 }
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
@@ -7049,7 +7624,11 @@ pub struct sched_class {
         unsafe extern "C" fn(arg1: *mut rq, arg2: *mut task_struct, arg3: ::aya_ebpf::cty::c_int),
     >,
     pub dequeue_task: ::core::option::Option<
-        unsafe extern "C" fn(arg1: *mut rq, arg2: *mut task_struct, arg3: ::aya_ebpf::cty::c_int),
+        unsafe extern "C" fn(
+            arg1: *mut rq,
+            arg2: *mut task_struct,
+            arg3: ::aya_ebpf::cty::c_int,
+        ) -> bool_,
     >,
     pub yield_task: ::core::option::Option<unsafe extern "C" fn(arg1: *mut rq)>,
     pub yield_to_task: ::core::option::Option<
@@ -7058,19 +7637,22 @@ pub struct sched_class {
     pub wakeup_preempt: ::core::option::Option<
         unsafe extern "C" fn(arg1: *mut rq, arg2: *mut task_struct, arg3: ::aya_ebpf::cty::c_int),
     >,
-    pub pick_next_task:
-        ::core::option::Option<unsafe extern "C" fn(arg1: *mut rq) -> *mut task_struct>,
-    pub put_prev_task:
-        ::core::option::Option<unsafe extern "C" fn(arg1: *mut rq, arg2: *mut task_struct)>,
-    pub set_next_task: ::core::option::Option<
-        unsafe extern "C" fn(arg1: *mut rq, arg2: *mut task_struct, arg3: bool_),
-    >,
     pub balance: ::core::option::Option<
         unsafe extern "C" fn(
             arg1: *mut rq,
             arg2: *mut task_struct,
             arg3: *mut rq_flags,
         ) -> ::aya_ebpf::cty::c_int,
+    >,
+    pub pick_task: ::core::option::Option<unsafe extern "C" fn(arg1: *mut rq) -> *mut task_struct>,
+    pub pick_next_task: ::core::option::Option<
+        unsafe extern "C" fn(arg1: *mut rq, arg2: *mut task_struct) -> *mut task_struct,
+    >,
+    pub put_prev_task: ::core::option::Option<
+        unsafe extern "C" fn(arg1: *mut rq, arg2: *mut task_struct, arg3: *mut task_struct),
+    >,
+    pub set_next_task: ::core::option::Option<
+        unsafe extern "C" fn(arg1: *mut rq, arg2: *mut task_struct, arg3: bool_),
     >,
     pub select_task_rq: ::core::option::Option<
         unsafe extern "C" fn(
@@ -7079,7 +7661,6 @@ pub struct sched_class {
             arg3: ::aya_ebpf::cty::c_int,
         ) -> ::aya_ebpf::cty::c_int,
     >,
-    pub pick_task: ::core::option::Option<unsafe extern "C" fn(arg1: *mut rq) -> *mut task_struct>,
     pub migrate_task_rq: ::core::option::Option<
         unsafe extern "C" fn(arg1: *mut task_struct, arg2: ::aya_ebpf::cty::c_int),
     >,
@@ -7098,10 +7679,15 @@ pub struct sched_class {
     >,
     pub task_fork: ::core::option::Option<unsafe extern "C" fn(arg1: *mut task_struct)>,
     pub task_dead: ::core::option::Option<unsafe extern "C" fn(arg1: *mut task_struct)>,
+    pub switching_to:
+        ::core::option::Option<unsafe extern "C" fn(arg1: *mut rq, arg2: *mut task_struct)>,
     pub switched_from:
         ::core::option::Option<unsafe extern "C" fn(arg1: *mut rq, arg2: *mut task_struct)>,
     pub switched_to:
         ::core::option::Option<unsafe extern "C" fn(arg1: *mut rq, arg2: *mut task_struct)>,
+    pub reweight_task: ::core::option::Option<
+        unsafe extern "C" fn(arg1: *mut rq, arg2: *mut task_struct, arg3: *const load_weight),
+    >,
     pub prio_changed: ::core::option::Option<
         unsafe extern "C" fn(arg1: *mut rq, arg2: *mut task_struct, arg3: ::aya_ebpf::cty::c_int),
     >,
@@ -7373,7 +7959,7 @@ pub struct signal_struct {
     pub _bitfield_align_1: [u8; 0],
     pub _bitfield_1: __BindgenBitfieldUnit<[u8; 1usize]>,
     pub next_posix_timer_id: ::aya_ebpf::cty::c_uint,
-    pub posix_timers: list_head,
+    pub posix_timers: hlist_head,
     pub real_timer: hrtimer,
     pub it_real_incr: ktime_t,
     pub it: [cpu_itimer; 2usize],
@@ -7622,7 +8208,7 @@ pub struct perf_event_context {
     pub pin_count: ::aya_ebpf::cty::c_int,
     pub nr_cgroups: ::aya_ebpf::cty::c_int,
     pub callback_head: callback_head,
-    pub nr_pending: local_t,
+    pub nr_no_switch_fast: local_t,
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -7667,36 +8253,6 @@ pub struct task_delay_info {
 }
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
-pub struct percpu_ref {
-    pub percpu_count_ptr: ::aya_ebpf::cty::c_ulong,
-    pub data: *mut percpu_ref_data,
-}
-#[repr(C)]
-#[derive(Debug, Copy, Clone)]
-pub struct rcu_work {
-    pub work: work_struct,
-    pub rcu: callback_head,
-    pub wq: *mut workqueue_struct,
-}
-#[repr(C)]
-#[derive(Debug, Copy, Clone)]
-pub struct cgroup_subsys_state {
-    pub cgroup: *mut cgroup,
-    pub ss: *mut cgroup_subsys,
-    pub refcnt: percpu_ref,
-    pub sibling: list_head,
-    pub children: list_head,
-    pub rstat_css_node: list_head,
-    pub id: ::aya_ebpf::cty::c_int,
-    pub flags: ::aya_ebpf::cty::c_uint,
-    pub serial_nr: u64_,
-    pub online_cnt: atomic_t,
-    pub destroy_work: work_struct,
-    pub destroy_rwork: rcu_work,
-    pub parent: *mut cgroup_subsys_state,
-}
-#[repr(C)]
-#[derive(Debug, Copy, Clone)]
 pub struct mem_cgroup_id {
     pub id: ::aya_ebpf::cty::c_int,
     pub ref_: refcount_t,
@@ -7715,20 +8271,24 @@ pub struct page_counter {
     pub low_usage: atomic_long_t,
     pub children_low_usage: atomic_long_t,
     pub watermark: ::aya_ebpf::cty::c_ulong,
+    pub local_watermark: ::aya_ebpf::cty::c_ulong,
     pub failcnt: ::aya_ebpf::cty::c_ulong,
+    pub _bitfield_align_2: [u8; 0],
+    pub _bitfield_2: __BindgenBitfieldUnit<[u8; 56usize]>,
     pub _pad2_: cacheline_padding,
+    pub protection_support: bool_,
     pub min: ::aya_ebpf::cty::c_ulong,
     pub low: ::aya_ebpf::cty::c_ulong,
     pub high: ::aya_ebpf::cty::c_ulong,
     pub max: ::aya_ebpf::cty::c_ulong,
     pub parent: *mut page_counter,
-    pub _bitfield_align_2: [u8; 0],
-    pub _bitfield_2: __BindgenBitfieldUnit<[u8; 24usize]>,
+    pub _bitfield_align_3: [u8; 0],
+    pub _bitfield_3: __BindgenBitfieldUnit<[u8; 16usize]>,
 }
 impl page_counter {
     #[inline]
-    pub fn new_bitfield_2() -> __BindgenBitfieldUnit<[u8; 24usize]> {
-        let mut __bindgen_bitfield_unit: __BindgenBitfieldUnit<[u8; 24usize]> = Default::default();
+    pub fn new_bitfield_3() -> __BindgenBitfieldUnit<[u8; 16usize]> {
+        let mut __bindgen_bitfield_unit: __BindgenBitfieldUnit<[u8; 16usize]> = Default::default();
         __bindgen_bitfield_unit
     }
 }
@@ -7743,13 +8303,6 @@ pub struct vmpressure {
     pub events: list_head,
     pub events_lock: mutex,
     pub work: work_struct,
-}
-#[repr(C)]
-#[derive(Debug, Copy, Clone)]
-pub struct cgroup_file {
-    pub kn: *mut kernfs_node,
-    pub notified_at: ::aya_ebpf::cty::c_ulong,
-    pub notify_timer: timer_list,
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -7784,13 +8337,6 @@ pub struct memcg_cgwb_frn {
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
-pub struct deferred_split {
-    pub split_queue_lock: spinlock_t,
-    pub split_queue: list_head,
-    pub split_queue_len: ::aya_ebpf::cty::c_ulong,
-}
-#[repr(C)]
-#[derive(Copy, Clone)]
 pub struct lru_gen_mm_list {
     pub fifo: list_head,
     pub lock: spinlock_t,
@@ -7800,9 +8346,12 @@ pub struct mem_cgroup {
     pub css: cgroup_subsys_state,
     pub id: mem_cgroup_id,
     pub _bitfield_align_1: [u8; 0],
-    pub _bitfield_1: __BindgenBitfieldUnit<[u8; 48usize]>,
+    pub _bitfield_1: __BindgenBitfieldUnit<[u8; 40usize]>,
     pub memory: page_counter,
     pub __bindgen_anon_1: mem_cgroup__bindgen_ty_1,
+    pub memory_peaks: list_head,
+    pub swap_peaks: list_head,
+    pub peaks_lock: spinlock_t,
     pub high_work: work_struct,
     pub zswap_max: ::aya_ebpf::cty::c_ulong,
     pub zswap_writeback: bool_,
@@ -7828,13 +8377,20 @@ pub struct mem_cgroup {
     pub mm_list: lru_gen_mm_list,
     pub nodeinfo: __IncompleteArrayField<*mut mem_cgroup_per_node>,
     pub _bitfield_align_2: [u8; 0],
-    pub _bitfield_2: __BindgenBitfieldUnit<[u8; 56usize]>,
+    pub _bitfield_2: __BindgenBitfieldUnit<[u8; 16usize]>,
 }
 #[repr(C)]
 pub struct mem_cgroup__bindgen_ty_1 {
     pub swap: __BindgenUnionField<page_counter>,
     pub memsw: __BindgenUnionField<page_counter>,
-    pub bindgen_union_field: [u64; 24usize],
+    pub bindgen_union_field: [u64; 32usize],
+}
+impl mem_cgroup {
+    #[inline]
+    pub fn new_bitfield_2() -> __BindgenBitfieldUnit<[u8; 16usize]> {
+        let mut __bindgen_bitfield_unit: __BindgenBitfieldUnit<[u8; 16usize]> = Default::default();
+        __bindgen_bitfield_unit
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -7924,8 +8480,6 @@ pub struct gendisk {
     pub zone_wplugs_lock: spinlock_t,
     pub zone_wplugs_pool: *mut mempool_s,
     pub zone_wplugs_hash: *mut hlist_head,
-    pub zone_wplugs_err_list: list_head,
-    pub zone_wplugs_work: work_struct,
     pub zone_wplugs_wq: *mut workqueue_struct,
     pub cdi: *mut cdrom_device_info,
     pub node_id: ::aya_ebpf::cty::c_int,
@@ -8041,18 +8595,23 @@ pub struct uid_gid_extent {
 #[repr(C)]
 #[derive(Copy, Clone)]
 pub struct uid_gid_map {
-    pub nr_extents: u32_,
     pub __bindgen_anon_1: uid_gid_map__bindgen_ty_1,
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
 pub union uid_gid_map__bindgen_ty_1 {
-    pub extent: [uid_gid_extent; 5usize],
     pub __bindgen_anon_1: uid_gid_map__bindgen_ty_1__bindgen_ty_1,
+    pub __bindgen_anon_2: uid_gid_map__bindgen_ty_1__bindgen_ty_2,
 }
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct uid_gid_map__bindgen_ty_1__bindgen_ty_1 {
+    pub extent: [uid_gid_extent; 5usize],
+    pub nr_extents: u32_,
+}
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct uid_gid_map__bindgen_ty_1__bindgen_ty_2 {
     pub forward: *mut uid_gid_extent,
     pub reverse: *mut uid_gid_extent,
 }
@@ -8156,17 +8715,6 @@ pub struct kstat {
     pub atomic_write_unit_min: u32_,
     pub atomic_write_unit_max: u32_,
     pub atomic_write_segments_max: u32_,
-}
-#[repr(C)]
-#[derive(Debug, Copy, Clone)]
-pub struct hlist_nulls_head {
-    pub first: *mut hlist_nulls_node,
-}
-#[repr(C)]
-#[derive(Debug, Copy, Clone)]
-pub struct hlist_nulls_node {
-    pub next: *mut hlist_nulls_node,
-    pub pprev: *mut *mut hlist_nulls_node,
 }
 pub type wait_queue_func_t = ::core::option::Option<
     unsafe extern "C" fn(
@@ -8536,14 +9084,10 @@ pub struct folio__bindgen_ty_3__bindgen_ty_2 {
     pub _deferred_list: list_head,
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-pub struct fown_struct {
-    pub lock: rwlock_t,
-    pub pid: *mut pid,
-    pub pid_type: pid_type::Type,
-    pub uid: kuid_t,
-    pub euid: kuid_t,
-    pub signum: ::aya_ebpf::cty::c_int,
+#[derive(Debug, Copy, Clone)]
+pub struct path {
+    pub mnt: *mut vfsmount,
+    pub dentry: *mut dentry,
 }
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
@@ -8557,40 +9101,45 @@ pub struct file_ra_state {
 }
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
-pub struct path {
-    pub mnt: *mut vfsmount,
-    pub dentry: *mut dentry,
+pub struct freeptr_t {
+    pub v: ::aya_ebpf::cty::c_ulong,
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
 pub struct file {
-    pub __bindgen_anon_1: file__bindgen_ty_1,
+    pub f_count: atomic_long_t,
     pub f_lock: spinlock_t,
     pub f_mode: fmode_t,
-    pub f_count: atomic_long_t,
-    pub f_pos_lock: mutex,
-    pub f_pos: loff_t,
-    pub f_flags: ::aya_ebpf::cty::c_uint,
-    pub f_owner: fown_struct,
-    pub f_cred: *const cred,
-    pub f_ra: file_ra_state,
-    pub f_path: path,
-    pub f_inode: *mut inode,
     pub f_op: *const file_operations,
-    pub f_version: u64_,
-    pub f_security: *mut ::aya_ebpf::cty::c_void,
-    pub private_data: *mut ::aya_ebpf::cty::c_void,
-    pub f_ep: *mut hlist_head,
     pub f_mapping: *mut address_space,
+    pub private_data: *mut ::aya_ebpf::cty::c_void,
+    pub f_inode: *mut inode,
+    pub f_flags: ::aya_ebpf::cty::c_uint,
+    pub f_iocb_flags: ::aya_ebpf::cty::c_uint,
+    pub f_cred: *const cred,
+    pub f_path: path,
+    pub __bindgen_anon_1: file__bindgen_ty_1,
+    pub f_pos: loff_t,
+    pub f_security: *mut ::aya_ebpf::cty::c_void,
+    pub f_owner: *mut fown_struct,
     pub f_wb_err: errseq_t,
     pub f_sb_err: errseq_t,
+    pub f_ep: *mut hlist_head,
+    pub __bindgen_anon_2: file__bindgen_ty_2,
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
 pub union file__bindgen_ty_1 {
+    pub f_pos_lock: mutex,
+    pub f_pipe: u64_,
+}
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub union file__bindgen_ty_2 {
     pub f_task_work: callback_head,
     pub f_llist: llist_node,
-    pub f_iocb_flags: ::aya_ebpf::cty::c_uint,
+    pub f_ra: file_ra_state,
+    pub f_freeptr: freeptr_t,
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -8773,228 +9322,6 @@ pub union vm_fault__bindgen_ty_2 {
     pub orig_pmd: pmd_t,
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
-pub struct zswap_lruvec_state {
-    pub nr_zswap_protected: atomic_long_t,
-}
-#[repr(C)]
-#[derive(Debug, Copy, Clone)]
-pub struct free_area {
-    pub free_list: [list_head; 6usize],
-    pub nr_free: ::aya_ebpf::cty::c_ulong,
-}
-#[repr(C)]
-#[derive(Debug, Copy, Clone)]
-pub struct lru_gen_folio {
-    pub max_seq: ::aya_ebpf::cty::c_ulong,
-    pub min_seq: [::aya_ebpf::cty::c_ulong; 2usize],
-    pub timestamps: [::aya_ebpf::cty::c_ulong; 4usize],
-    pub folios: [list_head; 40usize],
-    pub nr_pages: [::aya_ebpf::cty::c_long; 40usize],
-    pub avg_refaulted: [::aya_ebpf::cty::c_ulong; 8usize],
-    pub avg_total: [::aya_ebpf::cty::c_ulong; 8usize],
-    pub protected: [::aya_ebpf::cty::c_ulong; 6usize],
-    pub evicted: [atomic_long_t; 8usize],
-    pub refaulted: [atomic_long_t; 8usize],
-    pub enabled: bool_,
-    pub gen: u8_,
-    pub seg: u8_,
-    pub list: hlist_nulls_node,
-}
-#[repr(C)]
-#[derive(Debug, Copy, Clone)]
-pub struct lru_gen_mm_state {
-    pub seq: ::aya_ebpf::cty::c_ulong,
-    pub head: *mut list_head,
-    pub tail: *mut list_head,
-    pub filters: [*mut ::aya_ebpf::cty::c_ulong; 2usize],
-    pub stats: [::aya_ebpf::cty::c_ulong; 6usize],
-}
-#[repr(C)]
-#[derive(Debug, Copy, Clone)]
-pub struct lru_gen_mm_walk {
-    pub lruvec: *mut lruvec,
-    pub seq: ::aya_ebpf::cty::c_ulong,
-    pub next_addr: ::aya_ebpf::cty::c_ulong,
-    pub nr_pages: [::aya_ebpf::cty::c_int; 40usize],
-    pub mm_stats: [::aya_ebpf::cty::c_int; 6usize],
-    pub batched: ::aya_ebpf::cty::c_int,
-    pub can_swap: bool_,
-    pub force_scan: bool_,
-}
-#[repr(C)]
-#[derive(Copy, Clone)]
-pub struct lruvec {
-    pub lists: [list_head; 5usize],
-    pub lru_lock: spinlock_t,
-    pub anon_cost: ::aya_ebpf::cty::c_ulong,
-    pub file_cost: ::aya_ebpf::cty::c_ulong,
-    pub nonresident_age: atomic_long_t,
-    pub refaults: [::aya_ebpf::cty::c_ulong; 2usize],
-    pub flags: ::aya_ebpf::cty::c_ulong,
-    pub lrugen: lru_gen_folio,
-    pub mm_state: lru_gen_mm_state,
-    pub pgdat: *mut pglist_data,
-    pub zswap_lruvec_state: zswap_lruvec_state,
-}
-#[repr(C)]
-#[derive(Copy, Clone)]
-pub struct lru_gen_memcg {
-    pub seq: ::aya_ebpf::cty::c_ulong,
-    pub nr_memcgs: [::aya_ebpf::cty::c_ulong; 3usize],
-    pub fifo: [hlist_nulls_head; 24usize],
-    pub lock: spinlock_t,
-}
-#[repr(C)]
-pub struct zone {
-    pub _watermark: [::aya_ebpf::cty::c_ulong; 4usize],
-    pub watermark_boost: ::aya_ebpf::cty::c_ulong,
-    pub nr_reserved_highatomic: ::aya_ebpf::cty::c_ulong,
-    pub lowmem_reserve: [::aya_ebpf::cty::c_long; 5usize],
-    pub node: ::aya_ebpf::cty::c_int,
-    pub zone_pgdat: *mut pglist_data,
-    pub per_cpu_pageset: *mut per_cpu_pages,
-    pub per_cpu_zonestats: *mut per_cpu_zonestat,
-    pub pageset_high_min: ::aya_ebpf::cty::c_int,
-    pub pageset_high_max: ::aya_ebpf::cty::c_int,
-    pub pageset_batch: ::aya_ebpf::cty::c_int,
-    pub zone_start_pfn: ::aya_ebpf::cty::c_ulong,
-    pub managed_pages: atomic_long_t,
-    pub spanned_pages: ::aya_ebpf::cty::c_ulong,
-    pub present_pages: ::aya_ebpf::cty::c_ulong,
-    pub present_early_pages: ::aya_ebpf::cty::c_ulong,
-    pub cma_pages: ::aya_ebpf::cty::c_ulong,
-    pub name: *const ::aya_ebpf::cty::c_char,
-    pub nr_isolate_pageblock: ::aya_ebpf::cty::c_ulong,
-    pub span_seqlock: seqlock_t,
-    pub initialized: ::aya_ebpf::cty::c_int,
-    pub _bitfield_align_1: [u8; 0],
-    pub _bitfield_1: __BindgenBitfieldUnit<[u8; 40usize]>,
-    pub __bindgen_padding_0: [u8; 4usize],
-    pub _pad1_: cacheline_padding,
-    pub free_area: [free_area; 11usize],
-    pub unaccepted_pages: list_head,
-    pub flags: ::aya_ebpf::cty::c_ulong,
-    pub lock: spinlock_t,
-    pub _bitfield_align_2: [u8; 0],
-    pub _bitfield_2: __BindgenBitfieldUnit<[u8; 40usize]>,
-    pub __bindgen_padding_1: [u8; 4usize],
-    pub _pad2_: cacheline_padding,
-    pub percpu_drift_mark: ::aya_ebpf::cty::c_ulong,
-    pub compact_cached_free_pfn: ::aya_ebpf::cty::c_ulong,
-    pub compact_cached_migrate_pfn: [::aya_ebpf::cty::c_ulong; 2usize],
-    pub compact_init_migrate_pfn: ::aya_ebpf::cty::c_ulong,
-    pub compact_init_free_pfn: ::aya_ebpf::cty::c_ulong,
-    pub compact_considered: ::aya_ebpf::cty::c_uint,
-    pub compact_defer_shift: ::aya_ebpf::cty::c_uint,
-    pub compact_order_failed: ::aya_ebpf::cty::c_int,
-    pub compact_blockskip_flush: bool_,
-    pub contiguous: bool_,
-    pub __bindgen_padding_2: [u8; 2usize],
-    pub _pad3_: cacheline_padding,
-    pub vm_stat: [atomic_long_t; 12usize],
-    pub vm_numa_event: [atomic_long_t; 6usize],
-    pub _bitfield_align_3: [u8; 0],
-    pub _bitfield_3: __BindgenBitfieldUnit<[u8; 48usize]>,
-}
-#[repr(C)]
-#[derive(Debug, Copy, Clone)]
-pub struct zoneref {
-    pub zone: *mut zone,
-    pub zone_idx: ::aya_ebpf::cty::c_int,
-}
-#[repr(C)]
-#[derive(Debug, Copy, Clone)]
-pub struct zonelist {
-    pub _zonerefs: [zoneref; 321usize],
-}
-pub mod zone_type {
-    pub type Type = ::aya_ebpf::cty::c_uint;
-    pub const ZONE_DMA: Type = 0;
-    pub const ZONE_DMA32: Type = 1;
-    pub const ZONE_NORMAL: Type = 2;
-    pub const ZONE_MOVABLE: Type = 3;
-    pub const ZONE_DEVICE: Type = 4;
-    pub const __MAX_NR_ZONES: Type = 5;
-}
-#[repr(C)]
-#[derive(Debug, Copy, Clone)]
-pub struct memory_failure_stats {
-    pub total: ::aya_ebpf::cty::c_ulong,
-    pub ignored: ::aya_ebpf::cty::c_ulong,
-    pub failed: ::aya_ebpf::cty::c_ulong,
-    pub delayed: ::aya_ebpf::cty::c_ulong,
-    pub recovered: ::aya_ebpf::cty::c_ulong,
-}
-#[repr(C)]
-pub struct pglist_data {
-    pub node_zones: [zone; 5usize],
-    pub node_zonelists: [zonelist; 2usize],
-    pub nr_zones: ::aya_ebpf::cty::c_int,
-    pub node_size_lock: spinlock_t,
-    pub node_start_pfn: ::aya_ebpf::cty::c_ulong,
-    pub node_present_pages: ::aya_ebpf::cty::c_ulong,
-    pub node_spanned_pages: ::aya_ebpf::cty::c_ulong,
-    pub node_id: ::aya_ebpf::cty::c_int,
-    pub kswapd_wait: wait_queue_head_t,
-    pub pfmemalloc_wait: wait_queue_head_t,
-    pub reclaim_wait: [wait_queue_head_t; 4usize],
-    pub nr_writeback_throttled: atomic_t,
-    pub nr_reclaim_start: ::aya_ebpf::cty::c_ulong,
-    pub kswapd_lock: mutex,
-    pub kswapd: *mut task_struct,
-    pub kswapd_order: ::aya_ebpf::cty::c_int,
-    pub kswapd_highest_zoneidx: zone_type::Type,
-    pub kswapd_failures: ::aya_ebpf::cty::c_int,
-    pub kcompactd_max_order: ::aya_ebpf::cty::c_int,
-    pub kcompactd_highest_zoneidx: zone_type::Type,
-    pub kcompactd_wait: wait_queue_head_t,
-    pub kcompactd: *mut task_struct,
-    pub proactive_compact_trigger: bool_,
-    pub totalreserve_pages: ::aya_ebpf::cty::c_ulong,
-    pub min_unmapped_pages: ::aya_ebpf::cty::c_ulong,
-    pub min_slab_pages: ::aya_ebpf::cty::c_ulong,
-    pub _bitfield_align_1: [u8; 0],
-    pub _bitfield_1: __BindgenBitfieldUnit<[u8; 24usize]>,
-    pub _pad1_: cacheline_padding,
-    pub deferred_split_queue: deferred_split,
-    pub nbp_rl_start: ::aya_ebpf::cty::c_uint,
-    pub nbp_rl_nr_cand: ::aya_ebpf::cty::c_ulong,
-    pub nbp_threshold: ::aya_ebpf::cty::c_uint,
-    pub nbp_th_start: ::aya_ebpf::cty::c_uint,
-    pub nbp_th_nr_cand: ::aya_ebpf::cty::c_ulong,
-    pub __lruvec: lruvec,
-    pub flags: ::aya_ebpf::cty::c_ulong,
-    pub mm_walk: lru_gen_mm_walk,
-    pub memcg_lru: lru_gen_memcg,
-    pub _bitfield_align_2: [u8; 0],
-    pub _bitfield_2: __BindgenBitfieldUnit<[u8; 8usize]>,
-    pub _pad2_: cacheline_padding,
-    pub per_cpu_nodestats: *mut per_cpu_nodestat,
-    pub vm_stat: [atomic_long_t; 47usize],
-    pub memtier: *mut memory_tier,
-    pub mf_stats: memory_failure_stats,
-    pub _bitfield_align_3: [u8; 0],
-    pub _bitfield_3: __BindgenBitfieldUnit<[u8; 16usize]>,
-}
-impl pglist_data {
-    #[inline]
-    pub fn new_bitfield_1() -> __BindgenBitfieldUnit<[u8; 24usize]> {
-        let mut __bindgen_bitfield_unit: __BindgenBitfieldUnit<[u8; 24usize]> = Default::default();
-        __bindgen_bitfield_unit
-    }
-    #[inline]
-    pub fn new_bitfield_2() -> __BindgenBitfieldUnit<[u8; 8usize]> {
-        let mut __bindgen_bitfield_unit: __BindgenBitfieldUnit<[u8; 8usize]> = Default::default();
-        __bindgen_bitfield_unit
-    }
-    #[inline]
-    pub fn new_bitfield_3() -> __BindgenBitfieldUnit<[u8; 16usize]> {
-        let mut __bindgen_bitfield_unit: __BindgenBitfieldUnit<[u8; 16usize]> = Default::default();
-        __bindgen_bitfield_unit
-    }
-}
-#[repr(C)]
 #[derive(Copy, Clone)]
 pub struct per_cpu_pages {
     pub lock: spinlock_t,
@@ -9074,51 +9401,6 @@ pub struct ctl_table_root {
 }
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
-pub struct rhashtable_compare_arg {
-    pub ht: *mut rhashtable,
-    pub key: *const ::aya_ebpf::cty::c_void,
-}
-pub type rht_hashfn_t = ::core::option::Option<
-    unsafe extern "C" fn(arg1: *const ::aya_ebpf::cty::c_void, arg2: u32_, arg3: u32_) -> u32_,
->;
-pub type rht_obj_hashfn_t = ::core::option::Option<
-    unsafe extern "C" fn(arg1: *const ::aya_ebpf::cty::c_void, arg2: u32_, arg3: u32_) -> u32_,
->;
-pub type rht_obj_cmpfn_t = ::core::option::Option<
-    unsafe extern "C" fn(
-        arg1: *mut rhashtable_compare_arg,
-        arg2: *const ::aya_ebpf::cty::c_void,
-    ) -> ::aya_ebpf::cty::c_int,
->;
-#[repr(C)]
-#[derive(Debug, Copy, Clone)]
-pub struct rhashtable_params {
-    pub nelem_hint: u16_,
-    pub key_len: u16_,
-    pub key_offset: u16_,
-    pub head_offset: u16_,
-    pub max_size: ::aya_ebpf::cty::c_uint,
-    pub min_size: u16_,
-    pub automatic_shrinking: bool_,
-    pub hashfn: rht_hashfn_t,
-    pub obj_hashfn: rht_obj_hashfn_t,
-    pub obj_cmpfn: rht_obj_cmpfn_t,
-}
-#[repr(C)]
-#[derive(Copy, Clone)]
-pub struct rhashtable {
-    pub tbl: *mut bucket_table,
-    pub key_len: ::aya_ebpf::cty::c_uint,
-    pub max_elems: ::aya_ebpf::cty::c_uint,
-    pub p: rhashtable_params,
-    pub rhlist: bool_,
-    pub run_work: work_struct,
-    pub mutex: mutex,
-    pub lock: spinlock_t,
-    pub nelems: atomic_t,
-}
-#[repr(C)]
-#[derive(Debug, Copy, Clone)]
 pub struct iovec {
     pub iov_base: *mut ::aya_ebpf::cty::c_void,
     pub iov_len: __kernel_size_t,
@@ -9135,6 +9417,25 @@ pub struct bio_vec {
     pub bv_page: *mut page,
     pub bv_len: ::aya_ebpf::cty::c_uint,
     pub bv_offset: ::aya_ebpf::cty::c_uint,
+}
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct folio_batch {
+    pub nr: ::aya_ebpf::cty::c_uchar,
+    pub i: ::aya_ebpf::cty::c_uchar,
+    pub percpu_pvec_drained: bool_,
+    pub folios: [*mut folio; 31usize],
+}
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct folio_queue {
+    pub vec: folio_batch,
+    pub orders: [u8_; 31usize],
+    pub next: *mut folio_queue,
+    pub prev: *mut folio_queue,
+    pub marks: ::aya_ebpf::cty::c_ulong,
+    pub marks2: ::aya_ebpf::cty::c_ulong,
+    pub marks3: ::aya_ebpf::cty::c_ulong,
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -9164,6 +9465,7 @@ pub union iov_iter__bindgen_ty_1__bindgen_ty_1__bindgen_ty_1 {
     pub __iov: *const iovec,
     pub kvec: *const kvec,
     pub bvec: *const bio_vec,
+    pub folioq: *const folio_queue,
     pub xarray: *mut xarray,
     pub ubuf: *mut ::aya_ebpf::cty::c_void,
 }
@@ -9171,6 +9473,7 @@ pub union iov_iter__bindgen_ty_1__bindgen_ty_1__bindgen_ty_1 {
 #[derive(Copy, Clone)]
 pub union iov_iter__bindgen_ty_2 {
     pub nr_segs: ::aya_ebpf::cty::c_ulong,
+    pub folioq_slot: u8_,
     pub xarray_start: loff_t,
 }
 #[repr(C)]
@@ -10391,6 +10694,39 @@ impl sk_buff__bindgen_ty_4__bindgen_ty_1 {
         }
     }
     #[inline]
+    pub fn unreadable(&self) -> __u8 {
+        unsafe { ::core::mem::transmute(self._bitfield_2.get(29usize, 1u8) as u8) }
+    }
+    #[inline]
+    pub fn set_unreadable(&mut self, val: __u8) {
+        unsafe {
+            let val: u8 = ::core::mem::transmute(val);
+            self._bitfield_2.set(29usize, 1u8, val as u64)
+        }
+    }
+    #[inline]
+    pub unsafe fn unreadable_raw(this: *const Self) -> __u8 {
+        unsafe {
+            ::core::mem::transmute(<__BindgenBitfieldUnit<[u8; 4usize]>>::raw_get(
+                ::core::ptr::addr_of!((*this)._bitfield_2),
+                29usize,
+                1u8,
+            ) as u8)
+        }
+    }
+    #[inline]
+    pub unsafe fn set_unreadable_raw(this: *mut Self, val: __u8) {
+        unsafe {
+            let val: u8 = ::core::mem::transmute(val);
+            <__BindgenBitfieldUnit<[u8; 4usize]>>::raw_set(
+                ::core::ptr::addr_of_mut!((*this)._bitfield_2),
+                29usize,
+                1u8,
+                val as u64,
+            )
+        }
+    }
+    #[inline]
     pub fn new_bitfield_2(
         tstamp_type: __u8,
         tc_at_ingress: __u8,
@@ -10418,6 +10754,7 @@ impl sk_buff__bindgen_ty_4__bindgen_ty_1 {
         decrypted: __u8,
         slow_gro: __u8,
         csum_not_inet: __u8,
+        unreadable: __u8,
     ) -> __BindgenBitfieldUnit<[u8; 4usize]> {
         let mut __bindgen_bitfield_unit: __BindgenBitfieldUnit<[u8; 4usize]> = Default::default();
         __bindgen_bitfield_unit.set(0usize, 2u8, {
@@ -10523,6 +10860,10 @@ impl sk_buff__bindgen_ty_4__bindgen_ty_1 {
         __bindgen_bitfield_unit.set(28usize, 1u8, {
             let csum_not_inet: u8 = unsafe { ::core::mem::transmute(csum_not_inet) };
             csum_not_inet as u64
+        });
+        __bindgen_bitfield_unit.set(29usize, 1u8, {
+            let unreadable: u8 = unsafe { ::core::mem::transmute(unreadable) };
+            unreadable as u64
         });
         __bindgen_bitfield_unit
     }
@@ -11652,6 +11993,39 @@ impl sk_buff__bindgen_ty_4__bindgen_ty_2 {
         }
     }
     #[inline]
+    pub fn unreadable(&self) -> __u8 {
+        unsafe { ::core::mem::transmute(self._bitfield_2.get(29usize, 1u8) as u8) }
+    }
+    #[inline]
+    pub fn set_unreadable(&mut self, val: __u8) {
+        unsafe {
+            let val: u8 = ::core::mem::transmute(val);
+            self._bitfield_2.set(29usize, 1u8, val as u64)
+        }
+    }
+    #[inline]
+    pub unsafe fn unreadable_raw(this: *const Self) -> __u8 {
+        unsafe {
+            ::core::mem::transmute(<__BindgenBitfieldUnit<[u8; 4usize]>>::raw_get(
+                ::core::ptr::addr_of!((*this)._bitfield_2),
+                29usize,
+                1u8,
+            ) as u8)
+        }
+    }
+    #[inline]
+    pub unsafe fn set_unreadable_raw(this: *mut Self, val: __u8) {
+        unsafe {
+            let val: u8 = ::core::mem::transmute(val);
+            <__BindgenBitfieldUnit<[u8; 4usize]>>::raw_set(
+                ::core::ptr::addr_of_mut!((*this)._bitfield_2),
+                29usize,
+                1u8,
+                val as u64,
+            )
+        }
+    }
+    #[inline]
     pub fn new_bitfield_2(
         tstamp_type: __u8,
         tc_at_ingress: __u8,
@@ -11679,6 +12053,7 @@ impl sk_buff__bindgen_ty_4__bindgen_ty_2 {
         decrypted: __u8,
         slow_gro: __u8,
         csum_not_inet: __u8,
+        unreadable: __u8,
     ) -> __BindgenBitfieldUnit<[u8; 4usize]> {
         let mut __bindgen_bitfield_unit: __BindgenBitfieldUnit<[u8; 4usize]> = Default::default();
         __bindgen_bitfield_unit.set(0usize, 2u8, {
@@ -11784,6 +12159,10 @@ impl sk_buff__bindgen_ty_4__bindgen_ty_2 {
         __bindgen_bitfield_unit.set(28usize, 1u8, {
             let csum_not_inet: u8 = unsafe { ::core::mem::transmute(csum_not_inet) };
             csum_not_inet as u64
+        });
+        __bindgen_bitfield_unit.set(29usize, 1u8, {
+            let unreadable: u8 = unsafe { ::core::mem::transmute(unreadable) };
+            unreadable as u64
         });
         __bindgen_bitfield_unit
     }
@@ -12180,7 +12559,7 @@ pub struct inode {
     pub i_blkbits: u8_,
     pub i_write_hint: rw_hint::Type,
     pub i_blocks: blkcnt_t,
-    pub i_state: ::aya_ebpf::cty::c_ulong,
+    pub i_state: u32_,
     pub i_rwsem: rw_semaphore,
     pub dirtied_when: ::aya_ebpf::cty::c_ulong,
     pub dirtied_time_when: ::aya_ebpf::cty::c_ulong,
@@ -12405,7 +12784,7 @@ pub struct super_block {
     pub s_time_gran: u32_,
     pub s_time_min: time64_t,
     pub s_time_max: time64_t,
-    pub s_fsnotify_mask: __u32,
+    pub s_fsnotify_mask: u32_,
     pub s_fsnotify_info: *mut fsnotify_sb_info,
     pub s_id: [::aya_ebpf::cty::c_char; 32usize],
     pub s_uuid: uuid_t,
@@ -12540,84 +12919,6 @@ pub struct exception_table_entry {
     pub insn: ::aya_ebpf::cty::c_int,
     pub fixup: ::aya_ebpf::cty::c_int,
     pub data: ::aya_ebpf::cty::c_int,
-}
-#[repr(C)]
-#[derive(Debug, Copy, Clone)]
-pub struct cgroup_base_stat {
-    pub cputime: task_cputime,
-    pub forceidle_sum: u64_,
-}
-#[repr(C)]
-#[derive(Debug, Copy, Clone)]
-pub struct cgroup_bpf {
-    pub effective: [*mut bpf_prog_array; 38usize],
-    pub progs: [hlist_head; 38usize],
-    pub flags: [u8_; 38usize],
-    pub storages: list_head,
-    pub inactive: *mut bpf_prog_array,
-    pub refcnt: percpu_ref,
-    pub release_work: work_struct,
-}
-#[repr(C)]
-#[derive(Debug, Copy, Clone)]
-pub struct cgroup_freezer_state {
-    pub freeze: bool_,
-    pub e_freeze: ::aya_ebpf::cty::c_int,
-    pub nr_frozen_descendants: ::aya_ebpf::cty::c_int,
-    pub nr_frozen_tasks: ::aya_ebpf::cty::c_int,
-}
-#[repr(C)]
-pub struct cgroup {
-    pub self_: cgroup_subsys_state,
-    pub flags: ::aya_ebpf::cty::c_ulong,
-    pub level: ::aya_ebpf::cty::c_int,
-    pub max_depth: ::aya_ebpf::cty::c_int,
-    pub nr_descendants: ::aya_ebpf::cty::c_int,
-    pub nr_dying_descendants: ::aya_ebpf::cty::c_int,
-    pub max_descendants: ::aya_ebpf::cty::c_int,
-    pub nr_populated_csets: ::aya_ebpf::cty::c_int,
-    pub nr_populated_domain_children: ::aya_ebpf::cty::c_int,
-    pub nr_populated_threaded_children: ::aya_ebpf::cty::c_int,
-    pub nr_threaded_children: ::aya_ebpf::cty::c_int,
-    pub kn: *mut kernfs_node,
-    pub procs_file: cgroup_file,
-    pub events_file: cgroup_file,
-    pub psi_files: [cgroup_file; 4usize],
-    pub subtree_control: u16_,
-    pub subtree_ss_mask: u16_,
-    pub old_subtree_control: u16_,
-    pub old_subtree_ss_mask: u16_,
-    pub subsys: [*mut cgroup_subsys_state; 15usize],
-    pub root: *mut cgroup_root,
-    pub cset_links: list_head,
-    pub e_csets: [list_head; 15usize],
-    pub dom_cgrp: *mut cgroup,
-    pub old_dom_cgrp: *mut cgroup,
-    pub rstat_cpu: *mut cgroup_rstat_cpu,
-    pub rstat_css_list: list_head,
-    pub _pad_: cacheline_padding,
-    pub rstat_flush_next: *mut cgroup,
-    pub last_bstat: cgroup_base_stat,
-    pub bstat: cgroup_base_stat,
-    pub prev_cputime: prev_cputime,
-    pub pidlists: list_head,
-    pub pidlist_mutex: mutex,
-    pub offline_waitq: wait_queue_head_t,
-    pub release_agent_work: work_struct,
-    pub psi: *mut psi_group,
-    pub bpf: cgroup_bpf,
-    pub freezer: cgroup_freezer_state,
-    pub bpf_cgrp_storage: *mut bpf_local_storage,
-    pub ancestors: __IncompleteArrayField<*mut cgroup>,
-    pub _bitfield_align_1: [u8; 0],
-    pub _bitfield_1: __BindgenBitfieldUnit<[u8; 8usize]>,
-}
-impl cgroup {
-    #[inline]
-    pub fn new_bitfield_1() -> __BindgenBitfieldUnit<[u8; 8usize]> {
-        let mut __bindgen_bitfield_unit: __BindgenBitfieldUnit<[u8; 8usize]> = Default::default();
-        __bindgen_bitfield_unit
-    }
 }
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
@@ -13138,6 +13439,10 @@ pub struct request_queue {
     pub nr_hw_queues: ::aya_ebpf::cty::c_uint,
     pub hctx_table: xarray,
     pub q_usage_counter: percpu_ref,
+    pub io_lock_cls_key: lock_class_key,
+    pub io_lockdep_map: lockdep_map,
+    pub q_lock_cls_key: lock_class_key,
+    pub q_lockdep_map: lockdep_map,
     pub last_merge: *mut request,
     pub queue_lock: spinlock_t,
     pub quiesce_depth: ::aya_ebpf::cty::c_int,
@@ -13611,7 +13916,7 @@ pub struct address_space_operations {
             arg2: *mut address_space,
             arg3: loff_t,
             arg4: ::aya_ebpf::cty::c_uint,
-            arg5: *mut *mut page,
+            arg5: *mut *mut folio,
             arg6: *mut *mut ::aya_ebpf::cty::c_void,
         ) -> ::aya_ebpf::cty::c_int,
     >,
@@ -13622,7 +13927,7 @@ pub struct address_space_operations {
             arg3: loff_t,
             arg4: ::aya_ebpf::cty::c_uint,
             arg5: ::aya_ebpf::cty::c_uint,
-            arg6: *mut page,
+            arg6: *mut folio,
             arg7: *mut ::aya_ebpf::cty::c_void,
         ) -> ::aya_ebpf::cty::c_int,
     >,
@@ -13675,14 +13980,6 @@ pub mod writeback_sync_modes {
 }
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
-pub struct folio_batch {
-    pub nr: ::aya_ebpf::cty::c_uchar,
-    pub i: ::aya_ebpf::cty::c_uchar,
-    pub percpu_pvec_drained: bool_,
-    pub folios: [*mut folio; 31usize],
-}
-#[repr(C)]
-#[derive(Debug, Copy, Clone)]
 pub struct writeback_control {
     pub nr_to_write: ::aya_ebpf::cty::c_long,
     pub pages_skipped: ::aya_ebpf::cty::c_long,
@@ -13692,6 +13989,7 @@ pub struct writeback_control {
     pub _bitfield_align_1: [u8; 0],
     pub _bitfield_1: __BindgenBitfieldUnit<[u8; 1usize]>,
     pub swap_plug: *mut *mut swap_iocb,
+    pub list: *mut list_head,
     pub fbatch: folio_batch,
     pub index: ::aya_ebpf::cty::c_ulong,
     pub saved_err: ::aya_ebpf::cty::c_int,
@@ -14029,103 +14327,6 @@ pub struct readahead_control {
     pub _pflags: ::aya_ebpf::cty::c_ulong,
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
-pub struct swap_cluster_info {
-    pub lock: spinlock_t,
-    pub _bitfield_align_1: [u32; 0],
-    pub _bitfield_1: __BindgenBitfieldUnit<[u8; 4usize]>,
-}
-impl swap_cluster_info {
-    #[inline]
-    pub fn data(&self) -> ::aya_ebpf::cty::c_uint {
-        unsafe { ::core::mem::transmute(self._bitfield_1.get(0usize, 24u8) as u32) }
-    }
-    #[inline]
-    pub fn set_data(&mut self, val: ::aya_ebpf::cty::c_uint) {
-        unsafe {
-            let val: u32 = ::core::mem::transmute(val);
-            self._bitfield_1.set(0usize, 24u8, val as u64)
-        }
-    }
-    #[inline]
-    pub unsafe fn data_raw(this: *const Self) -> ::aya_ebpf::cty::c_uint {
-        unsafe {
-            ::core::mem::transmute(<__BindgenBitfieldUnit<[u8; 4usize]>>::raw_get(
-                ::core::ptr::addr_of!((*this)._bitfield_1),
-                0usize,
-                24u8,
-            ) as u32)
-        }
-    }
-    #[inline]
-    pub unsafe fn set_data_raw(this: *mut Self, val: ::aya_ebpf::cty::c_uint) {
-        unsafe {
-            let val: u32 = ::core::mem::transmute(val);
-            <__BindgenBitfieldUnit<[u8; 4usize]>>::raw_set(
-                ::core::ptr::addr_of_mut!((*this)._bitfield_1),
-                0usize,
-                24u8,
-                val as u64,
-            )
-        }
-    }
-    #[inline]
-    pub fn flags(&self) -> ::aya_ebpf::cty::c_uint {
-        unsafe { ::core::mem::transmute(self._bitfield_1.get(24usize, 8u8) as u32) }
-    }
-    #[inline]
-    pub fn set_flags(&mut self, val: ::aya_ebpf::cty::c_uint) {
-        unsafe {
-            let val: u32 = ::core::mem::transmute(val);
-            self._bitfield_1.set(24usize, 8u8, val as u64)
-        }
-    }
-    #[inline]
-    pub unsafe fn flags_raw(this: *const Self) -> ::aya_ebpf::cty::c_uint {
-        unsafe {
-            ::core::mem::transmute(<__BindgenBitfieldUnit<[u8; 4usize]>>::raw_get(
-                ::core::ptr::addr_of!((*this)._bitfield_1),
-                24usize,
-                8u8,
-            ) as u32)
-        }
-    }
-    #[inline]
-    pub unsafe fn set_flags_raw(this: *mut Self, val: ::aya_ebpf::cty::c_uint) {
-        unsafe {
-            let val: u32 = ::core::mem::transmute(val);
-            <__BindgenBitfieldUnit<[u8; 4usize]>>::raw_set(
-                ::core::ptr::addr_of_mut!((*this)._bitfield_1),
-                24usize,
-                8u8,
-                val as u64,
-            )
-        }
-    }
-    #[inline]
-    pub fn new_bitfield_1(
-        data: ::aya_ebpf::cty::c_uint,
-        flags: ::aya_ebpf::cty::c_uint,
-    ) -> __BindgenBitfieldUnit<[u8; 4usize]> {
-        let mut __bindgen_bitfield_unit: __BindgenBitfieldUnit<[u8; 4usize]> = Default::default();
-        __bindgen_bitfield_unit.set(0usize, 24u8, {
-            let data: u32 = unsafe { ::core::mem::transmute(data) };
-            data as u64
-        });
-        __bindgen_bitfield_unit.set(24usize, 8u8, {
-            let flags: u32 = unsafe { ::core::mem::transmute(flags) };
-            flags as u64
-        });
-        __bindgen_bitfield_unit
-    }
-}
-#[repr(C)]
-#[derive(Copy, Clone)]
-pub struct swap_cluster_list {
-    pub head: swap_cluster_info,
-    pub tail: swap_cluster_info,
-}
-#[repr(C)]
 pub struct swap_info_struct {
     pub users: percpu_ref,
     pub flags: ::aya_ebpf::cty::c_ulong,
@@ -14134,8 +14335,13 @@ pub struct swap_info_struct {
     pub type_: ::aya_ebpf::cty::c_schar,
     pub max: ::aya_ebpf::cty::c_uint,
     pub swap_map: *mut ::aya_ebpf::cty::c_uchar,
+    pub zeromap: *mut ::aya_ebpf::cty::c_ulong,
     pub cluster_info: *mut swap_cluster_info,
-    pub free_clusters: swap_cluster_list,
+    pub free_clusters: list_head,
+    pub full_clusters: list_head,
+    pub nonfull_clusters: [list_head; 10usize],
+    pub frag_clusters: [list_head; 10usize],
+    pub frag_cluster_nr: [::aya_ebpf::cty::c_uint; 10usize],
     pub lowest_bit: ::aya_ebpf::cty::c_uint,
     pub highest_bit: ::aya_ebpf::cty::c_uint,
     pub pages: ::aya_ebpf::cty::c_uint,
@@ -14151,7 +14357,8 @@ pub struct swap_info_struct {
     pub lock: spinlock_t,
     pub cont_lock: spinlock_t,
     pub discard_work: work_struct,
-    pub discard_clusters: swap_cluster_list,
+    pub reclaim_work: work_struct,
+    pub discard_clusters: list_head,
     pub avail_lists: __IncompleteArrayField<plist_node>,
 }
 #[repr(C)]
@@ -14405,6 +14612,17 @@ pub struct bdi_writeback {
 pub union bdi_writeback__bindgen_ty_1 {
     pub release_work: work_struct,
     pub rcu: callback_head,
+}
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct fown_struct {
+    pub file: *mut file,
+    pub lock: rwlock_t,
+    pub pid: *mut pid,
+    pub pid_type: pid_type::Type,
+    pub uid: kuid_t,
+    pub euid: kuid_t,
+    pub signum: ::aya_ebpf::cty::c_int,
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -16191,6 +16409,39 @@ impl device {
         }
     }
     #[inline]
+    pub fn dma_iommu(&self) -> bool_ {
+        unsafe { ::core::mem::transmute(self._bitfield_1.get(6usize, 1u8) as u8) }
+    }
+    #[inline]
+    pub fn set_dma_iommu(&mut self, val: bool_) {
+        unsafe {
+            let val: u8 = ::core::mem::transmute(val);
+            self._bitfield_1.set(6usize, 1u8, val as u64)
+        }
+    }
+    #[inline]
+    pub unsafe fn dma_iommu_raw(this: *const Self) -> bool_ {
+        unsafe {
+            ::core::mem::transmute(<__BindgenBitfieldUnit<[u8; 1usize]>>::raw_get(
+                ::core::ptr::addr_of!((*this)._bitfield_1),
+                6usize,
+                1u8,
+            ) as u8)
+        }
+    }
+    #[inline]
+    pub unsafe fn set_dma_iommu_raw(this: *mut Self, val: bool_) {
+        unsafe {
+            let val: u8 = ::core::mem::transmute(val);
+            <__BindgenBitfieldUnit<[u8; 1usize]>>::raw_set(
+                ::core::ptr::addr_of_mut!((*this)._bitfield_1),
+                6usize,
+                1u8,
+                val as u64,
+            )
+        }
+    }
+    #[inline]
     pub fn new_bitfield_1(
         offline_disabled: bool_,
         offline: bool_,
@@ -16198,6 +16449,7 @@ impl device {
         state_synced: bool_,
         can_match: bool_,
         dma_skip_sync: bool_,
+        dma_iommu: bool_,
     ) -> __BindgenBitfieldUnit<[u8; 1usize]> {
         let mut __bindgen_bitfield_unit: __BindgenBitfieldUnit<[u8; 1usize]> = Default::default();
         __bindgen_bitfield_unit.set(0usize, 1u8, {
@@ -16223,6 +16475,10 @@ impl device {
         __bindgen_bitfield_unit.set(5usize, 1u8, {
             let dma_skip_sync: u8 = unsafe { ::core::mem::transmute(dma_skip_sync) };
             dma_skip_sync as u64
+        });
+        __bindgen_bitfield_unit.set(6usize, 1u8, {
+            let dma_iommu: u8 = unsafe { ::core::mem::transmute(dma_iommu) };
+            dma_iommu as u64
         });
         __bindgen_bitfield_unit
     }
@@ -16251,6 +16507,7 @@ pub struct block_device {
     pub bd_fsfreeze_mutex: mutex,
     pub bd_meta_info: *mut partition_meta_info,
     pub bd_writers: ::aya_ebpf::cty::c_int,
+    pub bd_security: *mut ::aya_ebpf::cty::c_void,
     pub bd_device: device,
 }
 #[repr(C)]
@@ -16680,7 +16937,7 @@ pub struct bio {
     pub bi_issue: bio_issue,
     pub bi_iocost_cost: u64_,
     pub bi_crypt_context: *mut bio_crypt_ctx,
-    pub __bindgen_anon_2: bio__bindgen_ty_2,
+    pub bi_integrity: *mut bio_integrity_payload,
     pub bi_vcnt: ::aya_ebpf::cty::c_ushort,
     pub bi_max_vecs: ::aya_ebpf::cty::c_ushort,
     pub __bi_cnt: atomic_t,
@@ -16693,11 +16950,6 @@ pub struct bio {
 pub union bio__bindgen_ty_1 {
     pub bi_cookie: blk_qc_t,
     pub __bi_nr_segments: ::aya_ebpf::cty::c_uint,
-}
-#[repr(C)]
-#[derive(Copy, Clone)]
-pub union bio__bindgen_ty_2 {
-    pub bi_integrity: *mut bio_integrity_payload,
 }
 pub type Elf64_Addr = __u64;
 pub type Elf64_Half = __u16;
@@ -17774,7 +18026,6 @@ pub mod dma_data_direction {
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct dma_map_ops {
-    pub flags: ::aya_ebpf::cty::c_uint,
     pub alloc: ::core::option::Option<
         unsafe extern "C" fn(
             arg1: *mut device,
@@ -17809,23 +18060,6 @@ pub struct dma_map_ops {
             arg3: *mut page,
             arg4: dma_addr_t,
             arg5: dma_data_direction::Type,
-        ),
-    >,
-    pub alloc_noncontiguous: ::core::option::Option<
-        unsafe extern "C" fn(
-            arg1: *mut device,
-            arg2: usize,
-            arg3: dma_data_direction::Type,
-            arg4: gfp_t,
-            arg5: ::aya_ebpf::cty::c_ulong,
-        ) -> *mut sg_table,
-    >,
-    pub free_noncontiguous: ::core::option::Option<
-        unsafe extern "C" fn(
-            arg1: *mut device,
-            arg2: usize,
-            arg3: *mut sg_table,
-            arg4: dma_data_direction::Type,
         ),
     >,
     pub mmap: ::core::option::Option<
@@ -19121,6 +19355,10 @@ pub struct netns_ipv4 {
     pub sysctl_icmp_errors_use_inbound_ifaddr: u8_,
     pub sysctl_icmp_ratelimit: ::aya_ebpf::cty::c_int,
     pub sysctl_icmp_ratemask: ::aya_ebpf::cty::c_int,
+    pub sysctl_icmp_msgs_per_sec: ::aya_ebpf::cty::c_int,
+    pub sysctl_icmp_msgs_burst: ::aya_ebpf::cty::c_int,
+    pub icmp_global_credit: atomic_t,
+    pub icmp_global_stamp: u32_,
     pub ip_rt_min_pmtu: u32_,
     pub ip_rt_mtu_expires: ::aya_ebpf::cty::c_int,
     pub ip_rt_min_advmss: ::aya_ebpf::cty::c_int,
@@ -19228,18 +19466,11 @@ pub struct netns_ipv4 {
     pub ipmr_seq: ::aya_ebpf::cty::c_uint,
     pub rt_genid: atomic_t,
     pub ip_id_key: siphash_key_t,
-    pub _bitfield_align_2: [u8; 0],
-    pub _bitfield_2: __BindgenBitfieldUnit<[u8; 16usize]>,
 }
 impl netns_ipv4 {
     #[inline]
     pub fn new_bitfield_1() -> __BindgenBitfieldUnit<[u8; 8usize]> {
         let mut __bindgen_bitfield_unit: __BindgenBitfieldUnit<[u8; 8usize]> = Default::default();
-        __bindgen_bitfield_unit
-    }
-    #[inline]
-    pub fn new_bitfield_2() -> __BindgenBitfieldUnit<[u8; 16usize]> {
-        let mut __bindgen_bitfield_unit: __BindgenBitfieldUnit<[u8; 16usize]> = Default::default();
         __bindgen_bitfield_unit
     }
 }
@@ -19642,7 +19873,6 @@ pub struct netns_xfrm {
     pub policy_byidx: *mut hlist_head,
     pub policy_idx_hmask: ::aya_ebpf::cty::c_uint,
     pub idx_generator: ::aya_ebpf::cty::c_uint,
-    pub policy_inexact: [hlist_head; 3usize],
     pub policy_bydst: [xfrm_policy_hash; 3usize],
     pub policy_count: [::aya_ebpf::cty::c_uint; 6usize],
     pub policy_hash_work: work_struct,
@@ -19657,7 +19887,7 @@ pub struct netns_xfrm {
     pub policy_default: [u8_; 3usize],
     pub sysctl_hdr: *mut ctl_table_header,
     pub _bitfield_align_1: [u8; 0],
-    pub _bitfield_1: __BindgenBitfieldUnit<[u8; 24usize]>,
+    pub _bitfield_1: __BindgenBitfieldUnit<[u8; 48usize]>,
     pub xfrm4_dst_ops: dst_ops,
     pub xfrm6_dst_ops: dst_ops,
     pub xfrm_state_lock: spinlock_t,
@@ -19668,13 +19898,6 @@ pub struct netns_xfrm {
     pub nat_keepalive_work: delayed_work,
     pub _bitfield_align_2: [u8; 0],
     pub _bitfield_2: __BindgenBitfieldUnit<[u8; 56usize]>,
-}
-impl netns_xfrm {
-    #[inline]
-    pub fn new_bitfield_1() -> __BindgenBitfieldUnit<[u8; 24usize]> {
-        let mut __bindgen_bitfield_unit: __BindgenBitfieldUnit<[u8; 24usize]> = Default::default();
-        __bindgen_bitfield_unit
-    }
 }
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
@@ -19772,6 +19995,7 @@ pub struct net {
     pub fnhe_genid: atomic_t,
     pub list: list_head,
     pub exit_list: list_head,
+    pub defer_free_list: llist_node,
     pub cleanup_list: llist_node,
     pub key_domain: *mut key_tag,
     pub user_ns: *mut user_namespace,
@@ -19800,7 +20024,7 @@ pub struct net {
     pub unx: netns_unix,
     pub nexthop: netns_nexthop,
     pub _bitfield_align_1: [u8; 0],
-    pub _bitfield_1: __BindgenBitfieldUnit<[u8; 32usize]>,
+    pub _bitfield_1: __BindgenBitfieldUnit<[u8; 24usize]>,
     pub ipv4: netns_ipv4,
     pub ipv6: netns_ipv6,
     pub ieee802154_lowpan: netns_ieee802154_lowpan,
@@ -19828,8 +20052,8 @@ pub struct net {
 }
 impl net {
     #[inline]
-    pub fn new_bitfield_1() -> __BindgenBitfieldUnit<[u8; 32usize]> {
-        let mut __bindgen_bitfield_unit: __BindgenBitfieldUnit<[u8; 32usize]> = Default::default();
+    pub fn new_bitfield_1() -> __BindgenBitfieldUnit<[u8; 24usize]> {
+        let mut __bindgen_bitfield_unit: __BindgenBitfieldUnit<[u8; 24usize]> = Default::default();
         __bindgen_bitfield_unit
     }
     #[inline]
@@ -19887,6 +20111,7 @@ pub struct pmu {
     pub name: *const ::aya_ebpf::cty::c_char,
     pub type_: ::aya_ebpf::cty::c_int,
     pub capabilities: ::aya_ebpf::cty::c_int,
+    pub scope: ::aya_ebpf::cty::c_uint,
     pub pmu_disable_count: *mut ::aya_ebpf::cty::c_int,
     pub cpu_pmu_context: *mut perf_cpu_pmu_context,
     pub exclusive_cnt: atomic_t,
@@ -21893,7 +22118,7 @@ pub struct partition_meta_info {
 #[derive(Debug, Copy, Clone)]
 pub struct mem_cgroup_reclaim_iter {
     pub position: *mut mem_cgroup,
-    pub generation: ::aya_ebpf::cty::c_uint,
+    pub generation: atomic_t,
 }
 #[repr(C)]
 pub struct mem_cgroup_per_node {
@@ -21906,7 +22131,7 @@ pub struct mem_cgroup_per_node {
     pub _pad1_: cacheline_padding,
     pub lruvec: lruvec,
     pub _bitfield_align_2: [u8; 0],
-    pub _bitfield_2: __BindgenBitfieldUnit<[u8; 16usize]>,
+    pub _bitfield_2: __BindgenBitfieldUnit<[u8; 32usize]>,
     pub _pad2_: cacheline_padding,
     pub lru_zone_size: [::aya_ebpf::cty::c_ulong; 25usize],
     pub iter: mem_cgroup_reclaim_iter,
@@ -21920,8 +22145,8 @@ impl mem_cgroup_per_node {
         __bindgen_bitfield_unit
     }
     #[inline]
-    pub fn new_bitfield_2() -> __BindgenBitfieldUnit<[u8; 16usize]> {
-        let mut __bindgen_bitfield_unit: __BindgenBitfieldUnit<[u8; 16usize]> = Default::default();
+    pub fn new_bitfield_2() -> __BindgenBitfieldUnit<[u8; 32usize]> {
+        let mut __bindgen_bitfield_unit: __BindgenBitfieldUnit<[u8; 32usize]> = Default::default();
         __bindgen_bitfield_unit
     }
 }
@@ -22330,6 +22555,9 @@ pub struct bpf_prog_aux {
     pub xdp_has_frags: bool_,
     pub exception_cb: bool_,
     pub exception_boundary: bool_,
+    pub is_extended: bool_,
+    pub prog_array_member_cnt: u64_,
+    pub ext_mutex: mutex,
     pub arena: *mut bpf_arena,
     pub attach_func_proto: *const btf_type,
     pub attach_func_name: *const ::aya_ebpf::cty::c_char,
@@ -22406,7 +22634,7 @@ pub mod bpf_reg_type {
     pub const PTR_TO_SOCK_COMMON_OR_NULL: Type = 268;
     pub const PTR_TO_TCP_SOCK_OR_NULL: Type = 269;
     pub const PTR_TO_BTF_ID_OR_NULL: Type = 272;
-    pub const __BPF_REG_TYPE_LIMIT: Type = 67108863;
+    pub const __BPF_REG_TYPE_LIMIT: Type = 134217727;
 }
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
@@ -23142,6 +23370,15 @@ pub struct property {
     pub length: ::aya_ebpf::cty::c_int,
     pub value: *mut ::aya_ebpf::cty::c_void,
     pub next: *mut property,
+}
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct swap_cluster_info {
+    pub lock: spinlock_t,
+    pub count: u16_,
+    pub flags: u8_,
+    pub order: u8_,
+    pub list: list_head,
 }
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
@@ -24606,6 +24843,7 @@ pub struct sock {
     pub sk_bpf_storage: *mut bpf_local_storage,
     pub sk_rcu: callback_head,
     pub ns_tracker: netns_tracker,
+    pub sk_user_frags: xarray,
 }
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
@@ -25265,16 +25503,6 @@ pub struct tty_ldisc {
 }
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
-pub struct scatterlist {
-    pub page_link: ::aya_ebpf::cty::c_ulong,
-    pub offset: ::aya_ebpf::cty::c_uint,
-    pub length: ::aya_ebpf::cty::c_uint,
-    pub dma_address: dma_addr_t,
-    pub dma_length: ::aya_ebpf::cty::c_uint,
-    pub dma_flags: ::aya_ebpf::cty::c_uint,
-}
-#[repr(C)]
-#[derive(Debug, Copy, Clone)]
 pub struct tty_port_operations {
     pub carrier_raised: ::core::option::Option<unsafe extern "C" fn(arg1: *mut tty_port) -> bool_>,
     pub dtr_rts: ::core::option::Option<unsafe extern "C" fn(arg1: *mut tty_port, arg2: bool_)>,
@@ -25629,7 +25857,7 @@ pub struct bpf_xdp_entity {
 #[repr(C)]
 pub struct net_device {
     pub __cacheline_group_begin__net_device_read_tx: __IncompleteArrayField<__u8>,
-    pub priv_flags: ::aya_ebpf::cty::c_ulonglong,
+    pub __bindgen_anon_1: net_device__bindgen_ty_1,
     pub netdev_ops: *const net_device_ops,
     pub header_ops: *const header_ops,
     pub _tx: *mut netdev_queue,
@@ -25647,7 +25875,7 @@ pub struct net_device {
     pub tcx_egress: *mut bpf_mprog_entry,
     pub __cacheline_group_end__net_device_read_tx: __IncompleteArrayField<__u8>,
     pub __cacheline_group_begin__net_device_read_txrx: __IncompleteArrayField<__u8>,
-    pub __bindgen_anon_1: net_device__bindgen_ty_1,
+    pub __bindgen_anon_2: net_device__bindgen_ty_2,
     pub state: ::aya_ebpf::cty::c_ulong,
     pub flags: ::aya_ebpf::cty::c_uint,
     pub hard_header_len: ::aya_ebpf::cty::c_ushort,
@@ -25681,7 +25909,7 @@ pub struct net_device {
     pub unreg_list: list_head,
     pub close_list: list_head,
     pub ptype_all: list_head,
-    pub adj_list: net_device__bindgen_ty_2,
+    pub adj_list: net_device__bindgen_ty_3,
     pub xdp_features: xdp_features_t,
     pub xdp_metadata_ops: *const xdp_metadata_ops,
     pub xsk_tx_metadata_ops: *const xsk_tx_metadata_ops,
@@ -25783,11 +26011,14 @@ pub struct net_device {
     pub prio_tc_map: [u8_; 16usize],
     pub fcoe_ddp_xid: ::aya_ebpf::cty::c_uint,
     pub priomap: *mut netprio_map,
+    pub link_topo: *mut phy_link_topology,
     pub phydev: *mut phy_device,
     pub sfp_bus: *mut sfp_bus,
     pub qdisc_tx_busylock: *mut lock_class_key,
     pub proto_down: bool_,
     pub threaded: bool_,
+    pub _bitfield_align_3: [u8; 0],
+    pub _bitfield_3: __BindgenBitfieldUnit<[u8; 1usize]>,
     pub net_notifier_list: list_head,
     pub macsec_ops: *const macsec_ops,
     pub udp_tunnel_nic_info: *const udp_tunnel_nic_info,
@@ -25803,42 +26034,230 @@ pub struct net_device {
     pub dpll_pin: *mut dpll_pin,
     pub page_pools: hlist_head,
     pub irq_moder: *mut dim_irq_moder,
-    pub _bitfield_align_3: [u8; 0],
-    pub _bitfield_3: __BindgenBitfieldUnit<[u8; 56usize]>,
+    pub _bitfield_align_4: [u8; 0],
+    pub _bitfield_4: __BindgenBitfieldUnit<[u8; 48usize]>,
     pub priv_: __IncompleteArrayField<u8_>,
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
 pub union net_device__bindgen_ty_1 {
+    pub __bindgen_anon_1: net_device__bindgen_ty_1__bindgen_ty_1,
+    pub priv_flags_fast: net_device__bindgen_ty_1__bindgen_ty_2,
+}
+#[repr(C)]
+#[repr(align(8))]
+#[derive(Debug, Copy, Clone)]
+pub struct net_device__bindgen_ty_1__bindgen_ty_1 {
+    pub _bitfield_align_1: [u32; 0],
+    pub _bitfield_1: __BindgenBitfieldUnit<[u8; 5usize]>,
+}
+impl net_device__bindgen_ty_1__bindgen_ty_1 {
+    #[inline]
+    pub fn priv_flags(&self) -> ::aya_ebpf::cty::c_ulong {
+        unsafe { ::core::mem::transmute(self._bitfield_1.get(0usize, 32u8) as u64) }
+    }
+    #[inline]
+    pub fn set_priv_flags(&mut self, val: ::aya_ebpf::cty::c_ulong) {
+        unsafe {
+            let val: u64 = ::core::mem::transmute(val);
+            self._bitfield_1.set(0usize, 32u8, val as u64)
+        }
+    }
+    #[inline]
+    pub unsafe fn priv_flags_raw(this: *const Self) -> ::aya_ebpf::cty::c_ulong {
+        unsafe {
+            ::core::mem::transmute(<__BindgenBitfieldUnit<[u8; 5usize]>>::raw_get(
+                ::core::ptr::addr_of!((*this)._bitfield_1),
+                0usize,
+                32u8,
+            ) as u64)
+        }
+    }
+    #[inline]
+    pub unsafe fn set_priv_flags_raw(this: *mut Self, val: ::aya_ebpf::cty::c_ulong) {
+        unsafe {
+            let val: u64 = ::core::mem::transmute(val);
+            <__BindgenBitfieldUnit<[u8; 5usize]>>::raw_set(
+                ::core::ptr::addr_of_mut!((*this)._bitfield_1),
+                0usize,
+                32u8,
+                val as u64,
+            )
+        }
+    }
+    #[inline]
+    pub fn lltx(&self) -> ::aya_ebpf::cty::c_ulong {
+        unsafe { ::core::mem::transmute(self._bitfield_1.get(32usize, 1u8) as u64) }
+    }
+    #[inline]
+    pub fn set_lltx(&mut self, val: ::aya_ebpf::cty::c_ulong) {
+        unsafe {
+            let val: u64 = ::core::mem::transmute(val);
+            self._bitfield_1.set(32usize, 1u8, val as u64)
+        }
+    }
+    #[inline]
+    pub unsafe fn lltx_raw(this: *const Self) -> ::aya_ebpf::cty::c_ulong {
+        unsafe {
+            ::core::mem::transmute(<__BindgenBitfieldUnit<[u8; 5usize]>>::raw_get(
+                ::core::ptr::addr_of!((*this)._bitfield_1),
+                32usize,
+                1u8,
+            ) as u64)
+        }
+    }
+    #[inline]
+    pub unsafe fn set_lltx_raw(this: *mut Self, val: ::aya_ebpf::cty::c_ulong) {
+        unsafe {
+            let val: u64 = ::core::mem::transmute(val);
+            <__BindgenBitfieldUnit<[u8; 5usize]>>::raw_set(
+                ::core::ptr::addr_of_mut!((*this)._bitfield_1),
+                32usize,
+                1u8,
+                val as u64,
+            )
+        }
+    }
+    #[inline]
+    pub fn new_bitfield_1(
+        priv_flags: ::aya_ebpf::cty::c_ulong,
+        lltx: ::aya_ebpf::cty::c_ulong,
+    ) -> __BindgenBitfieldUnit<[u8; 5usize]> {
+        let mut __bindgen_bitfield_unit: __BindgenBitfieldUnit<[u8; 5usize]> = Default::default();
+        __bindgen_bitfield_unit.set(0usize, 32u8, {
+            let priv_flags: u64 = unsafe { ::core::mem::transmute(priv_flags) };
+            priv_flags as u64
+        });
+        __bindgen_bitfield_unit.set(32usize, 1u8, {
+            let lltx: u64 = unsafe { ::core::mem::transmute(lltx) };
+            lltx as u64
+        });
+        __bindgen_bitfield_unit
+    }
+}
+#[repr(C)]
+#[repr(align(8))]
+#[derive(Debug, Copy, Clone)]
+pub struct net_device__bindgen_ty_1__bindgen_ty_2 {
+    pub _bitfield_align_1: [u32; 0],
+    pub _bitfield_1: __BindgenBitfieldUnit<[u8; 5usize]>,
+}
+impl net_device__bindgen_ty_1__bindgen_ty_2 {
+    #[inline]
+    pub fn priv_flags(&self) -> ::aya_ebpf::cty::c_ulong {
+        unsafe { ::core::mem::transmute(self._bitfield_1.get(0usize, 32u8) as u64) }
+    }
+    #[inline]
+    pub fn set_priv_flags(&mut self, val: ::aya_ebpf::cty::c_ulong) {
+        unsafe {
+            let val: u64 = ::core::mem::transmute(val);
+            self._bitfield_1.set(0usize, 32u8, val as u64)
+        }
+    }
+    #[inline]
+    pub unsafe fn priv_flags_raw(this: *const Self) -> ::aya_ebpf::cty::c_ulong {
+        unsafe {
+            ::core::mem::transmute(<__BindgenBitfieldUnit<[u8; 5usize]>>::raw_get(
+                ::core::ptr::addr_of!((*this)._bitfield_1),
+                0usize,
+                32u8,
+            ) as u64)
+        }
+    }
+    #[inline]
+    pub unsafe fn set_priv_flags_raw(this: *mut Self, val: ::aya_ebpf::cty::c_ulong) {
+        unsafe {
+            let val: u64 = ::core::mem::transmute(val);
+            <__BindgenBitfieldUnit<[u8; 5usize]>>::raw_set(
+                ::core::ptr::addr_of_mut!((*this)._bitfield_1),
+                0usize,
+                32u8,
+                val as u64,
+            )
+        }
+    }
+    #[inline]
+    pub fn lltx(&self) -> ::aya_ebpf::cty::c_ulong {
+        unsafe { ::core::mem::transmute(self._bitfield_1.get(32usize, 1u8) as u64) }
+    }
+    #[inline]
+    pub fn set_lltx(&mut self, val: ::aya_ebpf::cty::c_ulong) {
+        unsafe {
+            let val: u64 = ::core::mem::transmute(val);
+            self._bitfield_1.set(32usize, 1u8, val as u64)
+        }
+    }
+    #[inline]
+    pub unsafe fn lltx_raw(this: *const Self) -> ::aya_ebpf::cty::c_ulong {
+        unsafe {
+            ::core::mem::transmute(<__BindgenBitfieldUnit<[u8; 5usize]>>::raw_get(
+                ::core::ptr::addr_of!((*this)._bitfield_1),
+                32usize,
+                1u8,
+            ) as u64)
+        }
+    }
+    #[inline]
+    pub unsafe fn set_lltx_raw(this: *mut Self, val: ::aya_ebpf::cty::c_ulong) {
+        unsafe {
+            let val: u64 = ::core::mem::transmute(val);
+            <__BindgenBitfieldUnit<[u8; 5usize]>>::raw_set(
+                ::core::ptr::addr_of_mut!((*this)._bitfield_1),
+                32usize,
+                1u8,
+                val as u64,
+            )
+        }
+    }
+    #[inline]
+    pub fn new_bitfield_1(
+        priv_flags: ::aya_ebpf::cty::c_ulong,
+        lltx: ::aya_ebpf::cty::c_ulong,
+    ) -> __BindgenBitfieldUnit<[u8; 5usize]> {
+        let mut __bindgen_bitfield_unit: __BindgenBitfieldUnit<[u8; 5usize]> = Default::default();
+        __bindgen_bitfield_unit.set(0usize, 32u8, {
+            let priv_flags: u64 = unsafe { ::core::mem::transmute(priv_flags) };
+            priv_flags as u64
+        });
+        __bindgen_bitfield_unit.set(32usize, 1u8, {
+            let lltx: u64 = unsafe { ::core::mem::transmute(lltx) };
+            lltx as u64
+        });
+        __bindgen_bitfield_unit
+    }
+}
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub union net_device__bindgen_ty_2 {
     pub lstats: *mut pcpu_lstats,
     pub tstats: *mut pcpu_sw_netstats,
     pub dstats: *mut pcpu_dstats,
 }
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
-pub struct net_device__bindgen_ty_2 {
+pub struct net_device__bindgen_ty_3 {
     pub upper: list_head,
     pub lower: list_head,
 }
-pub mod net_device__bindgen_ty_3 {
+pub mod net_device__bindgen_ty_4 {
     pub type Type = ::aya_ebpf::cty::c_uint;
     pub const RTNL_LINK_INITIALIZED: Type = 0;
     pub const RTNL_LINK_INITIALIZING: Type = 1;
 }
 impl net_device {
     #[inline]
-    pub fn rtnl_link_state(&self) -> net_device__bindgen_ty_3::Type {
+    pub fn rtnl_link_state(&self) -> net_device__bindgen_ty_4::Type {
         unsafe { ::core::mem::transmute(self._bitfield_1.get(0usize, 16u8) as u32) }
     }
     #[inline]
-    pub fn set_rtnl_link_state(&mut self, val: net_device__bindgen_ty_3::Type) {
+    pub fn set_rtnl_link_state(&mut self, val: net_device__bindgen_ty_4::Type) {
         unsafe {
             let val: u32 = ::core::mem::transmute(val);
             self._bitfield_1.set(0usize, 16u8, val as u64)
         }
     }
     #[inline]
-    pub unsafe fn rtnl_link_state_raw(this: *const Self) -> net_device__bindgen_ty_3::Type {
+    pub unsafe fn rtnl_link_state_raw(this: *const Self) -> net_device__bindgen_ty_4::Type {
         unsafe {
             ::core::mem::transmute(<__BindgenBitfieldUnit<[u8; 2usize]>>::raw_get(
                 ::core::ptr::addr_of!((*this)._bitfield_1),
@@ -25848,7 +26267,7 @@ impl net_device {
         }
     }
     #[inline]
-    pub unsafe fn set_rtnl_link_state_raw(this: *mut Self, val: net_device__bindgen_ty_3::Type) {
+    pub unsafe fn set_rtnl_link_state_raw(this: *mut Self, val: net_device__bindgen_ty_4::Type) {
         unsafe {
             let val: u32 = ::core::mem::transmute(val);
             <__BindgenBitfieldUnit<[u8; 2usize]>>::raw_set(
@@ -25861,7 +26280,7 @@ impl net_device {
     }
     #[inline]
     pub fn new_bitfield_1(
-        rtnl_link_state: net_device__bindgen_ty_3::Type,
+        rtnl_link_state: net_device__bindgen_ty_4::Type,
     ) -> __BindgenBitfieldUnit<[u8; 2usize]> {
         let mut __bindgen_bitfield_unit: __BindgenBitfieldUnit<[u8; 2usize]> = Default::default();
         __bindgen_bitfield_unit.set(0usize, 16u8, {
@@ -25914,6 +26333,178 @@ impl net_device {
         });
         __bindgen_bitfield_unit
     }
+    #[inline]
+    pub fn see_all_hwtstamp_requests(&self) -> ::aya_ebpf::cty::c_ulong {
+        unsafe { ::core::mem::transmute(self._bitfield_3.get(0usize, 1u8) as u64) }
+    }
+    #[inline]
+    pub fn set_see_all_hwtstamp_requests(&mut self, val: ::aya_ebpf::cty::c_ulong) {
+        unsafe {
+            let val: u64 = ::core::mem::transmute(val);
+            self._bitfield_3.set(0usize, 1u8, val as u64)
+        }
+    }
+    #[inline]
+    pub unsafe fn see_all_hwtstamp_requests_raw(this: *const Self) -> ::aya_ebpf::cty::c_ulong {
+        unsafe {
+            ::core::mem::transmute(<__BindgenBitfieldUnit<[u8; 1usize]>>::raw_get(
+                ::core::ptr::addr_of!((*this)._bitfield_3),
+                0usize,
+                1u8,
+            ) as u64)
+        }
+    }
+    #[inline]
+    pub unsafe fn set_see_all_hwtstamp_requests_raw(
+        this: *mut Self,
+        val: ::aya_ebpf::cty::c_ulong,
+    ) {
+        unsafe {
+            let val: u64 = ::core::mem::transmute(val);
+            <__BindgenBitfieldUnit<[u8; 1usize]>>::raw_set(
+                ::core::ptr::addr_of_mut!((*this)._bitfield_3),
+                0usize,
+                1u8,
+                val as u64,
+            )
+        }
+    }
+    #[inline]
+    pub fn change_proto_down(&self) -> ::aya_ebpf::cty::c_ulong {
+        unsafe { ::core::mem::transmute(self._bitfield_3.get(1usize, 1u8) as u64) }
+    }
+    #[inline]
+    pub fn set_change_proto_down(&mut self, val: ::aya_ebpf::cty::c_ulong) {
+        unsafe {
+            let val: u64 = ::core::mem::transmute(val);
+            self._bitfield_3.set(1usize, 1u8, val as u64)
+        }
+    }
+    #[inline]
+    pub unsafe fn change_proto_down_raw(this: *const Self) -> ::aya_ebpf::cty::c_ulong {
+        unsafe {
+            ::core::mem::transmute(<__BindgenBitfieldUnit<[u8; 1usize]>>::raw_get(
+                ::core::ptr::addr_of!((*this)._bitfield_3),
+                1usize,
+                1u8,
+            ) as u64)
+        }
+    }
+    #[inline]
+    pub unsafe fn set_change_proto_down_raw(this: *mut Self, val: ::aya_ebpf::cty::c_ulong) {
+        unsafe {
+            let val: u64 = ::core::mem::transmute(val);
+            <__BindgenBitfieldUnit<[u8; 1usize]>>::raw_set(
+                ::core::ptr::addr_of_mut!((*this)._bitfield_3),
+                1usize,
+                1u8,
+                val as u64,
+            )
+        }
+    }
+    #[inline]
+    pub fn netns_local(&self) -> ::aya_ebpf::cty::c_ulong {
+        unsafe { ::core::mem::transmute(self._bitfield_3.get(2usize, 1u8) as u64) }
+    }
+    #[inline]
+    pub fn set_netns_local(&mut self, val: ::aya_ebpf::cty::c_ulong) {
+        unsafe {
+            let val: u64 = ::core::mem::transmute(val);
+            self._bitfield_3.set(2usize, 1u8, val as u64)
+        }
+    }
+    #[inline]
+    pub unsafe fn netns_local_raw(this: *const Self) -> ::aya_ebpf::cty::c_ulong {
+        unsafe {
+            ::core::mem::transmute(<__BindgenBitfieldUnit<[u8; 1usize]>>::raw_get(
+                ::core::ptr::addr_of!((*this)._bitfield_3),
+                2usize,
+                1u8,
+            ) as u64)
+        }
+    }
+    #[inline]
+    pub unsafe fn set_netns_local_raw(this: *mut Self, val: ::aya_ebpf::cty::c_ulong) {
+        unsafe {
+            let val: u64 = ::core::mem::transmute(val);
+            <__BindgenBitfieldUnit<[u8; 1usize]>>::raw_set(
+                ::core::ptr::addr_of_mut!((*this)._bitfield_3),
+                2usize,
+                1u8,
+                val as u64,
+            )
+        }
+    }
+    #[inline]
+    pub fn fcoe_mtu(&self) -> ::aya_ebpf::cty::c_ulong {
+        unsafe { ::core::mem::transmute(self._bitfield_3.get(3usize, 1u8) as u64) }
+    }
+    #[inline]
+    pub fn set_fcoe_mtu(&mut self, val: ::aya_ebpf::cty::c_ulong) {
+        unsafe {
+            let val: u64 = ::core::mem::transmute(val);
+            self._bitfield_3.set(3usize, 1u8, val as u64)
+        }
+    }
+    #[inline]
+    pub unsafe fn fcoe_mtu_raw(this: *const Self) -> ::aya_ebpf::cty::c_ulong {
+        unsafe {
+            ::core::mem::transmute(<__BindgenBitfieldUnit<[u8; 1usize]>>::raw_get(
+                ::core::ptr::addr_of!((*this)._bitfield_3),
+                3usize,
+                1u8,
+            ) as u64)
+        }
+    }
+    #[inline]
+    pub unsafe fn set_fcoe_mtu_raw(this: *mut Self, val: ::aya_ebpf::cty::c_ulong) {
+        unsafe {
+            let val: u64 = ::core::mem::transmute(val);
+            <__BindgenBitfieldUnit<[u8; 1usize]>>::raw_set(
+                ::core::ptr::addr_of_mut!((*this)._bitfield_3),
+                3usize,
+                1u8,
+                val as u64,
+            )
+        }
+    }
+    #[inline]
+    pub fn new_bitfield_3(
+        see_all_hwtstamp_requests: ::aya_ebpf::cty::c_ulong,
+        change_proto_down: ::aya_ebpf::cty::c_ulong,
+        netns_local: ::aya_ebpf::cty::c_ulong,
+        fcoe_mtu: ::aya_ebpf::cty::c_ulong,
+    ) -> __BindgenBitfieldUnit<[u8; 1usize]> {
+        let mut __bindgen_bitfield_unit: __BindgenBitfieldUnit<[u8; 1usize]> = Default::default();
+        __bindgen_bitfield_unit.set(0usize, 1u8, {
+            let see_all_hwtstamp_requests: u64 =
+                unsafe { ::core::mem::transmute(see_all_hwtstamp_requests) };
+            see_all_hwtstamp_requests as u64
+        });
+        __bindgen_bitfield_unit.set(1usize, 1u8, {
+            let change_proto_down: u64 = unsafe { ::core::mem::transmute(change_proto_down) };
+            change_proto_down as u64
+        });
+        __bindgen_bitfield_unit.set(2usize, 1u8, {
+            let netns_local: u64 = unsafe { ::core::mem::transmute(netns_local) };
+            netns_local as u64
+        });
+        __bindgen_bitfield_unit.set(3usize, 1u8, {
+            let fcoe_mtu: u64 = unsafe { ::core::mem::transmute(fcoe_mtu) };
+            fcoe_mtu as u64
+        });
+        __bindgen_bitfield_unit
+    }
+}
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct scatterlist {
+    pub page_link: ::aya_ebpf::cty::c_ulong,
+    pub offset: ::aya_ebpf::cty::c_uint,
+    pub length: ::aya_ebpf::cty::c_uint,
+    pub dma_address: dma_addr_t,
+    pub dma_length: ::aya_ebpf::cty::c_uint,
+    pub dma_flags: ::aya_ebpf::cty::c_uint,
 }
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
@@ -26201,6 +26792,7 @@ pub struct ipv6_devconf {
     pub ioam6_enabled: __u8,
     pub ndisc_evict_nocarrier: __u8,
     pub ra_honor_pio_life: __u8,
+    pub ra_honor_pio_pflag: __u8,
     pub sysctl_header: *mut ctl_table_header,
 }
 #[repr(C)]
@@ -27100,21 +27692,34 @@ pub struct netdev_queue {
     pub qdisc: *mut Qdisc,
     pub qdisc_sleeping: *mut Qdisc,
     pub kobj: kobject,
-    pub numa_node: ::aya_ebpf::cty::c_int,
     pub tx_maxrate: ::aya_ebpf::cty::c_ulong,
     pub trans_timeout: atomic_long_t,
     pub sb_dev: *mut net_device,
     pub pool: *mut xsk_buff_pool,
-    pub napi: *mut napi_struct,
     pub _bitfield_align_1: [u8; 0],
-    pub _bitfield_1: __BindgenBitfieldUnit<[u8; 56usize]>,
+    pub _bitfield_1: __BindgenBitfieldUnit<[u8; 8usize]>,
+    pub dql: dql,
     pub _xmit_lock: spinlock_t,
     pub xmit_lock_owner: ::aya_ebpf::cty::c_int,
     pub trans_start: ::aya_ebpf::cty::c_ulong,
     pub state: ::aya_ebpf::cty::c_ulong,
+    pub napi: *mut napi_struct,
+    pub numa_node: ::aya_ebpf::cty::c_int,
     pub _bitfield_align_2: [u8; 0],
-    pub _bitfield_2: __BindgenBitfieldUnit<[u8; 40usize]>,
-    pub dql: dql,
+    pub _bitfield_2: __BindgenBitfieldUnit<[u8; 24usize]>,
+    pub __bindgen_padding_0: u32,
+}
+impl netdev_queue {
+    #[inline]
+    pub fn new_bitfield_1() -> __BindgenBitfieldUnit<[u8; 8usize]> {
+        let mut __bindgen_bitfield_unit: __BindgenBitfieldUnit<[u8; 8usize]> = Default::default();
+        __bindgen_bitfield_unit
+    }
+    #[inline]
+    pub fn new_bitfield_2() -> __BindgenBitfieldUnit<[u8; 24usize]> {
+        let mut __bindgen_bitfield_unit: __BindgenBitfieldUnit<[u8; 24usize]> = Default::default();
+        __bindgen_bitfield_unit
+    }
 }
 #[repr(C)]
 #[derive(Debug)]
@@ -28571,10 +29176,44 @@ impl ethtool_ops {
         }
     }
     #[inline]
+    pub fn rxfh_per_ctx_key(&self) -> u32_ {
+        unsafe { ::core::mem::transmute(self._bitfield_1.get(3usize, 1u8) as u32) }
+    }
+    #[inline]
+    pub fn set_rxfh_per_ctx_key(&mut self, val: u32_) {
+        unsafe {
+            let val: u32 = ::core::mem::transmute(val);
+            self._bitfield_1.set(3usize, 1u8, val as u64)
+        }
+    }
+    #[inline]
+    pub unsafe fn rxfh_per_ctx_key_raw(this: *const Self) -> u32_ {
+        unsafe {
+            ::core::mem::transmute(<__BindgenBitfieldUnit<[u8; 1usize]>>::raw_get(
+                ::core::ptr::addr_of!((*this)._bitfield_1),
+                3usize,
+                1u8,
+            ) as u32)
+        }
+    }
+    #[inline]
+    pub unsafe fn set_rxfh_per_ctx_key_raw(this: *mut Self, val: u32_) {
+        unsafe {
+            let val: u32 = ::core::mem::transmute(val);
+            <__BindgenBitfieldUnit<[u8; 1usize]>>::raw_set(
+                ::core::ptr::addr_of_mut!((*this)._bitfield_1),
+                3usize,
+                1u8,
+                val as u64,
+            )
+        }
+    }
+    #[inline]
     pub fn new_bitfield_1(
         cap_link_lanes_supported: u32_,
         cap_rss_ctx_supported: u32_,
         cap_rss_sym_xor_supported: u32_,
+        rxfh_per_ctx_key: u32_,
     ) -> __BindgenBitfieldUnit<[u8; 1usize]> {
         let mut __bindgen_bitfield_unit: __BindgenBitfieldUnit<[u8; 1usize]> = Default::default();
         __bindgen_bitfield_unit.set(0usize, 1u8, {
@@ -28591,6 +29230,10 @@ impl ethtool_ops {
             let cap_rss_sym_xor_supported: u32 =
                 unsafe { ::core::mem::transmute(cap_rss_sym_xor_supported) };
             cap_rss_sym_xor_supported as u64
+        });
+        __bindgen_bitfield_unit.set(3usize, 1u8, {
+            let rxfh_per_ctx_key: u32 = unsafe { ::core::mem::transmute(rxfh_per_ctx_key) };
+            rxfh_per_ctx_key as u64
         });
         __bindgen_bitfield_unit
     }
@@ -28618,8 +29261,6 @@ pub struct l3mdev_ops {
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct ndisc_ops {
-    pub is_useropt:
-        ::core::option::Option<unsafe extern "C" fn(arg1: u8_) -> ::aya_ebpf::cty::c_int>,
     pub parse_options: ::core::option::Option<
         unsafe extern "C" fn(
             arg1: *const net_device,
@@ -29322,15 +29963,21 @@ pub mod sk_rst_reason {
     pub const SK_RST_REASON_TCP_ABORT_ON_DATA: Type = 8;
     pub const SK_RST_REASON_TCP_TIMEWAIT_SOCKET: Type = 9;
     pub const SK_RST_REASON_INVALID_SYN: Type = 10;
-    pub const SK_RST_REASON_MPTCP_RST_EUNSPEC: Type = 11;
-    pub const SK_RST_REASON_MPTCP_RST_EMPTCP: Type = 12;
-    pub const SK_RST_REASON_MPTCP_RST_ERESOURCE: Type = 13;
-    pub const SK_RST_REASON_MPTCP_RST_EPROHIBIT: Type = 14;
-    pub const SK_RST_REASON_MPTCP_RST_EWQ2BIG: Type = 15;
-    pub const SK_RST_REASON_MPTCP_RST_EBADPERF: Type = 16;
-    pub const SK_RST_REASON_MPTCP_RST_EMIDDLEBOX: Type = 17;
-    pub const SK_RST_REASON_ERROR: Type = 18;
-    pub const SK_RST_REASON_MAX: Type = 19;
+    pub const SK_RST_REASON_TCP_ABORT_ON_CLOSE: Type = 11;
+    pub const SK_RST_REASON_TCP_ABORT_ON_LINGER: Type = 12;
+    pub const SK_RST_REASON_TCP_ABORT_ON_MEMORY: Type = 13;
+    pub const SK_RST_REASON_TCP_STATE: Type = 14;
+    pub const SK_RST_REASON_TCP_KEEPALIVE_TIMEOUT: Type = 15;
+    pub const SK_RST_REASON_TCP_DISCONNECT_WITH_DATA: Type = 16;
+    pub const SK_RST_REASON_MPTCP_RST_EUNSPEC: Type = 17;
+    pub const SK_RST_REASON_MPTCP_RST_EMPTCP: Type = 18;
+    pub const SK_RST_REASON_MPTCP_RST_ERESOURCE: Type = 19;
+    pub const SK_RST_REASON_MPTCP_RST_EPROHIBIT: Type = 20;
+    pub const SK_RST_REASON_MPTCP_RST_EWQ2BIG: Type = 21;
+    pub const SK_RST_REASON_MPTCP_RST_EBADPERF: Type = 22;
+    pub const SK_RST_REASON_MPTCP_RST_EMIDDLEBOX: Type = 23;
+    pub const SK_RST_REASON_ERROR: Type = 24;
+    pub const SK_RST_REASON_MAX: Type = 25;
 }
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
@@ -31237,7 +31884,6 @@ pub struct irq_chip_regs {
     pub ack: ::aya_ebpf::cty::c_ulong,
     pub eoi: ::aya_ebpf::cty::c_ulong,
     pub type_: ::aya_ebpf::cty::c_ulong,
-    pub polarity: ::aya_ebpf::cty::c_ulong,
 }
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
@@ -31263,8 +31909,6 @@ pub struct irq_chip_generic {
     pub irq_base: ::aya_ebpf::cty::c_uint,
     pub irq_cnt: ::aya_ebpf::cty::c_uint,
     pub mask_cache: u32_,
-    pub type_cache: u32_,
-    pub polarity_cache: u32_,
     pub wake_enabled: u32_,
     pub wake_active: u32_,
     pub num_ct: ::aya_ebpf::cty::c_uint,
@@ -31465,25 +32109,6 @@ pub struct msi_domain_info {
     pub handler_data: *mut ::aya_ebpf::cty::c_void,
     pub handler_name: *const ::aya_ebpf::cty::c_char,
     pub data: *mut ::aya_ebpf::cty::c_void,
-}
-#[repr(C)]
-#[derive(Debug, Copy, Clone)]
-pub struct vm_special_mapping {
-    pub name: *const ::aya_ebpf::cty::c_char,
-    pub pages: *mut *mut page,
-    pub fault: ::core::option::Option<
-        unsafe extern "C" fn(
-            arg1: *const vm_special_mapping,
-            arg2: *mut vm_area_struct,
-            arg3: *mut vm_fault,
-        ) -> vm_fault_t,
-    >,
-    pub mremap: ::core::option::Option<
-        unsafe extern "C" fn(
-            arg1: *const vm_special_mapping,
-            arg2: *mut vm_area_struct,
-        ) -> ::aya_ebpf::cty::c_int,
-    >,
 }
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
@@ -32532,6 +33157,31 @@ pub struct sg_table {
     pub nents: ::aya_ebpf::cty::c_uint,
     pub orig_nents: ::aya_ebpf::cty::c_uint,
 }
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct core_vma_metadata {
+    pub start: ::aya_ebpf::cty::c_ulong,
+    pub end: ::aya_ebpf::cty::c_ulong,
+    pub flags: ::aya_ebpf::cty::c_ulong,
+    pub dump_size: ::aya_ebpf::cty::c_ulong,
+    pub pgoff: ::aya_ebpf::cty::c_ulong,
+    pub file: *mut file,
+}
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct coredump_params {
+    pub siginfo: *const kernel_siginfo_t,
+    pub file: *mut file,
+    pub limit: ::aya_ebpf::cty::c_ulong,
+    pub mm_flags: ::aya_ebpf::cty::c_ulong,
+    pub cpu: ::aya_ebpf::cty::c_int,
+    pub written: loff_t,
+    pub pos: loff_t,
+    pub to_skip: loff_t,
+    pub vma_count: ::aya_ebpf::cty::c_int,
+    pub vma_data_size: usize,
+    pub vma_meta: *mut core_vma_metadata,
+}
 pub type cpu_stop_fn_t = ::core::option::Option<
     unsafe extern "C" fn(arg1: *mut ::aya_ebpf::cty::c_void) -> ::aya_ebpf::cty::c_int,
 >;
@@ -32559,7 +33209,7 @@ pub mod bpf_arg_type {
     pub const ARG_PTR_TO_STACK: Type = 19;
     pub const ARG_PTR_TO_CONST_STR: Type = 20;
     pub const ARG_PTR_TO_TIMER: Type = 21;
-    pub const ARG_PTR_TO_KPTR: Type = 22;
+    pub const ARG_KPTR_XCHG_DEST: Type = 22;
     pub const ARG_PTR_TO_DYNPTR: Type = 23;
     pub const __BPF_ARG_TYPE_MAX: Type = 24;
     pub const ARG_PTR_TO_MAP_VALUE_OR_NULL: Type = 259;
@@ -32568,9 +33218,9 @@ pub mod bpf_arg_type {
     pub const ARG_PTR_TO_SOCKET_OR_NULL: Type = 268;
     pub const ARG_PTR_TO_STACK_OR_NULL: Type = 275;
     pub const ARG_PTR_TO_BTF_ID_OR_NULL: Type = 269;
-    pub const ARG_PTR_TO_UNINIT_MEM: Type = 32772;
+    pub const ARG_PTR_TO_UNINIT_MEM: Type = 67141636;
     pub const ARG_PTR_TO_FIXED_SIZE_MEM: Type = 262148;
-    pub const __BPF_ARG_TYPE_LIMIT: Type = 67108863;
+    pub const __BPF_ARG_TYPE_LIMIT: Type = 134217727;
 }
 pub mod bpf_return_type {
     pub type Type = ::aya_ebpf::cty::c_uint;
@@ -32592,7 +33242,7 @@ pub mod bpf_return_type {
     pub const RET_PTR_TO_DYNPTR_MEM_OR_NULL: Type = 262;
     pub const RET_PTR_TO_BTF_ID_OR_NULL: Type = 264;
     pub const RET_PTR_TO_BTF_ID_TRUSTED: Type = 1048584;
-    pub const __BPF_RET_TYPE_LIMIT: Type = 67108863;
+    pub const __BPF_RET_TYPE_LIMIT: Type = 134217727;
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -32608,6 +33258,8 @@ pub mod task_work_notify_mode {
     pub const TWA_SIGNAL: Type = 2;
     pub const TWA_SIGNAL_NO_IPI: Type = 3;
     pub const TWA_NMI_CURRENT: Type = 4;
+    pub const TWA_FLAGS: Type = 65280;
+    pub const TWAF_NO_ALLOC: Type = 256;
 }
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
@@ -33519,6 +34171,13 @@ pub struct robust_list_head {
     pub futex_offset: ::aya_ebpf::cty::c_long,
     pub list_op_pending: *mut robust_list,
 }
+pub mod tk_offsets {
+    pub type Type = ::aya_ebpf::cty::c_uint;
+    pub const TK_OFFS_REAL: Type = 0;
+    pub const TK_OFFS_BOOT: Type = 1;
+    pub const TK_OFFS_TAI: Type = 2;
+    pub const TK_OFFS_MAX: Type = 3;
+}
 #[repr(C)]
 #[derive(Copy, Clone)]
 pub struct pipe_inode_info {
@@ -33579,31 +34238,6 @@ pub struct sk_filter {
     pub refcnt: refcount_t,
     pub rcu: callback_head,
     pub prog: *mut bpf_prog,
-}
-#[repr(C)]
-#[derive(Debug, Copy, Clone)]
-pub struct coredump_params {
-    pub siginfo: *const kernel_siginfo_t,
-    pub file: *mut file,
-    pub limit: ::aya_ebpf::cty::c_ulong,
-    pub mm_flags: ::aya_ebpf::cty::c_ulong,
-    pub cpu: ::aya_ebpf::cty::c_int,
-    pub written: loff_t,
-    pub pos: loff_t,
-    pub to_skip: loff_t,
-    pub vma_count: ::aya_ebpf::cty::c_int,
-    pub vma_data_size: usize,
-    pub vma_meta: *mut core_vma_metadata,
-}
-#[repr(C)]
-#[derive(Debug, Copy, Clone)]
-pub struct core_vma_metadata {
-    pub start: ::aya_ebpf::cty::c_ulong,
-    pub end: ::aya_ebpf::cty::c_ulong,
-    pub flags: ::aya_ebpf::cty::c_ulong,
-    pub dump_size: ::aya_ebpf::cty::c_ulong,
-    pub pgoff: ::aya_ebpf::cty::c_ulong,
-    pub file: *mut file,
 }
 #[repr(C)]
 pub struct workqueue_struct {
@@ -33918,16 +34552,14 @@ pub struct cfs_rq {
     pub idle_h_nr_running: ::aya_ebpf::cty::c_uint,
     pub avg_vruntime: s64,
     pub avg_load: u64_,
-    pub exec_clock: u64_,
     pub min_vruntime: u64_,
     pub forceidle_seq: ::aya_ebpf::cty::c_uint,
     pub min_vruntime_fi: u64_,
     pub tasks_timeline: rb_root_cached,
     pub curr: *mut sched_entity,
     pub next: *mut sched_entity,
-    pub nr_spread_over: ::aya_ebpf::cty::c_uint,
     pub _bitfield_align_1: [u8; 0],
-    pub _bitfield_1: __BindgenBitfieldUnit<[u8; 8usize]>,
+    pub _bitfield_1: __BindgenBitfieldUnit<[u8; 24usize]>,
     pub avg: sched_avg,
     pub removed: cfs_rq__bindgen_ty_1,
     pub last_update_tg_load_avg: u64_,
@@ -33977,8 +34609,8 @@ impl cfs_rq__bindgen_ty_1 {
 }
 impl cfs_rq {
     #[inline]
-    pub fn new_bitfield_1() -> __BindgenBitfieldUnit<[u8; 8usize]> {
-        let mut __bindgen_bitfield_unit: __BindgenBitfieldUnit<[u8; 8usize]> = Default::default();
+    pub fn new_bitfield_1() -> __BindgenBitfieldUnit<[u8; 24usize]> {
+        let mut __bindgen_bitfield_unit: __BindgenBitfieldUnit<[u8; 24usize]> = Default::default();
         __bindgen_bitfield_unit
     }
 }
@@ -34085,7 +34717,7 @@ pub struct rt_prio_array {
     pub queue: [list_head; 100usize],
 }
 #[repr(C)]
-#[derive(Copy, Clone)]
+#[derive(Debug, Copy, Clone)]
 pub struct rt_rq {
     pub active: rt_prio_array,
     pub rt_nr_running: ::aya_ebpf::cty::c_uint,
@@ -34094,10 +34726,6 @@ pub struct rt_rq {
     pub overloaded: bool_,
     pub pushable_tasks: plist_head,
     pub rt_queued: ::aya_ebpf::cty::c_int,
-    pub rt_throttled: ::aya_ebpf::cty::c_int,
-    pub rt_time: u64_,
-    pub rt_runtime: u64_,
-    pub rt_runtime_lock: raw_spinlock_t,
 }
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
@@ -34124,6 +34752,33 @@ pub struct dl_rq {
 pub struct dl_rq__bindgen_ty_1 {
     pub curr: u64_,
     pub next: u64_,
+}
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct balance_callback {
+    pub next: *mut balance_callback,
+    pub func: ::core::option::Option<unsafe extern "C" fn(arg1: *mut rq)>,
+}
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct scx_rq {
+    pub local_dsq: scx_dispatch_q,
+    pub runnable_list: list_head,
+    pub ddsp_deferred_locals: list_head,
+    pub ops_qseq: ::aya_ebpf::cty::c_ulong,
+    pub extra_enq_flags: u64_,
+    pub nr_running: u32_,
+    pub flags: u32_,
+    pub cpuperf_target: u32_,
+    pub cpu_released: bool_,
+    pub cpus_to_kick: cpumask_var_t,
+    pub cpus_to_kick_if_idle: cpumask_var_t,
+    pub cpus_to_preempt: cpumask_var_t,
+    pub cpus_to_wait: cpumask_var_t,
+    pub pnt_seq: ::aya_ebpf::cty::c_ulong,
+    pub deferred_bal_cb: balance_callback,
+    pub deferred_irq_work: irq_work,
+    pub kick_cpus_irq_work: irq_work,
 }
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
@@ -34160,10 +34815,13 @@ pub struct rq {
     pub cfs: cfs_rq,
     pub rt: rt_rq,
     pub dl: dl_rq,
+    pub scx: scx_rq,
+    pub fair_server: sched_dl_entity,
     pub leaf_cfs_rq_list: list_head,
     pub tmp_alone_branch: *mut list_head,
     pub nr_uninterruptible: ::aya_ebpf::cty::c_uint,
     pub curr: *mut task_struct,
+    pub dl_server: *mut sched_dl_entity,
     pub idle: *mut task_struct,
     pub stop: *mut task_struct,
     pub next_balance: ::aya_ebpf::cty::c_ulong,
@@ -34171,7 +34829,7 @@ pub struct rq {
     pub clock_update_flags: ::aya_ebpf::cty::c_uint,
     pub clock: u64_,
     pub _bitfield_align_4: [u8; 0],
-    pub _bitfield_4: __BindgenBitfieldUnit<[u8; 40usize]>,
+    pub _bitfield_4: __BindgenBitfieldUnit<[u8; 24usize]>,
     pub clock_task: u64_,
     pub clock_pelt: u64_,
     pub lost_idle_time: ::aya_ebpf::cty::c_ulong,
@@ -34225,6 +34883,7 @@ pub struct rq {
     pub push_work: cpu_stop_work,
     pub core: *mut rq,
     pub core_pick: *mut task_struct,
+    pub core_dl_server: *mut sched_dl_entity,
     pub core_enabled: ::aya_ebpf::cty::c_uint,
     pub core_sched_seq: ::aya_ebpf::cty::c_uint,
     pub core_tree: rb_root,
@@ -34236,10 +34895,12 @@ pub struct rq {
     pub core_forceidle_occupation: ::aya_ebpf::cty::c_uint,
     pub core_forceidle_start: u64_,
     pub scratch_mask: cpumask_var_t,
+    pub _bitfield_align_6: [u8; 0],
+    pub _bitfield_6: __BindgenBitfieldUnit<[u8; 24usize]>,
     pub cfsb_csd: call_single_data_t,
     pub cfsb_csd_list: list_head,
-    pub _bitfield_align_6: [u8; 0],
-    pub _bitfield_6: __BindgenBitfieldUnit<[u8; 16usize]>,
+    pub _bitfield_align_7: [u8; 0],
+    pub _bitfield_7: __BindgenBitfieldUnit<[u8; 48usize]>,
 }
 impl rq {
     #[inline]
@@ -34258,13 +34919,18 @@ impl rq {
         __bindgen_bitfield_unit
     }
     #[inline]
+    pub fn new_bitfield_4() -> __BindgenBitfieldUnit<[u8; 24usize]> {
+        let mut __bindgen_bitfield_unit: __BindgenBitfieldUnit<[u8; 24usize]> = Default::default();
+        __bindgen_bitfield_unit
+    }
+    #[inline]
     pub fn new_bitfield_5() -> __BindgenBitfieldUnit<[u8; 16usize]> {
         let mut __bindgen_bitfield_unit: __BindgenBitfieldUnit<[u8; 16usize]> = Default::default();
         __bindgen_bitfield_unit
     }
     #[inline]
-    pub fn new_bitfield_6() -> __BindgenBitfieldUnit<[u8; 16usize]> {
-        let mut __bindgen_bitfield_unit: __BindgenBitfieldUnit<[u8; 16usize]> = Default::default();
+    pub fn new_bitfield_6() -> __BindgenBitfieldUnit<[u8; 24usize]> {
+        let mut __bindgen_bitfield_unit: __BindgenBitfieldUnit<[u8; 24usize]> = Default::default();
         __bindgen_bitfield_unit
     }
 }
@@ -34294,13 +34960,15 @@ pub struct cfs_bandwidth {
 #[derive(Copy, Clone)]
 pub struct task_group {
     pub css: cgroup_subsys_state,
+    pub idle: ::aya_ebpf::cty::c_int,
     pub se: *mut *mut sched_entity,
     pub cfs_rq: *mut *mut cfs_rq,
     pub shares: ::aya_ebpf::cty::c_ulong,
-    pub idle: ::aya_ebpf::cty::c_int,
     pub _bitfield_align_1: [u8; 0],
-    pub _bitfield_1: __BindgenBitfieldUnit<[u8; 24usize]>,
+    pub _bitfield_1: __BindgenBitfieldUnit<[u8; 16usize]>,
     pub load_avg: atomic_long_t,
+    pub scx_flags: u32_,
+    pub scx_weight: u32_,
     pub rcu: callback_head,
     pub list: list_head,
     pub parent: *mut task_group,
@@ -34312,17 +34980,17 @@ pub struct task_group {
     pub uclamp_req: [uclamp_se; 2usize],
     pub uclamp: [uclamp_se; 2usize],
     pub _bitfield_align_2: [u8; 0],
-    pub _bitfield_2: __BindgenBitfieldUnit<[u8; 32usize]>,
+    pub _bitfield_2: __BindgenBitfieldUnit<[u8; 24usize]>,
 }
 impl task_group {
     #[inline]
-    pub fn new_bitfield_1() -> __BindgenBitfieldUnit<[u8; 24usize]> {
-        let mut __bindgen_bitfield_unit: __BindgenBitfieldUnit<[u8; 24usize]> = Default::default();
+    pub fn new_bitfield_1() -> __BindgenBitfieldUnit<[u8; 16usize]> {
+        let mut __bindgen_bitfield_unit: __BindgenBitfieldUnit<[u8; 16usize]> = Default::default();
         __bindgen_bitfield_unit
     }
     #[inline]
-    pub fn new_bitfield_2() -> __BindgenBitfieldUnit<[u8; 32usize]> {
-        let mut __bindgen_bitfield_unit: __BindgenBitfieldUnit<[u8; 32usize]> = Default::default();
+    pub fn new_bitfield_2() -> __BindgenBitfieldUnit<[u8; 24usize]> {
+        let mut __bindgen_bitfield_unit: __BindgenBitfieldUnit<[u8; 24usize]> = Default::default();
         __bindgen_bitfield_unit
     }
 }
@@ -34404,12 +35072,6 @@ pub struct perf_domain {
     pub em_pd: *mut em_perf_domain,
     pub next: *mut perf_domain,
     pub rcu: callback_head,
-}
-#[repr(C)]
-#[derive(Debug, Copy, Clone)]
-pub struct balance_callback {
-    pub next: *mut balance_callback,
-    pub func: ::core::option::Option<unsafe extern "C" fn(arg1: *mut rq)>,
 }
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
@@ -34682,10 +35344,12 @@ pub struct io_ring_ctx__bindgen_ty_1 {
     pub submitter_task: *mut task_struct,
     pub rings: *mut io_rings,
     pub refs: percpu_ref,
+    pub clockid: clockid_t,
+    pub clock_offset: tk_offsets::Type,
     pub notify_method: task_work_notify_mode::Type,
     pub sq_thread_idle: ::aya_ebpf::cty::c_uint,
     pub _bitfield_align_2: [u8; 0],
-    pub _bitfield_2: __BindgenBitfieldUnit<[u8; 16usize]>,
+    pub _bitfield_2: __BindgenBitfieldUnit<[u8; 8usize]>,
 }
 impl io_ring_ctx__bindgen_ty_1 {
     #[inline]
@@ -35151,8 +35815,8 @@ impl io_ring_ctx__bindgen_ty_1 {
         __bindgen_bitfield_unit
     }
     #[inline]
-    pub fn new_bitfield_2() -> __BindgenBitfieldUnit<[u8; 16usize]> {
-        let mut __bindgen_bitfield_unit: __BindgenBitfieldUnit<[u8; 16usize]> = Default::default();
+    pub fn new_bitfield_2() -> __BindgenBitfieldUnit<[u8; 8usize]> {
+        let mut __bindgen_bitfield_unit: __BindgenBitfieldUnit<[u8; 8usize]> = Default::default();
         __bindgen_bitfield_unit
     }
 }
@@ -35624,215 +36288,29 @@ impl cpuidle_driver {
     }
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
-pub struct ww_acquire_ctx {
-    pub task: *mut task_struct,
-    pub stamp: ::aya_ebpf::cty::c_ulong,
-    pub acquired: ::aya_ebpf::cty::c_uint,
-    pub wounded: ::aya_ebpf::cty::c_ushort,
-    pub is_wait_die: ::aya_ebpf::cty::c_ushort,
-}
-#[repr(C)]
-#[derive(Debug, Copy, Clone)]
-pub struct rt_waiter_node {
-    pub entry: rb_node,
-    pub prio: ::aya_ebpf::cty::c_int,
-    pub deadline: u64_,
-}
-#[repr(C)]
-#[derive(Debug, Copy, Clone)]
-pub struct rt_mutex_waiter {
-    pub tree: rt_waiter_node,
-    pub pi_tree: rt_waiter_node,
-    pub task: *mut task_struct,
-    pub lock: *mut rt_mutex_base,
-    pub wake_state: ::aya_ebpf::cty::c_uint,
-    pub ww_ctx: *mut ww_acquire_ctx,
-}
-#[repr(C)]
-#[derive(Copy, Clone)]
-pub struct rt_mutex_base {
-    pub wait_lock: raw_spinlock_t,
-    pub waiters: rb_root_cached,
-    pub owner: *mut task_struct,
-}
-#[repr(C)]
-#[derive(Copy, Clone)]
-pub struct rt_mutex {
-    pub rtmutex: rt_mutex_base,
-}
-#[repr(C)]
-#[derive(Copy, Clone)]
-pub struct msi_dev_domain {
-    pub store: xarray,
-    pub domain: *mut irq_domain,
-}
-#[repr(C)]
-#[derive(Copy, Clone)]
-pub struct msi_device_data {
-    pub properties: ::aya_ebpf::cty::c_ulong,
-    pub mutex: mutex,
-    pub __domains: [msi_dev_domain; 1usize],
-    pub __iter_idx: ::aya_ebpf::cty::c_ulong,
-}
-#[repr(C)]
-#[derive(Debug, Copy, Clone)]
-pub struct rcu_exp_work {
-    pub rew_s: ::aya_ebpf::cty::c_ulong,
-    pub rew_work: kthread_work,
-}
-#[repr(C)]
-#[derive(Copy, Clone)]
-pub struct rcu_node {
-    pub lock: raw_spinlock_t,
-    pub gp_seq: ::aya_ebpf::cty::c_ulong,
-    pub gp_seq_needed: ::aya_ebpf::cty::c_ulong,
-    pub completedqs: ::aya_ebpf::cty::c_ulong,
-    pub qsmask: ::aya_ebpf::cty::c_ulong,
-    pub rcu_gp_init_mask: ::aya_ebpf::cty::c_ulong,
-    pub qsmaskinit: ::aya_ebpf::cty::c_ulong,
-    pub qsmaskinitnext: ::aya_ebpf::cty::c_ulong,
-    pub expmask: ::aya_ebpf::cty::c_ulong,
-    pub expmaskinit: ::aya_ebpf::cty::c_ulong,
-    pub expmaskinitnext: ::aya_ebpf::cty::c_ulong,
-    pub exp_kworker: *mut kthread_worker,
-    pub cbovldmask: ::aya_ebpf::cty::c_ulong,
-    pub ffmask: ::aya_ebpf::cty::c_ulong,
-    pub grpmask: ::aya_ebpf::cty::c_ulong,
-    pub grplo: ::aya_ebpf::cty::c_int,
-    pub grphi: ::aya_ebpf::cty::c_int,
-    pub grpnum: u8_,
-    pub level: u8_,
-    pub wait_blkd_tasks: bool_,
-    pub parent: *mut rcu_node,
-    pub blkd_tasks: list_head,
-    pub gp_tasks: *mut list_head,
-    pub exp_tasks: *mut list_head,
-    pub boost_tasks: *mut list_head,
-    pub boost_mtx: rt_mutex,
-    pub boost_time: ::aya_ebpf::cty::c_ulong,
-    pub kthread_mutex: mutex,
-    pub boost_kthread_task: *mut task_struct,
-    pub boost_kthread_status: ::aya_ebpf::cty::c_uint,
-    pub n_boosts: ::aya_ebpf::cty::c_ulong,
-    pub nocb_gp_wq: [swait_queue_head; 2usize],
+#[derive(Debug)]
+pub struct bucket_table {
+    pub size: ::aya_ebpf::cty::c_uint,
+    pub nest: ::aya_ebpf::cty::c_uint,
+    pub hash_rnd: u32_,
+    pub walkers: list_head,
+    pub rcu: callback_head,
+    pub future_tbl: *mut bucket_table,
+    pub dep_map: lockdep_map,
     pub _bitfield_align_1: [u8; 0],
-    pub _bitfield_1: __BindgenBitfieldUnit<[u8; 56usize]>,
-    pub fqslock: raw_spinlock_t,
-    pub _bitfield_align_2: [u8; 0],
-    pub _bitfield_2: __BindgenBitfieldUnit<[u8; 56usize]>,
-    pub __bindgen_padding_0: u32,
-    pub exp_lock: spinlock_t,
-    pub exp_seq_rq: ::aya_ebpf::cty::c_ulong,
-    pub exp_wq: [wait_queue_head_t; 4usize],
-    pub rew: rcu_exp_work,
-    pub exp_need_flush: bool_,
-    pub exp_poll_lock: raw_spinlock_t,
-    pub exp_seq_poll_rq: ::aya_ebpf::cty::c_ulong,
-    pub exp_poll_wq: work_struct,
-    pub _bitfield_align_3: [u8; 0],
-    pub _bitfield_3: __BindgenBitfieldUnit<[u8; 48usize]>,
+    pub _bitfield_1: __BindgenBitfieldUnit<[u8; 8usize]>,
+    pub buckets: __IncompleteArrayField<*mut rhash_lock_head>,
 }
-#[repr(C)]
-#[derive(Copy, Clone)]
-pub struct cma {
-    pub base_pfn: ::aya_ebpf::cty::c_ulong,
-    pub count: ::aya_ebpf::cty::c_ulong,
-    pub bitmap: *mut ::aya_ebpf::cty::c_ulong,
-    pub order_per_bit: ::aya_ebpf::cty::c_uint,
-    pub lock: spinlock_t,
-    pub name: [::aya_ebpf::cty::c_char; 64usize],
-    pub reserve_pages_on_error: bool_,
-}
-#[repr(C)]
-#[derive(Copy, Clone)]
-pub struct io_tlb_area {
-    pub used: ::aya_ebpf::cty::c_ulong,
-    pub index: ::aya_ebpf::cty::c_uint,
-    pub lock: spinlock_t,
+impl bucket_table {
+    #[inline]
+    pub fn new_bitfield_1() -> __BindgenBitfieldUnit<[u8; 8usize]> {
+        let mut __bindgen_bitfield_unit: __BindgenBitfieldUnit<[u8; 8usize]> = Default::default();
+        __bindgen_bitfield_unit
+    }
 }
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
-pub struct io_tlb_slot {
-    pub orig_addr: phys_addr_t,
-    pub alloc_size: usize,
-    pub list: ::aya_ebpf::cty::c_ushort,
-    pub pad_slots: ::aya_ebpf::cty::c_ushort,
-}
-#[repr(C)]
-#[derive(Debug, Copy, Clone)]
-pub struct module_sect_attr {
-    pub battr: bin_attribute,
-    pub address: ::aya_ebpf::cty::c_ulong,
-}
-#[repr(C)]
-#[derive(Debug)]
-pub struct module_sect_attrs {
-    pub grp: attribute_group,
-    pub nsections: ::aya_ebpf::cty::c_uint,
-    pub attrs: __IncompleteArrayField<module_sect_attr>,
-}
-#[repr(C)]
-#[derive(Debug)]
-pub struct module_notes_attrs {
-    pub dir: *mut kobject,
-    pub notes: ::aya_ebpf::cty::c_uint,
-    pub attrs: __IncompleteArrayField<bin_attribute>,
-}
-#[repr(C)]
-#[derive(Debug, Copy, Clone)]
-pub struct audit_ntp_val {
-    pub oldval: ::aya_ebpf::cty::c_longlong,
-    pub newval: ::aya_ebpf::cty::c_longlong,
-}
-#[repr(C)]
-#[derive(Debug, Copy, Clone)]
-pub struct audit_ntp_data {
-    pub vals: [audit_ntp_val; 6usize],
-}
-#[repr(C)]
-#[derive(Copy, Clone)]
-pub union futex_key {
-    pub shared: futex_key__bindgen_ty_1,
-    pub private: futex_key__bindgen_ty_2,
-    pub both: futex_key__bindgen_ty_3,
-}
-#[repr(C)]
-#[derive(Debug, Copy, Clone)]
-pub struct futex_key__bindgen_ty_1 {
-    pub i_seq: u64_,
-    pub pgoff: ::aya_ebpf::cty::c_ulong,
-    pub offset: ::aya_ebpf::cty::c_uint,
-}
-#[repr(C)]
-#[derive(Copy, Clone)]
-pub struct futex_key__bindgen_ty_2 {
-    pub __bindgen_anon_1: futex_key__bindgen_ty_2__bindgen_ty_1,
-    pub address: ::aya_ebpf::cty::c_ulong,
-    pub offset: ::aya_ebpf::cty::c_uint,
-}
-#[repr(C)]
-#[derive(Copy, Clone)]
-pub union futex_key__bindgen_ty_2__bindgen_ty_1 {
-    pub mm: *mut mm_struct,
-    pub __tmp: u64_,
-}
-#[repr(C)]
-#[derive(Debug, Copy, Clone)]
-pub struct futex_key__bindgen_ty_3 {
-    pub ptr: u64_,
-    pub word: ::aya_ebpf::cty::c_ulong,
-    pub offset: ::aya_ebpf::cty::c_uint,
-}
-#[repr(C)]
-#[derive(Copy, Clone)]
-pub struct futex_pi_state {
-    pub list: list_head,
-    pub pi_mutex: rt_mutex_base,
-    pub owner: *mut task_struct,
-    pub refcount: refcount_t,
-    pub key: futex_key,
-}
+pub struct rhash_lock_head {}
 pub mod bpf_func_id {
     pub type Type = ::aya_ebpf::cty::c_uint;
     pub const BPF_FUNC_unspec: Type = 0;
@@ -36049,6 +36527,693 @@ pub mod bpf_func_id {
     pub const BPF_FUNC_cgrp_storage_delete: Type = 211;
     pub const __BPF_FUNC_MAX_ID: Type = 212;
 }
+pub type bpfptr_t = sockptr_t;
+#[repr(C)]
+#[derive(Debug)]
+pub struct btf_id_set8 {
+    pub cnt: u32_,
+    pub flags: u32_,
+    pub pairs: __IncompleteArrayField<btf_id_set8__bindgen_ty_1>,
+}
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct btf_id_set8__bindgen_ty_1 {
+    pub id: u32_,
+    pub flags: u32_,
+}
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct btf_member {
+    pub name_off: __u32,
+    pub type_: __u32,
+    pub offset: __u32,
+}
+pub type btf_kfunc_filter_t = ::core::option::Option<
+    unsafe extern "C" fn(arg1: *const bpf_prog, arg2: u32_) -> ::aya_ebpf::cty::c_int,
+>;
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct btf_struct_meta {
+    pub btf_id: u32_,
+    pub record: *mut btf_record,
+}
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct bpf_verifier_log {
+    pub start_pos: u64_,
+    pub end_pos: u64_,
+    pub ubuf: *mut ::aya_ebpf::cty::c_char,
+    pub level: u32_,
+    pub len_total: u32_,
+    pub len_max: u32_,
+    pub kbuf: [::aya_ebpf::cty::c_char; 1024usize],
+}
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct bpf_subprog_arg_info {
+    pub arg_type: bpf_arg_type::Type,
+    pub __bindgen_anon_1: bpf_subprog_arg_info__bindgen_ty_1,
+}
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub union bpf_subprog_arg_info__bindgen_ty_1 {
+    pub mem_size: u32_,
+    pub btf_id: u32_,
+}
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct bpf_subprog_info {
+    pub start: u32_,
+    pub linfo_idx: u32_,
+    pub stack_depth: u16_,
+    pub stack_extra: u16_,
+    pub fastcall_stack_off: s16,
+    pub _bitfield_align_1: [u8; 0],
+    pub _bitfield_1: __BindgenBitfieldUnit<[u8; 1usize]>,
+    pub arg_cnt: u8_,
+    pub args: [bpf_subprog_arg_info; 5usize],
+}
+impl bpf_subprog_info {
+    #[inline]
+    pub fn has_tail_call(&self) -> bool_ {
+        unsafe { ::core::mem::transmute(self._bitfield_1.get(0usize, 1u8) as u8) }
+    }
+    #[inline]
+    pub fn set_has_tail_call(&mut self, val: bool_) {
+        unsafe {
+            let val: u8 = ::core::mem::transmute(val);
+            self._bitfield_1.set(0usize, 1u8, val as u64)
+        }
+    }
+    #[inline]
+    pub unsafe fn has_tail_call_raw(this: *const Self) -> bool_ {
+        unsafe {
+            ::core::mem::transmute(<__BindgenBitfieldUnit<[u8; 1usize]>>::raw_get(
+                ::core::ptr::addr_of!((*this)._bitfield_1),
+                0usize,
+                1u8,
+            ) as u8)
+        }
+    }
+    #[inline]
+    pub unsafe fn set_has_tail_call_raw(this: *mut Self, val: bool_) {
+        unsafe {
+            let val: u8 = ::core::mem::transmute(val);
+            <__BindgenBitfieldUnit<[u8; 1usize]>>::raw_set(
+                ::core::ptr::addr_of_mut!((*this)._bitfield_1),
+                0usize,
+                1u8,
+                val as u64,
+            )
+        }
+    }
+    #[inline]
+    pub fn tail_call_reachable(&self) -> bool_ {
+        unsafe { ::core::mem::transmute(self._bitfield_1.get(1usize, 1u8) as u8) }
+    }
+    #[inline]
+    pub fn set_tail_call_reachable(&mut self, val: bool_) {
+        unsafe {
+            let val: u8 = ::core::mem::transmute(val);
+            self._bitfield_1.set(1usize, 1u8, val as u64)
+        }
+    }
+    #[inline]
+    pub unsafe fn tail_call_reachable_raw(this: *const Self) -> bool_ {
+        unsafe {
+            ::core::mem::transmute(<__BindgenBitfieldUnit<[u8; 1usize]>>::raw_get(
+                ::core::ptr::addr_of!((*this)._bitfield_1),
+                1usize,
+                1u8,
+            ) as u8)
+        }
+    }
+    #[inline]
+    pub unsafe fn set_tail_call_reachable_raw(this: *mut Self, val: bool_) {
+        unsafe {
+            let val: u8 = ::core::mem::transmute(val);
+            <__BindgenBitfieldUnit<[u8; 1usize]>>::raw_set(
+                ::core::ptr::addr_of_mut!((*this)._bitfield_1),
+                1usize,
+                1u8,
+                val as u64,
+            )
+        }
+    }
+    #[inline]
+    pub fn has_ld_abs(&self) -> bool_ {
+        unsafe { ::core::mem::transmute(self._bitfield_1.get(2usize, 1u8) as u8) }
+    }
+    #[inline]
+    pub fn set_has_ld_abs(&mut self, val: bool_) {
+        unsafe {
+            let val: u8 = ::core::mem::transmute(val);
+            self._bitfield_1.set(2usize, 1u8, val as u64)
+        }
+    }
+    #[inline]
+    pub unsafe fn has_ld_abs_raw(this: *const Self) -> bool_ {
+        unsafe {
+            ::core::mem::transmute(<__BindgenBitfieldUnit<[u8; 1usize]>>::raw_get(
+                ::core::ptr::addr_of!((*this)._bitfield_1),
+                2usize,
+                1u8,
+            ) as u8)
+        }
+    }
+    #[inline]
+    pub unsafe fn set_has_ld_abs_raw(this: *mut Self, val: bool_) {
+        unsafe {
+            let val: u8 = ::core::mem::transmute(val);
+            <__BindgenBitfieldUnit<[u8; 1usize]>>::raw_set(
+                ::core::ptr::addr_of_mut!((*this)._bitfield_1),
+                2usize,
+                1u8,
+                val as u64,
+            )
+        }
+    }
+    #[inline]
+    pub fn is_cb(&self) -> bool_ {
+        unsafe { ::core::mem::transmute(self._bitfield_1.get(3usize, 1u8) as u8) }
+    }
+    #[inline]
+    pub fn set_is_cb(&mut self, val: bool_) {
+        unsafe {
+            let val: u8 = ::core::mem::transmute(val);
+            self._bitfield_1.set(3usize, 1u8, val as u64)
+        }
+    }
+    #[inline]
+    pub unsafe fn is_cb_raw(this: *const Self) -> bool_ {
+        unsafe {
+            ::core::mem::transmute(<__BindgenBitfieldUnit<[u8; 1usize]>>::raw_get(
+                ::core::ptr::addr_of!((*this)._bitfield_1),
+                3usize,
+                1u8,
+            ) as u8)
+        }
+    }
+    #[inline]
+    pub unsafe fn set_is_cb_raw(this: *mut Self, val: bool_) {
+        unsafe {
+            let val: u8 = ::core::mem::transmute(val);
+            <__BindgenBitfieldUnit<[u8; 1usize]>>::raw_set(
+                ::core::ptr::addr_of_mut!((*this)._bitfield_1),
+                3usize,
+                1u8,
+                val as u64,
+            )
+        }
+    }
+    #[inline]
+    pub fn is_async_cb(&self) -> bool_ {
+        unsafe { ::core::mem::transmute(self._bitfield_1.get(4usize, 1u8) as u8) }
+    }
+    #[inline]
+    pub fn set_is_async_cb(&mut self, val: bool_) {
+        unsafe {
+            let val: u8 = ::core::mem::transmute(val);
+            self._bitfield_1.set(4usize, 1u8, val as u64)
+        }
+    }
+    #[inline]
+    pub unsafe fn is_async_cb_raw(this: *const Self) -> bool_ {
+        unsafe {
+            ::core::mem::transmute(<__BindgenBitfieldUnit<[u8; 1usize]>>::raw_get(
+                ::core::ptr::addr_of!((*this)._bitfield_1),
+                4usize,
+                1u8,
+            ) as u8)
+        }
+    }
+    #[inline]
+    pub unsafe fn set_is_async_cb_raw(this: *mut Self, val: bool_) {
+        unsafe {
+            let val: u8 = ::core::mem::transmute(val);
+            <__BindgenBitfieldUnit<[u8; 1usize]>>::raw_set(
+                ::core::ptr::addr_of_mut!((*this)._bitfield_1),
+                4usize,
+                1u8,
+                val as u64,
+            )
+        }
+    }
+    #[inline]
+    pub fn is_exception_cb(&self) -> bool_ {
+        unsafe { ::core::mem::transmute(self._bitfield_1.get(5usize, 1u8) as u8) }
+    }
+    #[inline]
+    pub fn set_is_exception_cb(&mut self, val: bool_) {
+        unsafe {
+            let val: u8 = ::core::mem::transmute(val);
+            self._bitfield_1.set(5usize, 1u8, val as u64)
+        }
+    }
+    #[inline]
+    pub unsafe fn is_exception_cb_raw(this: *const Self) -> bool_ {
+        unsafe {
+            ::core::mem::transmute(<__BindgenBitfieldUnit<[u8; 1usize]>>::raw_get(
+                ::core::ptr::addr_of!((*this)._bitfield_1),
+                5usize,
+                1u8,
+            ) as u8)
+        }
+    }
+    #[inline]
+    pub unsafe fn set_is_exception_cb_raw(this: *mut Self, val: bool_) {
+        unsafe {
+            let val: u8 = ::core::mem::transmute(val);
+            <__BindgenBitfieldUnit<[u8; 1usize]>>::raw_set(
+                ::core::ptr::addr_of_mut!((*this)._bitfield_1),
+                5usize,
+                1u8,
+                val as u64,
+            )
+        }
+    }
+    #[inline]
+    pub fn args_cached(&self) -> bool_ {
+        unsafe { ::core::mem::transmute(self._bitfield_1.get(6usize, 1u8) as u8) }
+    }
+    #[inline]
+    pub fn set_args_cached(&mut self, val: bool_) {
+        unsafe {
+            let val: u8 = ::core::mem::transmute(val);
+            self._bitfield_1.set(6usize, 1u8, val as u64)
+        }
+    }
+    #[inline]
+    pub unsafe fn args_cached_raw(this: *const Self) -> bool_ {
+        unsafe {
+            ::core::mem::transmute(<__BindgenBitfieldUnit<[u8; 1usize]>>::raw_get(
+                ::core::ptr::addr_of!((*this)._bitfield_1),
+                6usize,
+                1u8,
+            ) as u8)
+        }
+    }
+    #[inline]
+    pub unsafe fn set_args_cached_raw(this: *mut Self, val: bool_) {
+        unsafe {
+            let val: u8 = ::core::mem::transmute(val);
+            <__BindgenBitfieldUnit<[u8; 1usize]>>::raw_set(
+                ::core::ptr::addr_of_mut!((*this)._bitfield_1),
+                6usize,
+                1u8,
+                val as u64,
+            )
+        }
+    }
+    #[inline]
+    pub fn keep_fastcall_stack(&self) -> bool_ {
+        unsafe { ::core::mem::transmute(self._bitfield_1.get(7usize, 1u8) as u8) }
+    }
+    #[inline]
+    pub fn set_keep_fastcall_stack(&mut self, val: bool_) {
+        unsafe {
+            let val: u8 = ::core::mem::transmute(val);
+            self._bitfield_1.set(7usize, 1u8, val as u64)
+        }
+    }
+    #[inline]
+    pub unsafe fn keep_fastcall_stack_raw(this: *const Self) -> bool_ {
+        unsafe {
+            ::core::mem::transmute(<__BindgenBitfieldUnit<[u8; 1usize]>>::raw_get(
+                ::core::ptr::addr_of!((*this)._bitfield_1),
+                7usize,
+                1u8,
+            ) as u8)
+        }
+    }
+    #[inline]
+    pub unsafe fn set_keep_fastcall_stack_raw(this: *mut Self, val: bool_) {
+        unsafe {
+            let val: u8 = ::core::mem::transmute(val);
+            <__BindgenBitfieldUnit<[u8; 1usize]>>::raw_set(
+                ::core::ptr::addr_of_mut!((*this)._bitfield_1),
+                7usize,
+                1u8,
+                val as u64,
+            )
+        }
+    }
+    #[inline]
+    pub fn new_bitfield_1(
+        has_tail_call: bool_,
+        tail_call_reachable: bool_,
+        has_ld_abs: bool_,
+        is_cb: bool_,
+        is_async_cb: bool_,
+        is_exception_cb: bool_,
+        args_cached: bool_,
+        keep_fastcall_stack: bool_,
+    ) -> __BindgenBitfieldUnit<[u8; 1usize]> {
+        let mut __bindgen_bitfield_unit: __BindgenBitfieldUnit<[u8; 1usize]> = Default::default();
+        __bindgen_bitfield_unit.set(0usize, 1u8, {
+            let has_tail_call: u8 = unsafe { ::core::mem::transmute(has_tail_call) };
+            has_tail_call as u64
+        });
+        __bindgen_bitfield_unit.set(1usize, 1u8, {
+            let tail_call_reachable: u8 = unsafe { ::core::mem::transmute(tail_call_reachable) };
+            tail_call_reachable as u64
+        });
+        __bindgen_bitfield_unit.set(2usize, 1u8, {
+            let has_ld_abs: u8 = unsafe { ::core::mem::transmute(has_ld_abs) };
+            has_ld_abs as u64
+        });
+        __bindgen_bitfield_unit.set(3usize, 1u8, {
+            let is_cb: u8 = unsafe { ::core::mem::transmute(is_cb) };
+            is_cb as u64
+        });
+        __bindgen_bitfield_unit.set(4usize, 1u8, {
+            let is_async_cb: u8 = unsafe { ::core::mem::transmute(is_async_cb) };
+            is_async_cb as u64
+        });
+        __bindgen_bitfield_unit.set(5usize, 1u8, {
+            let is_exception_cb: u8 = unsafe { ::core::mem::transmute(is_exception_cb) };
+            is_exception_cb as u64
+        });
+        __bindgen_bitfield_unit.set(6usize, 1u8, {
+            let args_cached: u8 = unsafe { ::core::mem::transmute(args_cached) };
+            args_cached as u64
+        });
+        __bindgen_bitfield_unit.set(7usize, 1u8, {
+            let keep_fastcall_stack: u8 = unsafe { ::core::mem::transmute(keep_fastcall_stack) };
+            keep_fastcall_stack as u64
+        });
+        __bindgen_bitfield_unit
+    }
+}
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct bpf_id_pair {
+    pub old: u32_,
+    pub cur: u32_,
+}
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct bpf_idmap {
+    pub tmp_id_gen: u32_,
+    pub map: [bpf_id_pair; 600usize],
+}
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct bpf_idset {
+    pub count: u32_,
+    pub ids: [u32_; 600usize],
+}
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct backtrack_state {
+    pub env: *mut bpf_verifier_env,
+    pub frame: u32_,
+    pub reg_masks: [u32_; 8usize],
+    pub stack_masks: [u64_; 8usize],
+}
+pub mod bpf_dynptr_type {
+    pub type Type = ::aya_ebpf::cty::c_uint;
+    pub const BPF_DYNPTR_TYPE_INVALID: Type = 0;
+    pub const BPF_DYNPTR_TYPE_LOCAL: Type = 1;
+    pub const BPF_DYNPTR_TYPE_RINGBUF: Type = 2;
+    pub const BPF_DYNPTR_TYPE_SKB: Type = 3;
+    pub const BPF_DYNPTR_TYPE_XDP: Type = 4;
+}
+pub mod bpf_iter_state {
+    pub type Type = ::aya_ebpf::cty::c_uint;
+    pub const BPF_ITER_STATE_INVALID: Type = 0;
+    pub const BPF_ITER_STATE_ACTIVE: Type = 1;
+    pub const BPF_ITER_STATE_DRAINED: Type = 2;
+}
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct tnum {
+    pub value: u64_,
+    pub mask: u64_,
+}
+pub mod bpf_reg_liveness {
+    pub type Type = ::aya_ebpf::cty::c_uint;
+    pub const REG_LIVE_NONE: Type = 0;
+    pub const REG_LIVE_READ32: Type = 1;
+    pub const REG_LIVE_READ64: Type = 2;
+    pub const REG_LIVE_READ: Type = 3;
+    pub const REG_LIVE_WRITTEN: Type = 4;
+    pub const REG_LIVE_DONE: Type = 8;
+}
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct bpf_reg_state {
+    pub type_: bpf_reg_type::Type,
+    pub off: s32,
+    pub __bindgen_anon_1: bpf_reg_state__bindgen_ty_1,
+    pub var_off: tnum,
+    pub smin_value: s64,
+    pub smax_value: s64,
+    pub umin_value: u64_,
+    pub umax_value: u64_,
+    pub s32_min_value: s32,
+    pub s32_max_value: s32,
+    pub u32_min_value: u32_,
+    pub u32_max_value: u32_,
+    pub id: u32_,
+    pub ref_obj_id: u32_,
+    pub parent: *mut bpf_reg_state,
+    pub frameno: u32_,
+    pub subreg_def: s32,
+    pub live: bpf_reg_liveness::Type,
+    pub precise: bool_,
+}
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub union bpf_reg_state__bindgen_ty_1 {
+    pub range: ::aya_ebpf::cty::c_int,
+    pub __bindgen_anon_1: bpf_reg_state__bindgen_ty_1__bindgen_ty_1,
+    pub __bindgen_anon_2: bpf_reg_state__bindgen_ty_1__bindgen_ty_2,
+    pub __bindgen_anon_3: bpf_reg_state__bindgen_ty_1__bindgen_ty_3,
+    pub dynptr: bpf_reg_state__bindgen_ty_1__bindgen_ty_4,
+    pub iter: bpf_reg_state__bindgen_ty_1__bindgen_ty_5,
+    pub raw: bpf_reg_state__bindgen_ty_1__bindgen_ty_6,
+    pub subprogno: u32_,
+}
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct bpf_reg_state__bindgen_ty_1__bindgen_ty_1 {
+    pub map_ptr: *mut bpf_map,
+    pub map_uid: u32_,
+}
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct bpf_reg_state__bindgen_ty_1__bindgen_ty_2 {
+    pub btf: *mut btf,
+    pub btf_id: u32_,
+}
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct bpf_reg_state__bindgen_ty_1__bindgen_ty_3 {
+    pub mem_size: u32_,
+    pub dynptr_id: u32_,
+}
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct bpf_reg_state__bindgen_ty_1__bindgen_ty_4 {
+    pub type_: bpf_dynptr_type::Type,
+    pub first_slot: bool_,
+}
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct bpf_reg_state__bindgen_ty_1__bindgen_ty_5 {
+    pub btf: *mut btf,
+    pub btf_id: u32_,
+    pub _bitfield_align_1: [u32; 0],
+    pub _bitfield_1: __BindgenBitfieldUnit<[u8; 4usize]>,
+}
+impl bpf_reg_state__bindgen_ty_1__bindgen_ty_5 {
+    #[inline]
+    pub fn state(&self) -> bpf_iter_state::Type {
+        unsafe { ::core::mem::transmute(self._bitfield_1.get(0usize, 2u8) as u32) }
+    }
+    #[inline]
+    pub fn set_state(&mut self, val: bpf_iter_state::Type) {
+        unsafe {
+            let val: u32 = ::core::mem::transmute(val);
+            self._bitfield_1.set(0usize, 2u8, val as u64)
+        }
+    }
+    #[inline]
+    pub unsafe fn state_raw(this: *const Self) -> bpf_iter_state::Type {
+        unsafe {
+            ::core::mem::transmute(<__BindgenBitfieldUnit<[u8; 4usize]>>::raw_get(
+                ::core::ptr::addr_of!((*this)._bitfield_1),
+                0usize,
+                2u8,
+            ) as u32)
+        }
+    }
+    #[inline]
+    pub unsafe fn set_state_raw(this: *mut Self, val: bpf_iter_state::Type) {
+        unsafe {
+            let val: u32 = ::core::mem::transmute(val);
+            <__BindgenBitfieldUnit<[u8; 4usize]>>::raw_set(
+                ::core::ptr::addr_of_mut!((*this)._bitfield_1),
+                0usize,
+                2u8,
+                val as u64,
+            )
+        }
+    }
+    #[inline]
+    pub fn depth(&self) -> ::aya_ebpf::cty::c_int {
+        unsafe { ::core::mem::transmute(self._bitfield_1.get(2usize, 30u8) as u32) }
+    }
+    #[inline]
+    pub fn set_depth(&mut self, val: ::aya_ebpf::cty::c_int) {
+        unsafe {
+            let val: u32 = ::core::mem::transmute(val);
+            self._bitfield_1.set(2usize, 30u8, val as u64)
+        }
+    }
+    #[inline]
+    pub unsafe fn depth_raw(this: *const Self) -> ::aya_ebpf::cty::c_int {
+        unsafe {
+            ::core::mem::transmute(<__BindgenBitfieldUnit<[u8; 4usize]>>::raw_get(
+                ::core::ptr::addr_of!((*this)._bitfield_1),
+                2usize,
+                30u8,
+            ) as u32)
+        }
+    }
+    #[inline]
+    pub unsafe fn set_depth_raw(this: *mut Self, val: ::aya_ebpf::cty::c_int) {
+        unsafe {
+            let val: u32 = ::core::mem::transmute(val);
+            <__BindgenBitfieldUnit<[u8; 4usize]>>::raw_set(
+                ::core::ptr::addr_of_mut!((*this)._bitfield_1),
+                2usize,
+                30u8,
+                val as u64,
+            )
+        }
+    }
+    #[inline]
+    pub fn new_bitfield_1(
+        state: bpf_iter_state::Type,
+        depth: ::aya_ebpf::cty::c_int,
+    ) -> __BindgenBitfieldUnit<[u8; 4usize]> {
+        let mut __bindgen_bitfield_unit: __BindgenBitfieldUnit<[u8; 4usize]> = Default::default();
+        __bindgen_bitfield_unit.set(0usize, 2u8, {
+            let state: u32 = unsafe { ::core::mem::transmute(state) };
+            state as u64
+        });
+        __bindgen_bitfield_unit.set(2usize, 30u8, {
+            let depth: u32 = unsafe { ::core::mem::transmute(depth) };
+            depth as u64
+        });
+        __bindgen_bitfield_unit
+    }
+}
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct bpf_reg_state__bindgen_ty_1__bindgen_ty_6 {
+    pub raw1: ::aya_ebpf::cty::c_ulong,
+    pub raw2: ::aya_ebpf::cty::c_ulong,
+}
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct bpf_verifier_env {
+    pub insn_idx: u32_,
+    pub prev_insn_idx: u32_,
+    pub prog: *mut bpf_prog,
+    pub ops: *const bpf_verifier_ops,
+    pub attach_btf_mod: *mut module,
+    pub head: *mut bpf_verifier_stack_elem,
+    pub stack_size: ::aya_ebpf::cty::c_int,
+    pub strict_alignment: bool_,
+    pub test_state_freq: bool_,
+    pub test_reg_invariants: bool_,
+    pub cur_state: *mut bpf_verifier_state,
+    pub explored_states: *mut *mut bpf_verifier_state_list,
+    pub free_list: *mut bpf_verifier_state_list,
+    pub used_maps: [*mut bpf_map; 64usize],
+    pub used_btfs: [btf_mod_pair; 64usize],
+    pub used_map_cnt: u32_,
+    pub used_btf_cnt: u32_,
+    pub id_gen: u32_,
+    pub hidden_subprog_cnt: u32_,
+    pub exception_callback_subprog: ::aya_ebpf::cty::c_int,
+    pub explore_alu_limits: bool_,
+    pub allow_ptr_leaks: bool_,
+    pub allow_uninit_stack: bool_,
+    pub bpf_capable: bool_,
+    pub bypass_spec_v1: bool_,
+    pub bypass_spec_v4: bool_,
+    pub seen_direct_write: bool_,
+    pub seen_exception: bool_,
+    pub insn_aux_data: *mut bpf_insn_aux_data,
+    pub prev_linfo: *const bpf_line_info,
+    pub log: bpf_verifier_log,
+    pub subprog_info: [bpf_subprog_info; 258usize],
+    pub __bindgen_anon_1: bpf_verifier_env__bindgen_ty_1,
+    pub cfg: bpf_verifier_env__bindgen_ty_2,
+    pub bt: backtrack_state,
+    pub cur_hist_ent: *mut bpf_jmp_history_entry,
+    pub pass_cnt: u32_,
+    pub subprog_cnt: u32_,
+    pub prev_insn_processed: u32_,
+    pub insn_processed: u32_,
+    pub prev_jmps_processed: u32_,
+    pub jmps_processed: u32_,
+    pub verification_time: u64_,
+    pub max_states_per_insn: u32_,
+    pub total_states: u32_,
+    pub peak_states: u32_,
+    pub longest_mark_read_walk: u32_,
+    pub fd_array: bpfptr_t,
+    pub scratched_regs: u32_,
+    pub scratched_stack_slots: u64_,
+    pub prev_log_pos: u64_,
+    pub prev_insn_print_pos: u64_,
+    pub fake_reg: [bpf_reg_state; 2usize],
+    pub tmp_str_buf: [::aya_ebpf::cty::c_char; 320usize],
+    pub insn_buf: [bpf_insn; 32usize],
+    pub epilogue_buf: [bpf_insn; 32usize],
+}
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub union bpf_verifier_env__bindgen_ty_1 {
+    pub idmap_scratch: bpf_idmap,
+    pub idset_scratch: bpf_idset,
+}
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct bpf_verifier_env__bindgen_ty_2 {
+    pub insn_state: *mut ::aya_ebpf::cty::c_int,
+    pub insn_stack: *mut ::aya_ebpf::cty::c_int,
+    pub cur_stack: ::aya_ebpf::cty::c_int,
+}
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct bpf_retval_range {
+    pub minval: s32,
+    pub maxval: s32,
+}
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct bpf_func_state {
+    pub regs: [bpf_reg_state; 11usize],
+    pub callsite: ::aya_ebpf::cty::c_int,
+    pub frameno: u32_,
+    pub subprogno: u32_,
+    pub async_entry_cnt: u32_,
+    pub callback_ret_range: bpf_retval_range,
+    pub in_callback_fn: bool_,
+    pub in_async_callback_fn: bool_,
+    pub in_exception_callback_fn: bool_,
+    pub callback_depth: u32_,
+    pub acquired_refs: ::aya_ebpf::cty::c_int,
+    pub refs: *mut bpf_reference_state,
+    pub stack: *mut bpf_stack_state,
+    pub allocated_stack: ::aya_ebpf::cty::c_int,
+}
 #[repr(C)]
 #[derive(Copy, Clone)]
 pub struct bpf_func_proto {
@@ -36058,6 +37223,7 @@ pub struct bpf_func_proto {
     pub gpl_only: bool_,
     pub pkt_access: bool_,
     pub might_sleep: bool_,
+    pub allow_fastcall: bool_,
     pub ret_type: bpf_return_type::Type,
     pub __bindgen_anon_1: bpf_func_proto__bindgen_ty_1,
     pub __bindgen_anon_2: bpf_func_proto__bindgen_ty_2,
@@ -36104,6 +37270,742 @@ pub struct bpf_func_proto__bindgen_ty_2__bindgen_ty_2 {
     pub arg3_size: usize,
     pub arg4_size: usize,
     pub arg5_size: usize,
+}
+pub mod bpf_access_type {
+    pub type Type = ::aya_ebpf::cty::c_uint;
+    pub const BPF_READ: Type = 1;
+    pub const BPF_WRITE: Type = 2;
+}
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct bpf_insn_access_aux {
+    pub reg_type: bpf_reg_type::Type,
+    pub is_ldsx: bool_,
+    pub __bindgen_anon_1: bpf_insn_access_aux__bindgen_ty_1,
+    pub log: *mut bpf_verifier_log,
+    pub is_retval: bool_,
+}
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub union bpf_insn_access_aux__bindgen_ty_1 {
+    pub ctx_field_size: ::aya_ebpf::cty::c_int,
+    pub __bindgen_anon_1: bpf_insn_access_aux__bindgen_ty_1__bindgen_ty_1,
+}
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct bpf_insn_access_aux__bindgen_ty_1__bindgen_ty_1 {
+    pub btf: *mut btf,
+    pub btf_id: u32_,
+}
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct bpf_verifier_ops {
+    pub get_func_proto: ::core::option::Option<
+        unsafe extern "C" fn(
+            arg1: bpf_func_id::Type,
+            arg2: *const bpf_prog,
+        ) -> *const bpf_func_proto,
+    >,
+    pub is_valid_access: ::core::option::Option<
+        unsafe extern "C" fn(
+            arg1: ::aya_ebpf::cty::c_int,
+            arg2: ::aya_ebpf::cty::c_int,
+            arg3: bpf_access_type::Type,
+            arg4: *const bpf_prog,
+            arg5: *mut bpf_insn_access_aux,
+        ) -> bool_,
+    >,
+    pub gen_prologue: ::core::option::Option<
+        unsafe extern "C" fn(
+            arg1: *mut bpf_insn,
+            arg2: bool_,
+            arg3: *const bpf_prog,
+        ) -> ::aya_ebpf::cty::c_int,
+    >,
+    pub gen_epilogue: ::core::option::Option<
+        unsafe extern "C" fn(
+            arg1: *mut bpf_insn,
+            arg2: *const bpf_prog,
+            arg3: s16,
+        ) -> ::aya_ebpf::cty::c_int,
+    >,
+    pub gen_ld_abs: ::core::option::Option<
+        unsafe extern "C" fn(arg1: *const bpf_insn, arg2: *mut bpf_insn) -> ::aya_ebpf::cty::c_int,
+    >,
+    pub convert_ctx_access: ::core::option::Option<
+        unsafe extern "C" fn(
+            arg1: bpf_access_type::Type,
+            arg2: *const bpf_insn,
+            arg3: *mut bpf_insn,
+            arg4: *mut bpf_prog,
+            arg5: *mut u32_,
+        ) -> u32_,
+    >,
+    pub btf_struct_access: ::core::option::Option<
+        unsafe extern "C" fn(
+            arg1: *mut bpf_verifier_log,
+            arg2: *const bpf_reg_state,
+            arg3: ::aya_ebpf::cty::c_int,
+            arg4: ::aya_ebpf::cty::c_int,
+        ) -> ::aya_ebpf::cty::c_int,
+    >,
+}
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct bpf_struct_ops {
+    pub verifier_ops: *const bpf_verifier_ops,
+    pub init:
+        ::core::option::Option<unsafe extern "C" fn(arg1: *mut btf) -> ::aya_ebpf::cty::c_int>,
+    pub check_member: ::core::option::Option<
+        unsafe extern "C" fn(
+            arg1: *const btf_type,
+            arg2: *const btf_member,
+            arg3: *const bpf_prog,
+        ) -> ::aya_ebpf::cty::c_int,
+    >,
+    pub init_member: ::core::option::Option<
+        unsafe extern "C" fn(
+            arg1: *const btf_type,
+            arg2: *const btf_member,
+            arg3: *mut ::aya_ebpf::cty::c_void,
+            arg4: *const ::aya_ebpf::cty::c_void,
+        ) -> ::aya_ebpf::cty::c_int,
+    >,
+    pub reg: ::core::option::Option<
+        unsafe extern "C" fn(
+            arg1: *mut ::aya_ebpf::cty::c_void,
+            arg2: *mut bpf_link,
+        ) -> ::aya_ebpf::cty::c_int,
+    >,
+    pub unreg: ::core::option::Option<
+        unsafe extern "C" fn(arg1: *mut ::aya_ebpf::cty::c_void, arg2: *mut bpf_link),
+    >,
+    pub update: ::core::option::Option<
+        unsafe extern "C" fn(
+            arg1: *mut ::aya_ebpf::cty::c_void,
+            arg2: *mut ::aya_ebpf::cty::c_void,
+            arg3: *mut bpf_link,
+        ) -> ::aya_ebpf::cty::c_int,
+    >,
+    pub validate: ::core::option::Option<
+        unsafe extern "C" fn(arg1: *mut ::aya_ebpf::cty::c_void) -> ::aya_ebpf::cty::c_int,
+    >,
+    pub cfi_stubs: *mut ::aya_ebpf::cty::c_void,
+    pub owner: *mut module,
+    pub name: *const ::aya_ebpf::cty::c_char,
+    pub func_models: [btf_func_model; 64usize],
+}
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct bpf_struct_ops_arg_info {
+    pub info: *mut bpf_ctx_arg_aux,
+    pub cnt: u32_,
+}
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct bpf_struct_ops_desc {
+    pub st_ops: *mut bpf_struct_ops,
+    pub type_: *const btf_type,
+    pub value_type: *const btf_type,
+    pub type_id: u32_,
+    pub value_id: u32_,
+    pub arg_info: *mut bpf_struct_ops_arg_info,
+}
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct bpf_active_lock {
+    pub ptr: *mut ::aya_ebpf::cty::c_void,
+    pub id: u32_,
+}
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct bpf_stack_state {
+    pub spilled_ptr: bpf_reg_state,
+    pub slot_type: [u8_; 8usize],
+}
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct bpf_reference_state {
+    pub id: ::aya_ebpf::cty::c_int,
+    pub insn_idx: ::aya_ebpf::cty::c_int,
+    pub callback_ref: ::aya_ebpf::cty::c_int,
+}
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct bpf_jmp_history_entry {
+    pub idx: u32_,
+    pub _bitfield_align_1: [u32; 0],
+    pub _bitfield_1: __BindgenBitfieldUnit<[u8; 4usize]>,
+    pub linked_regs: u64_,
+}
+impl bpf_jmp_history_entry {
+    #[inline]
+    pub fn prev_idx(&self) -> u32_ {
+        unsafe { ::core::mem::transmute(self._bitfield_1.get(0usize, 22u8) as u32) }
+    }
+    #[inline]
+    pub fn set_prev_idx(&mut self, val: u32_) {
+        unsafe {
+            let val: u32 = ::core::mem::transmute(val);
+            self._bitfield_1.set(0usize, 22u8, val as u64)
+        }
+    }
+    #[inline]
+    pub unsafe fn prev_idx_raw(this: *const Self) -> u32_ {
+        unsafe {
+            ::core::mem::transmute(<__BindgenBitfieldUnit<[u8; 4usize]>>::raw_get(
+                ::core::ptr::addr_of!((*this)._bitfield_1),
+                0usize,
+                22u8,
+            ) as u32)
+        }
+    }
+    #[inline]
+    pub unsafe fn set_prev_idx_raw(this: *mut Self, val: u32_) {
+        unsafe {
+            let val: u32 = ::core::mem::transmute(val);
+            <__BindgenBitfieldUnit<[u8; 4usize]>>::raw_set(
+                ::core::ptr::addr_of_mut!((*this)._bitfield_1),
+                0usize,
+                22u8,
+                val as u64,
+            )
+        }
+    }
+    #[inline]
+    pub fn flags(&self) -> u32_ {
+        unsafe { ::core::mem::transmute(self._bitfield_1.get(22usize, 10u8) as u32) }
+    }
+    #[inline]
+    pub fn set_flags(&mut self, val: u32_) {
+        unsafe {
+            let val: u32 = ::core::mem::transmute(val);
+            self._bitfield_1.set(22usize, 10u8, val as u64)
+        }
+    }
+    #[inline]
+    pub unsafe fn flags_raw(this: *const Self) -> u32_ {
+        unsafe {
+            ::core::mem::transmute(<__BindgenBitfieldUnit<[u8; 4usize]>>::raw_get(
+                ::core::ptr::addr_of!((*this)._bitfield_1),
+                22usize,
+                10u8,
+            ) as u32)
+        }
+    }
+    #[inline]
+    pub unsafe fn set_flags_raw(this: *mut Self, val: u32_) {
+        unsafe {
+            let val: u32 = ::core::mem::transmute(val);
+            <__BindgenBitfieldUnit<[u8; 4usize]>>::raw_set(
+                ::core::ptr::addr_of_mut!((*this)._bitfield_1),
+                22usize,
+                10u8,
+                val as u64,
+            )
+        }
+    }
+    #[inline]
+    pub fn new_bitfield_1(prev_idx: u32_, flags: u32_) -> __BindgenBitfieldUnit<[u8; 4usize]> {
+        let mut __bindgen_bitfield_unit: __BindgenBitfieldUnit<[u8; 4usize]> = Default::default();
+        __bindgen_bitfield_unit.set(0usize, 22u8, {
+            let prev_idx: u32 = unsafe { ::core::mem::transmute(prev_idx) };
+            prev_idx as u64
+        });
+        __bindgen_bitfield_unit.set(22usize, 10u8, {
+            let flags: u32 = unsafe { ::core::mem::transmute(flags) };
+            flags as u64
+        });
+        __bindgen_bitfield_unit
+    }
+}
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct bpf_verifier_state {
+    pub frame: [*mut bpf_func_state; 8usize],
+    pub parent: *mut bpf_verifier_state,
+    pub branches: u32_,
+    pub insn_idx: u32_,
+    pub curframe: u32_,
+    pub active_lock: bpf_active_lock,
+    pub speculative: bool_,
+    pub active_rcu_lock: bool_,
+    pub active_preempt_lock: u32_,
+    pub used_as_loop_entry: bool_,
+    pub in_sleepable: bool_,
+    pub first_insn_idx: u32_,
+    pub last_insn_idx: u32_,
+    pub loop_entry: *mut bpf_verifier_state,
+    pub jmp_history: *mut bpf_jmp_history_entry,
+    pub jmp_history_cnt: u32_,
+    pub dfs_depth: u32_,
+    pub callback_unroll_depth: u32_,
+    pub may_goto_depth: u32_,
+}
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct bpf_verifier_state_list {
+    pub state: bpf_verifier_state,
+    pub next: *mut bpf_verifier_state_list,
+    pub miss_cnt: ::aya_ebpf::cty::c_int,
+    pub hit_cnt: ::aya_ebpf::cty::c_int,
+}
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct bpf_loop_inline_state {
+    pub _bitfield_align_1: [u8; 0],
+    pub _bitfield_1: __BindgenBitfieldUnit<[u8; 1usize]>,
+    pub callback_subprogno: u32_,
+}
+impl bpf_loop_inline_state {
+    #[inline]
+    pub fn initialized(&self) -> ::aya_ebpf::cty::c_uint {
+        unsafe { ::core::mem::transmute(self._bitfield_1.get(0usize, 1u8) as u32) }
+    }
+    #[inline]
+    pub fn set_initialized(&mut self, val: ::aya_ebpf::cty::c_uint) {
+        unsafe {
+            let val: u32 = ::core::mem::transmute(val);
+            self._bitfield_1.set(0usize, 1u8, val as u64)
+        }
+    }
+    #[inline]
+    pub unsafe fn initialized_raw(this: *const Self) -> ::aya_ebpf::cty::c_uint {
+        unsafe {
+            ::core::mem::transmute(<__BindgenBitfieldUnit<[u8; 1usize]>>::raw_get(
+                ::core::ptr::addr_of!((*this)._bitfield_1),
+                0usize,
+                1u8,
+            ) as u32)
+        }
+    }
+    #[inline]
+    pub unsafe fn set_initialized_raw(this: *mut Self, val: ::aya_ebpf::cty::c_uint) {
+        unsafe {
+            let val: u32 = ::core::mem::transmute(val);
+            <__BindgenBitfieldUnit<[u8; 1usize]>>::raw_set(
+                ::core::ptr::addr_of_mut!((*this)._bitfield_1),
+                0usize,
+                1u8,
+                val as u64,
+            )
+        }
+    }
+    #[inline]
+    pub fn fit_for_inline(&self) -> ::aya_ebpf::cty::c_uint {
+        unsafe { ::core::mem::transmute(self._bitfield_1.get(1usize, 1u8) as u32) }
+    }
+    #[inline]
+    pub fn set_fit_for_inline(&mut self, val: ::aya_ebpf::cty::c_uint) {
+        unsafe {
+            let val: u32 = ::core::mem::transmute(val);
+            self._bitfield_1.set(1usize, 1u8, val as u64)
+        }
+    }
+    #[inline]
+    pub unsafe fn fit_for_inline_raw(this: *const Self) -> ::aya_ebpf::cty::c_uint {
+        unsafe {
+            ::core::mem::transmute(<__BindgenBitfieldUnit<[u8; 1usize]>>::raw_get(
+                ::core::ptr::addr_of!((*this)._bitfield_1),
+                1usize,
+                1u8,
+            ) as u32)
+        }
+    }
+    #[inline]
+    pub unsafe fn set_fit_for_inline_raw(this: *mut Self, val: ::aya_ebpf::cty::c_uint) {
+        unsafe {
+            let val: u32 = ::core::mem::transmute(val);
+            <__BindgenBitfieldUnit<[u8; 1usize]>>::raw_set(
+                ::core::ptr::addr_of_mut!((*this)._bitfield_1),
+                1usize,
+                1u8,
+                val as u64,
+            )
+        }
+    }
+    #[inline]
+    pub fn new_bitfield_1(
+        initialized: ::aya_ebpf::cty::c_uint,
+        fit_for_inline: ::aya_ebpf::cty::c_uint,
+    ) -> __BindgenBitfieldUnit<[u8; 1usize]> {
+        let mut __bindgen_bitfield_unit: __BindgenBitfieldUnit<[u8; 1usize]> = Default::default();
+        __bindgen_bitfield_unit.set(0usize, 1u8, {
+            let initialized: u32 = unsafe { ::core::mem::transmute(initialized) };
+            initialized as u64
+        });
+        __bindgen_bitfield_unit.set(1usize, 1u8, {
+            let fit_for_inline: u32 = unsafe { ::core::mem::transmute(fit_for_inline) };
+            fit_for_inline as u64
+        });
+        __bindgen_bitfield_unit
+    }
+}
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct bpf_map_ptr_state {
+    pub map_ptr: *mut bpf_map,
+    pub poison: bool_,
+    pub unpriv: bool_,
+}
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct bpf_insn_aux_data {
+    pub __bindgen_anon_1: bpf_insn_aux_data__bindgen_ty_1,
+    pub __bindgen_anon_2: bpf_insn_aux_data__bindgen_ty_2,
+    pub kptr_struct_meta: *mut btf_struct_meta,
+    pub map_key_state: u64_,
+    pub ctx_field_size: ::aya_ebpf::cty::c_int,
+    pub seen: u32_,
+    pub sanitize_stack_spill: bool_,
+    pub zext_dst: bool_,
+    pub needs_zext: bool_,
+    pub storage_get_func_atomic: bool_,
+    pub is_iter_next: bool_,
+    pub call_with_percpu_alloc_ptr: bool_,
+    pub alu_state: u8_,
+    pub _bitfield_align_1: [u8; 0],
+    pub _bitfield_1: __BindgenBitfieldUnit<[u8; 1usize]>,
+    pub orig_idx: ::aya_ebpf::cty::c_uint,
+    pub jmp_point: bool_,
+    pub prune_point: bool_,
+    pub force_checkpoint: bool_,
+    pub calls_callback: bool_,
+}
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub union bpf_insn_aux_data__bindgen_ty_1 {
+    pub ptr_type: bpf_reg_type::Type,
+    pub map_ptr_state: bpf_map_ptr_state,
+    pub call_imm: s32,
+    pub alu_limit: u32_,
+    pub __bindgen_anon_1: bpf_insn_aux_data__bindgen_ty_1__bindgen_ty_1,
+    pub btf_var: bpf_insn_aux_data__bindgen_ty_1__bindgen_ty_2,
+    pub loop_inline_state: bpf_loop_inline_state,
+}
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct bpf_insn_aux_data__bindgen_ty_1__bindgen_ty_1 {
+    pub map_index: u32_,
+    pub map_off: u32_,
+}
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct bpf_insn_aux_data__bindgen_ty_1__bindgen_ty_2 {
+    pub reg_type: bpf_reg_type::Type,
+    pub __bindgen_anon_1: bpf_insn_aux_data__bindgen_ty_1__bindgen_ty_2__bindgen_ty_1,
+}
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub union bpf_insn_aux_data__bindgen_ty_1__bindgen_ty_2__bindgen_ty_1 {
+    pub __bindgen_anon_1: bpf_insn_aux_data__bindgen_ty_1__bindgen_ty_2__bindgen_ty_1__bindgen_ty_1,
+    pub mem_size: u32_,
+}
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct bpf_insn_aux_data__bindgen_ty_1__bindgen_ty_2__bindgen_ty_1__bindgen_ty_1 {
+    pub btf: *mut btf,
+    pub btf_id: u32_,
+}
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub union bpf_insn_aux_data__bindgen_ty_2 {
+    pub obj_new_size: u64_,
+    pub insert_off: u64_,
+}
+impl bpf_insn_aux_data {
+    #[inline]
+    pub fn fastcall_pattern(&self) -> u8_ {
+        unsafe { ::core::mem::transmute(self._bitfield_1.get(0usize, 1u8) as u8) }
+    }
+    #[inline]
+    pub fn set_fastcall_pattern(&mut self, val: u8_) {
+        unsafe {
+            let val: u8 = ::core::mem::transmute(val);
+            self._bitfield_1.set(0usize, 1u8, val as u64)
+        }
+    }
+    #[inline]
+    pub unsafe fn fastcall_pattern_raw(this: *const Self) -> u8_ {
+        unsafe {
+            ::core::mem::transmute(<__BindgenBitfieldUnit<[u8; 1usize]>>::raw_get(
+                ::core::ptr::addr_of!((*this)._bitfield_1),
+                0usize,
+                1u8,
+            ) as u8)
+        }
+    }
+    #[inline]
+    pub unsafe fn set_fastcall_pattern_raw(this: *mut Self, val: u8_) {
+        unsafe {
+            let val: u8 = ::core::mem::transmute(val);
+            <__BindgenBitfieldUnit<[u8; 1usize]>>::raw_set(
+                ::core::ptr::addr_of_mut!((*this)._bitfield_1),
+                0usize,
+                1u8,
+                val as u64,
+            )
+        }
+    }
+    #[inline]
+    pub fn fastcall_spills_num(&self) -> u8_ {
+        unsafe { ::core::mem::transmute(self._bitfield_1.get(1usize, 3u8) as u8) }
+    }
+    #[inline]
+    pub fn set_fastcall_spills_num(&mut self, val: u8_) {
+        unsafe {
+            let val: u8 = ::core::mem::transmute(val);
+            self._bitfield_1.set(1usize, 3u8, val as u64)
+        }
+    }
+    #[inline]
+    pub unsafe fn fastcall_spills_num_raw(this: *const Self) -> u8_ {
+        unsafe {
+            ::core::mem::transmute(<__BindgenBitfieldUnit<[u8; 1usize]>>::raw_get(
+                ::core::ptr::addr_of!((*this)._bitfield_1),
+                1usize,
+                3u8,
+            ) as u8)
+        }
+    }
+    #[inline]
+    pub unsafe fn set_fastcall_spills_num_raw(this: *mut Self, val: u8_) {
+        unsafe {
+            let val: u8 = ::core::mem::transmute(val);
+            <__BindgenBitfieldUnit<[u8; 1usize]>>::raw_set(
+                ::core::ptr::addr_of_mut!((*this)._bitfield_1),
+                1usize,
+                3u8,
+                val as u64,
+            )
+        }
+    }
+    #[inline]
+    pub fn new_bitfield_1(
+        fastcall_pattern: u8_,
+        fastcall_spills_num: u8_,
+    ) -> __BindgenBitfieldUnit<[u8; 1usize]> {
+        let mut __bindgen_bitfield_unit: __BindgenBitfieldUnit<[u8; 1usize]> = Default::default();
+        __bindgen_bitfield_unit.set(0usize, 1u8, {
+            let fastcall_pattern: u8 = unsafe { ::core::mem::transmute(fastcall_pattern) };
+            fastcall_pattern as u64
+        });
+        __bindgen_bitfield_unit.set(1usize, 3u8, {
+            let fastcall_spills_num: u8 = unsafe { ::core::mem::transmute(fastcall_spills_num) };
+            fastcall_spills_num as u64
+        });
+        __bindgen_bitfield_unit
+    }
+}
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct ww_acquire_ctx {
+    pub task: *mut task_struct,
+    pub stamp: ::aya_ebpf::cty::c_ulong,
+    pub acquired: ::aya_ebpf::cty::c_uint,
+    pub wounded: ::aya_ebpf::cty::c_ushort,
+    pub is_wait_die: ::aya_ebpf::cty::c_ushort,
+}
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct rt_waiter_node {
+    pub entry: rb_node,
+    pub prio: ::aya_ebpf::cty::c_int,
+    pub deadline: u64_,
+}
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct rt_mutex_waiter {
+    pub tree: rt_waiter_node,
+    pub pi_tree: rt_waiter_node,
+    pub task: *mut task_struct,
+    pub lock: *mut rt_mutex_base,
+    pub wake_state: ::aya_ebpf::cty::c_uint,
+    pub ww_ctx: *mut ww_acquire_ctx,
+}
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct rt_mutex_base {
+    pub wait_lock: raw_spinlock_t,
+    pub waiters: rb_root_cached,
+    pub owner: *mut task_struct,
+}
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct rt_mutex {
+    pub rtmutex: rt_mutex_base,
+}
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct msi_dev_domain {
+    pub store: xarray,
+    pub domain: *mut irq_domain,
+}
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct msi_device_data {
+    pub properties: ::aya_ebpf::cty::c_ulong,
+    pub mutex: mutex,
+    pub __domains: [msi_dev_domain; 1usize],
+    pub __iter_idx: ::aya_ebpf::cty::c_ulong,
+}
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct rcu_exp_work {
+    pub rew_s: ::aya_ebpf::cty::c_ulong,
+    pub rew_work: kthread_work,
+}
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct rcu_node {
+    pub lock: raw_spinlock_t,
+    pub gp_seq: ::aya_ebpf::cty::c_ulong,
+    pub gp_seq_needed: ::aya_ebpf::cty::c_ulong,
+    pub completedqs: ::aya_ebpf::cty::c_ulong,
+    pub qsmask: ::aya_ebpf::cty::c_ulong,
+    pub rcu_gp_init_mask: ::aya_ebpf::cty::c_ulong,
+    pub qsmaskinit: ::aya_ebpf::cty::c_ulong,
+    pub qsmaskinitnext: ::aya_ebpf::cty::c_ulong,
+    pub expmask: ::aya_ebpf::cty::c_ulong,
+    pub expmaskinit: ::aya_ebpf::cty::c_ulong,
+    pub expmaskinitnext: ::aya_ebpf::cty::c_ulong,
+    pub exp_kworker: *mut kthread_worker,
+    pub cbovldmask: ::aya_ebpf::cty::c_ulong,
+    pub ffmask: ::aya_ebpf::cty::c_ulong,
+    pub grpmask: ::aya_ebpf::cty::c_ulong,
+    pub grplo: ::aya_ebpf::cty::c_int,
+    pub grphi: ::aya_ebpf::cty::c_int,
+    pub grpnum: u8_,
+    pub level: u8_,
+    pub wait_blkd_tasks: bool_,
+    pub parent: *mut rcu_node,
+    pub blkd_tasks: list_head,
+    pub gp_tasks: *mut list_head,
+    pub exp_tasks: *mut list_head,
+    pub boost_tasks: *mut list_head,
+    pub boost_mtx: rt_mutex,
+    pub boost_time: ::aya_ebpf::cty::c_ulong,
+    pub kthread_mutex: mutex,
+    pub boost_kthread_task: *mut task_struct,
+    pub boost_kthread_status: ::aya_ebpf::cty::c_uint,
+    pub n_boosts: ::aya_ebpf::cty::c_ulong,
+    pub nocb_gp_wq: [swait_queue_head; 2usize],
+    pub _bitfield_align_1: [u8; 0],
+    pub _bitfield_1: __BindgenBitfieldUnit<[u8; 56usize]>,
+    pub fqslock: raw_spinlock_t,
+    pub _bitfield_align_2: [u8; 0],
+    pub _bitfield_2: __BindgenBitfieldUnit<[u8; 56usize]>,
+    pub __bindgen_padding_0: u32,
+    pub exp_lock: spinlock_t,
+    pub exp_seq_rq: ::aya_ebpf::cty::c_ulong,
+    pub exp_wq: [wait_queue_head_t; 4usize],
+    pub rew: rcu_exp_work,
+    pub exp_need_flush: bool_,
+    pub exp_poll_lock: raw_spinlock_t,
+    pub exp_seq_poll_rq: ::aya_ebpf::cty::c_ulong,
+    pub exp_poll_wq: work_struct,
+    pub _bitfield_align_3: [u8; 0],
+    pub _bitfield_3: __BindgenBitfieldUnit<[u8; 48usize]>,
+}
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct cma {
+    pub base_pfn: ::aya_ebpf::cty::c_ulong,
+    pub count: ::aya_ebpf::cty::c_ulong,
+    pub bitmap: *mut ::aya_ebpf::cty::c_ulong,
+    pub order_per_bit: ::aya_ebpf::cty::c_uint,
+    pub lock: spinlock_t,
+    pub name: [::aya_ebpf::cty::c_char; 64usize],
+    pub reserve_pages_on_error: bool_,
+}
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct io_tlb_area {
+    pub used: ::aya_ebpf::cty::c_ulong,
+    pub index: ::aya_ebpf::cty::c_uint,
+    pub lock: spinlock_t,
+}
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct io_tlb_slot {
+    pub orig_addr: phys_addr_t,
+    pub alloc_size: usize,
+    pub list: ::aya_ebpf::cty::c_ushort,
+    pub pad_slots: ::aya_ebpf::cty::c_ushort,
+}
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct module_sect_attr {
+    pub battr: bin_attribute,
+    pub address: ::aya_ebpf::cty::c_ulong,
+}
+#[repr(C)]
+#[derive(Debug)]
+pub struct module_sect_attrs {
+    pub grp: attribute_group,
+    pub nsections: ::aya_ebpf::cty::c_uint,
+    pub attrs: __IncompleteArrayField<module_sect_attr>,
+}
+#[repr(C)]
+#[derive(Debug)]
+pub struct module_notes_attrs {
+    pub dir: *mut kobject,
+    pub notes: ::aya_ebpf::cty::c_uint,
+    pub attrs: __IncompleteArrayField<bin_attribute>,
+}
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct audit_ntp_val {
+    pub oldval: ::aya_ebpf::cty::c_longlong,
+    pub newval: ::aya_ebpf::cty::c_longlong,
+}
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct audit_ntp_data {
+    pub vals: [audit_ntp_val; 6usize],
+}
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub union futex_key {
+    pub shared: futex_key__bindgen_ty_1,
+    pub private: futex_key__bindgen_ty_2,
+    pub both: futex_key__bindgen_ty_3,
+}
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct futex_key__bindgen_ty_1 {
+    pub i_seq: u64_,
+    pub pgoff: ::aya_ebpf::cty::c_ulong,
+    pub offset: ::aya_ebpf::cty::c_uint,
+}
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct futex_key__bindgen_ty_2 {
+    pub __bindgen_anon_1: futex_key__bindgen_ty_2__bindgen_ty_1,
+    pub address: ::aya_ebpf::cty::c_ulong,
+    pub offset: ::aya_ebpf::cty::c_uint,
+}
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub union futex_key__bindgen_ty_2__bindgen_ty_1 {
+    pub mm: *mut mm_struct,
+    pub __tmp: u64_,
+}
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct futex_key__bindgen_ty_3 {
+    pub ptr: u64_,
+    pub word: ::aya_ebpf::cty::c_ulong,
+    pub offset: ::aya_ebpf::cty::c_uint,
+}
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct futex_pi_state {
+    pub list: list_head,
+    pub pi_mutex: rt_mutex_base,
+    pub owner: *mut task_struct,
+    pub refcount: refcount_t,
+    pub key: futex_key,
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -36154,22 +38056,6 @@ pub struct bpf_storage_buffer {
     pub rcu: callback_head,
     pub data: __IncompleteArrayField<::aya_ebpf::cty::c_char>,
 }
-#[repr(C)]
-#[derive(Debug)]
-pub struct btf_id_set8 {
-    pub cnt: u32_,
-    pub flags: u32_,
-    pub pairs: __IncompleteArrayField<btf_id_set8__bindgen_ty_1>,
-}
-#[repr(C)]
-#[derive(Debug, Copy, Clone)]
-pub struct btf_id_set8__bindgen_ty_1 {
-    pub id: u32_,
-    pub flags: u32_,
-}
-pub type btf_kfunc_filter_t = ::core::option::Option<
-    unsafe extern "C" fn(arg1: *const bpf_prog, arg2: u32_) -> ::aya_ebpf::cty::c_int,
->;
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct rdma_cgroup {
@@ -36892,11 +38778,15 @@ pub struct trace_array {
     pub allocated_snapshot: bool_,
     pub snapshot_trigger_lock: spinlock_t,
     pub snapshot: ::aya_ebpf::cty::c_uint,
-    pub mapped: ::aya_ebpf::cty::c_uint,
     pub max_latency: ::aya_ebpf::cty::c_ulong,
     pub d_max_latency: *mut dentry,
     pub fsnotify_work: work_struct,
     pub fsnotify_irqwork: irq_work,
+    pub mapped: ::aya_ebpf::cty::c_uint,
+    pub range_addr_start: ::aya_ebpf::cty::c_ulong,
+    pub range_addr_size: ::aya_ebpf::cty::c_ulong,
+    pub text_delta: ::aya_ebpf::cty::c_long,
+    pub data_delta: ::aya_ebpf::cty::c_long,
     pub filtered_pids: *mut trace_pid_list,
     pub filtered_no_pids: *mut trace_pid_list,
     pub max_lock: arch_spinlock_t,
@@ -37177,9 +39067,27 @@ pub struct trace_buffer {
     pub clock: ::core::option::Option<unsafe extern "C" fn() -> u64_>,
     pub irq_work: rb_irq_work,
     pub time_stamp_abs: bool_,
+    pub range_addr_start: ::aya_ebpf::cty::c_ulong,
+    pub range_addr_end: ::aya_ebpf::cty::c_ulong,
+    pub last_text_delta: ::aya_ebpf::cty::c_long,
+    pub last_data_delta: ::aya_ebpf::cty::c_long,
     pub subbuf_size: ::aya_ebpf::cty::c_uint,
     pub subbuf_order: ::aya_ebpf::cty::c_uint,
     pub max_data_size: ::aya_ebpf::cty::c_uint,
+}
+#[repr(C)]
+#[derive(Debug)]
+pub struct ring_buffer_meta {
+    pub magic: ::aya_ebpf::cty::c_int,
+    pub struct_size: ::aya_ebpf::cty::c_int,
+    pub text_addr: ::aya_ebpf::cty::c_ulong,
+    pub data_addr: ::aya_ebpf::cty::c_ulong,
+    pub first_buffer: ::aya_ebpf::cty::c_ulong,
+    pub head_buffer: ::aya_ebpf::cty::c_ulong,
+    pub commit_buffer: ::aya_ebpf::cty::c_ulong,
+    pub subbuf_size: __u32,
+    pub nr_subbufs: __u32,
+    pub buffers: __IncompleteArrayField<::aya_ebpf::cty::c_int>,
 }
 #[repr(C)]
 #[derive(Debug)]
@@ -37197,8 +39105,90 @@ pub struct buffer_page {
     pub entries: local_t,
     pub real_end: ::aya_ebpf::cty::c_ulong,
     pub order: ::aya_ebpf::cty::c_uint,
-    pub id: u32_,
+    pub _bitfield_align_1: [u32; 0],
+    pub _bitfield_1: __BindgenBitfieldUnit<[u8; 4usize]>,
     pub page: *mut buffer_data_page,
+}
+impl buffer_page {
+    #[inline]
+    pub fn id(&self) -> u32_ {
+        unsafe { ::core::mem::transmute(self._bitfield_1.get(0usize, 30u8) as u32) }
+    }
+    #[inline]
+    pub fn set_id(&mut self, val: u32_) {
+        unsafe {
+            let val: u32 = ::core::mem::transmute(val);
+            self._bitfield_1.set(0usize, 30u8, val as u64)
+        }
+    }
+    #[inline]
+    pub unsafe fn id_raw(this: *const Self) -> u32_ {
+        unsafe {
+            ::core::mem::transmute(<__BindgenBitfieldUnit<[u8; 4usize]>>::raw_get(
+                ::core::ptr::addr_of!((*this)._bitfield_1),
+                0usize,
+                30u8,
+            ) as u32)
+        }
+    }
+    #[inline]
+    pub unsafe fn set_id_raw(this: *mut Self, val: u32_) {
+        unsafe {
+            let val: u32 = ::core::mem::transmute(val);
+            <__BindgenBitfieldUnit<[u8; 4usize]>>::raw_set(
+                ::core::ptr::addr_of_mut!((*this)._bitfield_1),
+                0usize,
+                30u8,
+                val as u64,
+            )
+        }
+    }
+    #[inline]
+    pub fn range(&self) -> u32_ {
+        unsafe { ::core::mem::transmute(self._bitfield_1.get(30usize, 1u8) as u32) }
+    }
+    #[inline]
+    pub fn set_range(&mut self, val: u32_) {
+        unsafe {
+            let val: u32 = ::core::mem::transmute(val);
+            self._bitfield_1.set(30usize, 1u8, val as u64)
+        }
+    }
+    #[inline]
+    pub unsafe fn range_raw(this: *const Self) -> u32_ {
+        unsafe {
+            ::core::mem::transmute(<__BindgenBitfieldUnit<[u8; 4usize]>>::raw_get(
+                ::core::ptr::addr_of!((*this)._bitfield_1),
+                30usize,
+                1u8,
+            ) as u32)
+        }
+    }
+    #[inline]
+    pub unsafe fn set_range_raw(this: *mut Self, val: u32_) {
+        unsafe {
+            let val: u32 = ::core::mem::transmute(val);
+            <__BindgenBitfieldUnit<[u8; 4usize]>>::raw_set(
+                ::core::ptr::addr_of_mut!((*this)._bitfield_1),
+                30usize,
+                1u8,
+                val as u64,
+            )
+        }
+    }
+    #[inline]
+    pub fn new_bitfield_1(id: u32_, range: u32_) -> __BindgenBitfieldUnit<[u8; 4usize]> {
+        let mut __bindgen_bitfield_unit: __BindgenBitfieldUnit<[u8; 4usize]> = Default::default();
+        __bindgen_bitfield_unit.set(0usize, 30u8, {
+            let id: u32 = unsafe { ::core::mem::transmute(id) };
+            id as u64
+        });
+        __bindgen_bitfield_unit.set(30usize, 1u8, {
+            let range: u32 = unsafe { ::core::mem::transmute(range) };
+            range as u64
+        });
+        __bindgen_bitfield_unit
+    }
 }
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
@@ -37220,6 +39210,7 @@ pub struct ring_buffer_per_cpu {
     pub nr_pages: ::aya_ebpf::cty::c_ulong,
     pub current_context: ::aya_ebpf::cty::c_uint,
     pub pages: *mut list_head,
+    pub cnt: ::aya_ebpf::cty::c_ulong,
     pub head_page: *mut buffer_page,
     pub tail_page: *mut buffer_page,
     pub commit_page: *mut buffer_page,
@@ -37247,9 +39238,11 @@ pub struct ring_buffer_per_cpu {
     pub read_stamp: u64_,
     pub pages_removed: ::aya_ebpf::cty::c_ulong,
     pub mapped: ::aya_ebpf::cty::c_uint,
+    pub user_mapped: ::aya_ebpf::cty::c_uint,
     pub mapping_lock: mutex,
     pub subbuf_ids: *mut ::aya_ebpf::cty::c_ulong,
     pub meta_page: *mut trace_buffer_meta,
+    pub ring_meta: *mut ring_buffer_meta,
     pub nr_pages_to_update: ::aya_ebpf::cty::c_long,
     pub new_pages: list_head,
     pub update_pages_work: work_struct,
@@ -37269,6 +39262,12 @@ pub struct ftrace_event_field {
     pub len: ::aya_ebpf::cty::c_int,
 }
 #[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct bio_crypt_ctx {
+    pub bc_key: *const blk_crypto_key,
+    pub bc_dun: [u64_; 4usize],
+}
+#[repr(C)]
 #[derive(Debug)]
 pub struct bio_integrity_payload {
     pub bip_bio: *mut bio,
@@ -37281,12 +39280,6 @@ pub struct bio_integrity_payload {
     pub bip_work: work_struct,
     pub bip_vec: *mut bio_vec,
     pub bip_inline_vecs: __IncompleteArrayField<bio_vec>,
-}
-#[repr(C)]
-#[derive(Debug, Copy, Clone)]
-pub struct bio_crypt_ctx {
-    pub bc_key: *const blk_crypto_key,
-    pub bc_dun: [u64_; 4usize],
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -37734,37 +39727,6 @@ pub struct filter_pred {
     pub not: ::aya_ebpf::cty::c_int,
     pub op: ::aya_ebpf::cty::c_int,
 }
-pub mod uprobe_filter_ctx {
-    pub type Type = ::aya_ebpf::cty::c_uint;
-    pub const UPROBE_FILTER_REGISTER: Type = 0;
-    pub const UPROBE_FILTER_UNREGISTER: Type = 1;
-    pub const UPROBE_FILTER_MMAP: Type = 2;
-}
-#[repr(C)]
-#[derive(Debug, Copy, Clone)]
-pub struct uprobe_consumer {
-    pub handler: ::core::option::Option<
-        unsafe extern "C" fn(
-            arg1: *mut uprobe_consumer,
-            arg2: *mut pt_regs,
-        ) -> ::aya_ebpf::cty::c_int,
-    >,
-    pub ret_handler: ::core::option::Option<
-        unsafe extern "C" fn(
-            arg1: *mut uprobe_consumer,
-            arg2: ::aya_ebpf::cty::c_ulong,
-            arg3: *mut pt_regs,
-        ) -> ::aya_ebpf::cty::c_int,
-    >,
-    pub filter: ::core::option::Option<
-        unsafe extern "C" fn(
-            arg1: *mut uprobe_consumer,
-            arg2: uprobe_filter_ctx::Type,
-            arg3: *mut mm_struct,
-        ) -> bool_,
-    >,
-    pub next: *mut uprobe_consumer,
-}
 #[repr(C)]
 #[derive(Copy, Clone)]
 pub struct bpf_local_storage {
@@ -37774,110 +39736,6 @@ pub struct bpf_local_storage {
     pub owner: *mut ::aya_ebpf::cty::c_void,
     pub rcu: callback_head,
     pub lock: raw_spinlock_t,
-}
-#[repr(C)]
-#[derive(Debug, Copy, Clone)]
-pub struct fileattr {
-    pub flags: u32_,
-    pub fsx_xflags: u32_,
-    pub fsx_extsize: u32_,
-    pub fsx_nextents: u32_,
-    pub fsx_projid: u32_,
-    pub fsx_cowextsize: u32_,
-    pub _bitfield_align_1: [u8; 0],
-    pub _bitfield_1: __BindgenBitfieldUnit<[u8; 1usize]>,
-    pub __bindgen_padding_0: [u8; 3usize],
-}
-impl fileattr {
-    #[inline]
-    pub fn flags_valid(&self) -> bool_ {
-        unsafe { ::core::mem::transmute(self._bitfield_1.get(0usize, 1u8) as u8) }
-    }
-    #[inline]
-    pub fn set_flags_valid(&mut self, val: bool_) {
-        unsafe {
-            let val: u8 = ::core::mem::transmute(val);
-            self._bitfield_1.set(0usize, 1u8, val as u64)
-        }
-    }
-    #[inline]
-    pub unsafe fn flags_valid_raw(this: *const Self) -> bool_ {
-        unsafe {
-            ::core::mem::transmute(<__BindgenBitfieldUnit<[u8; 1usize]>>::raw_get(
-                ::core::ptr::addr_of!((*this)._bitfield_1),
-                0usize,
-                1u8,
-            ) as u8)
-        }
-    }
-    #[inline]
-    pub unsafe fn set_flags_valid_raw(this: *mut Self, val: bool_) {
-        unsafe {
-            let val: u8 = ::core::mem::transmute(val);
-            <__BindgenBitfieldUnit<[u8; 1usize]>>::raw_set(
-                ::core::ptr::addr_of_mut!((*this)._bitfield_1),
-                0usize,
-                1u8,
-                val as u64,
-            )
-        }
-    }
-    #[inline]
-    pub fn fsx_valid(&self) -> bool_ {
-        unsafe { ::core::mem::transmute(self._bitfield_1.get(1usize, 1u8) as u8) }
-    }
-    #[inline]
-    pub fn set_fsx_valid(&mut self, val: bool_) {
-        unsafe {
-            let val: u8 = ::core::mem::transmute(val);
-            self._bitfield_1.set(1usize, 1u8, val as u64)
-        }
-    }
-    #[inline]
-    pub unsafe fn fsx_valid_raw(this: *const Self) -> bool_ {
-        unsafe {
-            ::core::mem::transmute(<__BindgenBitfieldUnit<[u8; 1usize]>>::raw_get(
-                ::core::ptr::addr_of!((*this)._bitfield_1),
-                1usize,
-                1u8,
-            ) as u8)
-        }
-    }
-    #[inline]
-    pub unsafe fn set_fsx_valid_raw(this: *mut Self, val: bool_) {
-        unsafe {
-            let val: u8 = ::core::mem::transmute(val);
-            <__BindgenBitfieldUnit<[u8; 1usize]>>::raw_set(
-                ::core::ptr::addr_of_mut!((*this)._bitfield_1),
-                1usize,
-                1u8,
-                val as u64,
-            )
-        }
-    }
-    #[inline]
-    pub fn new_bitfield_1(
-        flags_valid: bool_,
-        fsx_valid: bool_,
-    ) -> __BindgenBitfieldUnit<[u8; 1usize]> {
-        let mut __bindgen_bitfield_unit: __BindgenBitfieldUnit<[u8; 1usize]> = Default::default();
-        __bindgen_bitfield_unit.set(0usize, 1u8, {
-            let flags_valid: u8 = unsafe { ::core::mem::transmute(flags_valid) };
-            flags_valid as u64
-        });
-        __bindgen_bitfield_unit.set(1usize, 1u8, {
-            let fsx_valid: u8 = unsafe { ::core::mem::transmute(fsx_valid) };
-            fsx_valid as u64
-        });
-        __bindgen_bitfield_unit
-    }
-}
-pub type bpfptr_t = sockptr_t;
-#[repr(C)]
-#[derive(Debug, Copy, Clone)]
-pub struct btf_struct_meta {
-    pub btf_id: u32_,
-    pub record: *mut btf_record,
 }
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
@@ -37901,993 +39759,6 @@ pub struct bpf_local_storage_map {
     pub bpf_ma: bool_,
 }
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
-pub struct bpf_verifier_log {
-    pub start_pos: u64_,
-    pub end_pos: u64_,
-    pub ubuf: *mut ::aya_ebpf::cty::c_char,
-    pub level: u32_,
-    pub len_total: u32_,
-    pub len_max: u32_,
-    pub kbuf: [::aya_ebpf::cty::c_char; 1024usize],
-}
-#[repr(C)]
-#[derive(Copy, Clone)]
-pub struct bpf_subprog_arg_info {
-    pub arg_type: bpf_arg_type::Type,
-    pub __bindgen_anon_1: bpf_subprog_arg_info__bindgen_ty_1,
-}
-#[repr(C)]
-#[derive(Copy, Clone)]
-pub union bpf_subprog_arg_info__bindgen_ty_1 {
-    pub mem_size: u32_,
-    pub btf_id: u32_,
-}
-#[repr(C)]
-#[derive(Copy, Clone)]
-pub struct bpf_subprog_info {
-    pub start: u32_,
-    pub linfo_idx: u32_,
-    pub stack_depth: u16_,
-    pub stack_extra: u16_,
-    pub _bitfield_align_1: [u8; 0],
-    pub _bitfield_1: __BindgenBitfieldUnit<[u8; 1usize]>,
-    pub arg_cnt: u8_,
-    pub args: [bpf_subprog_arg_info; 5usize],
-}
-impl bpf_subprog_info {
-    #[inline]
-    pub fn has_tail_call(&self) -> bool_ {
-        unsafe { ::core::mem::transmute(self._bitfield_1.get(0usize, 1u8) as u8) }
-    }
-    #[inline]
-    pub fn set_has_tail_call(&mut self, val: bool_) {
-        unsafe {
-            let val: u8 = ::core::mem::transmute(val);
-            self._bitfield_1.set(0usize, 1u8, val as u64)
-        }
-    }
-    #[inline]
-    pub unsafe fn has_tail_call_raw(this: *const Self) -> bool_ {
-        unsafe {
-            ::core::mem::transmute(<__BindgenBitfieldUnit<[u8; 1usize]>>::raw_get(
-                ::core::ptr::addr_of!((*this)._bitfield_1),
-                0usize,
-                1u8,
-            ) as u8)
-        }
-    }
-    #[inline]
-    pub unsafe fn set_has_tail_call_raw(this: *mut Self, val: bool_) {
-        unsafe {
-            let val: u8 = ::core::mem::transmute(val);
-            <__BindgenBitfieldUnit<[u8; 1usize]>>::raw_set(
-                ::core::ptr::addr_of_mut!((*this)._bitfield_1),
-                0usize,
-                1u8,
-                val as u64,
-            )
-        }
-    }
-    #[inline]
-    pub fn tail_call_reachable(&self) -> bool_ {
-        unsafe { ::core::mem::transmute(self._bitfield_1.get(1usize, 1u8) as u8) }
-    }
-    #[inline]
-    pub fn set_tail_call_reachable(&mut self, val: bool_) {
-        unsafe {
-            let val: u8 = ::core::mem::transmute(val);
-            self._bitfield_1.set(1usize, 1u8, val as u64)
-        }
-    }
-    #[inline]
-    pub unsafe fn tail_call_reachable_raw(this: *const Self) -> bool_ {
-        unsafe {
-            ::core::mem::transmute(<__BindgenBitfieldUnit<[u8; 1usize]>>::raw_get(
-                ::core::ptr::addr_of!((*this)._bitfield_1),
-                1usize,
-                1u8,
-            ) as u8)
-        }
-    }
-    #[inline]
-    pub unsafe fn set_tail_call_reachable_raw(this: *mut Self, val: bool_) {
-        unsafe {
-            let val: u8 = ::core::mem::transmute(val);
-            <__BindgenBitfieldUnit<[u8; 1usize]>>::raw_set(
-                ::core::ptr::addr_of_mut!((*this)._bitfield_1),
-                1usize,
-                1u8,
-                val as u64,
-            )
-        }
-    }
-    #[inline]
-    pub fn has_ld_abs(&self) -> bool_ {
-        unsafe { ::core::mem::transmute(self._bitfield_1.get(2usize, 1u8) as u8) }
-    }
-    #[inline]
-    pub fn set_has_ld_abs(&mut self, val: bool_) {
-        unsafe {
-            let val: u8 = ::core::mem::transmute(val);
-            self._bitfield_1.set(2usize, 1u8, val as u64)
-        }
-    }
-    #[inline]
-    pub unsafe fn has_ld_abs_raw(this: *const Self) -> bool_ {
-        unsafe {
-            ::core::mem::transmute(<__BindgenBitfieldUnit<[u8; 1usize]>>::raw_get(
-                ::core::ptr::addr_of!((*this)._bitfield_1),
-                2usize,
-                1u8,
-            ) as u8)
-        }
-    }
-    #[inline]
-    pub unsafe fn set_has_ld_abs_raw(this: *mut Self, val: bool_) {
-        unsafe {
-            let val: u8 = ::core::mem::transmute(val);
-            <__BindgenBitfieldUnit<[u8; 1usize]>>::raw_set(
-                ::core::ptr::addr_of_mut!((*this)._bitfield_1),
-                2usize,
-                1u8,
-                val as u64,
-            )
-        }
-    }
-    #[inline]
-    pub fn is_cb(&self) -> bool_ {
-        unsafe { ::core::mem::transmute(self._bitfield_1.get(3usize, 1u8) as u8) }
-    }
-    #[inline]
-    pub fn set_is_cb(&mut self, val: bool_) {
-        unsafe {
-            let val: u8 = ::core::mem::transmute(val);
-            self._bitfield_1.set(3usize, 1u8, val as u64)
-        }
-    }
-    #[inline]
-    pub unsafe fn is_cb_raw(this: *const Self) -> bool_ {
-        unsafe {
-            ::core::mem::transmute(<__BindgenBitfieldUnit<[u8; 1usize]>>::raw_get(
-                ::core::ptr::addr_of!((*this)._bitfield_1),
-                3usize,
-                1u8,
-            ) as u8)
-        }
-    }
-    #[inline]
-    pub unsafe fn set_is_cb_raw(this: *mut Self, val: bool_) {
-        unsafe {
-            let val: u8 = ::core::mem::transmute(val);
-            <__BindgenBitfieldUnit<[u8; 1usize]>>::raw_set(
-                ::core::ptr::addr_of_mut!((*this)._bitfield_1),
-                3usize,
-                1u8,
-                val as u64,
-            )
-        }
-    }
-    #[inline]
-    pub fn is_async_cb(&self) -> bool_ {
-        unsafe { ::core::mem::transmute(self._bitfield_1.get(4usize, 1u8) as u8) }
-    }
-    #[inline]
-    pub fn set_is_async_cb(&mut self, val: bool_) {
-        unsafe {
-            let val: u8 = ::core::mem::transmute(val);
-            self._bitfield_1.set(4usize, 1u8, val as u64)
-        }
-    }
-    #[inline]
-    pub unsafe fn is_async_cb_raw(this: *const Self) -> bool_ {
-        unsafe {
-            ::core::mem::transmute(<__BindgenBitfieldUnit<[u8; 1usize]>>::raw_get(
-                ::core::ptr::addr_of!((*this)._bitfield_1),
-                4usize,
-                1u8,
-            ) as u8)
-        }
-    }
-    #[inline]
-    pub unsafe fn set_is_async_cb_raw(this: *mut Self, val: bool_) {
-        unsafe {
-            let val: u8 = ::core::mem::transmute(val);
-            <__BindgenBitfieldUnit<[u8; 1usize]>>::raw_set(
-                ::core::ptr::addr_of_mut!((*this)._bitfield_1),
-                4usize,
-                1u8,
-                val as u64,
-            )
-        }
-    }
-    #[inline]
-    pub fn is_exception_cb(&self) -> bool_ {
-        unsafe { ::core::mem::transmute(self._bitfield_1.get(5usize, 1u8) as u8) }
-    }
-    #[inline]
-    pub fn set_is_exception_cb(&mut self, val: bool_) {
-        unsafe {
-            let val: u8 = ::core::mem::transmute(val);
-            self._bitfield_1.set(5usize, 1u8, val as u64)
-        }
-    }
-    #[inline]
-    pub unsafe fn is_exception_cb_raw(this: *const Self) -> bool_ {
-        unsafe {
-            ::core::mem::transmute(<__BindgenBitfieldUnit<[u8; 1usize]>>::raw_get(
-                ::core::ptr::addr_of!((*this)._bitfield_1),
-                5usize,
-                1u8,
-            ) as u8)
-        }
-    }
-    #[inline]
-    pub unsafe fn set_is_exception_cb_raw(this: *mut Self, val: bool_) {
-        unsafe {
-            let val: u8 = ::core::mem::transmute(val);
-            <__BindgenBitfieldUnit<[u8; 1usize]>>::raw_set(
-                ::core::ptr::addr_of_mut!((*this)._bitfield_1),
-                5usize,
-                1u8,
-                val as u64,
-            )
-        }
-    }
-    #[inline]
-    pub fn args_cached(&self) -> bool_ {
-        unsafe { ::core::mem::transmute(self._bitfield_1.get(6usize, 1u8) as u8) }
-    }
-    #[inline]
-    pub fn set_args_cached(&mut self, val: bool_) {
-        unsafe {
-            let val: u8 = ::core::mem::transmute(val);
-            self._bitfield_1.set(6usize, 1u8, val as u64)
-        }
-    }
-    #[inline]
-    pub unsafe fn args_cached_raw(this: *const Self) -> bool_ {
-        unsafe {
-            ::core::mem::transmute(<__BindgenBitfieldUnit<[u8; 1usize]>>::raw_get(
-                ::core::ptr::addr_of!((*this)._bitfield_1),
-                6usize,
-                1u8,
-            ) as u8)
-        }
-    }
-    #[inline]
-    pub unsafe fn set_args_cached_raw(this: *mut Self, val: bool_) {
-        unsafe {
-            let val: u8 = ::core::mem::transmute(val);
-            <__BindgenBitfieldUnit<[u8; 1usize]>>::raw_set(
-                ::core::ptr::addr_of_mut!((*this)._bitfield_1),
-                6usize,
-                1u8,
-                val as u64,
-            )
-        }
-    }
-    #[inline]
-    pub fn new_bitfield_1(
-        has_tail_call: bool_,
-        tail_call_reachable: bool_,
-        has_ld_abs: bool_,
-        is_cb: bool_,
-        is_async_cb: bool_,
-        is_exception_cb: bool_,
-        args_cached: bool_,
-    ) -> __BindgenBitfieldUnit<[u8; 1usize]> {
-        let mut __bindgen_bitfield_unit: __BindgenBitfieldUnit<[u8; 1usize]> = Default::default();
-        __bindgen_bitfield_unit.set(0usize, 1u8, {
-            let has_tail_call: u8 = unsafe { ::core::mem::transmute(has_tail_call) };
-            has_tail_call as u64
-        });
-        __bindgen_bitfield_unit.set(1usize, 1u8, {
-            let tail_call_reachable: u8 = unsafe { ::core::mem::transmute(tail_call_reachable) };
-            tail_call_reachable as u64
-        });
-        __bindgen_bitfield_unit.set(2usize, 1u8, {
-            let has_ld_abs: u8 = unsafe { ::core::mem::transmute(has_ld_abs) };
-            has_ld_abs as u64
-        });
-        __bindgen_bitfield_unit.set(3usize, 1u8, {
-            let is_cb: u8 = unsafe { ::core::mem::transmute(is_cb) };
-            is_cb as u64
-        });
-        __bindgen_bitfield_unit.set(4usize, 1u8, {
-            let is_async_cb: u8 = unsafe { ::core::mem::transmute(is_async_cb) };
-            is_async_cb as u64
-        });
-        __bindgen_bitfield_unit.set(5usize, 1u8, {
-            let is_exception_cb: u8 = unsafe { ::core::mem::transmute(is_exception_cb) };
-            is_exception_cb as u64
-        });
-        __bindgen_bitfield_unit.set(6usize, 1u8, {
-            let args_cached: u8 = unsafe { ::core::mem::transmute(args_cached) };
-            args_cached as u64
-        });
-        __bindgen_bitfield_unit
-    }
-}
-#[repr(C)]
-#[derive(Debug, Copy, Clone)]
-pub struct bpf_id_pair {
-    pub old: u32_,
-    pub cur: u32_,
-}
-#[repr(C)]
-#[derive(Debug, Copy, Clone)]
-pub struct bpf_idmap {
-    pub tmp_id_gen: u32_,
-    pub map: [bpf_id_pair; 600usize],
-}
-#[repr(C)]
-#[derive(Debug, Copy, Clone)]
-pub struct bpf_idset {
-    pub count: u32_,
-    pub ids: [u32_; 600usize],
-}
-#[repr(C)]
-#[derive(Debug, Copy, Clone)]
-pub struct backtrack_state {
-    pub env: *mut bpf_verifier_env,
-    pub frame: u32_,
-    pub reg_masks: [u32_; 8usize],
-    pub stack_masks: [u64_; 8usize],
-}
-pub mod bpf_dynptr_type {
-    pub type Type = ::aya_ebpf::cty::c_uint;
-    pub const BPF_DYNPTR_TYPE_INVALID: Type = 0;
-    pub const BPF_DYNPTR_TYPE_LOCAL: Type = 1;
-    pub const BPF_DYNPTR_TYPE_RINGBUF: Type = 2;
-    pub const BPF_DYNPTR_TYPE_SKB: Type = 3;
-    pub const BPF_DYNPTR_TYPE_XDP: Type = 4;
-}
-pub mod bpf_iter_state {
-    pub type Type = ::aya_ebpf::cty::c_uint;
-    pub const BPF_ITER_STATE_INVALID: Type = 0;
-    pub const BPF_ITER_STATE_ACTIVE: Type = 1;
-    pub const BPF_ITER_STATE_DRAINED: Type = 2;
-}
-#[repr(C)]
-#[derive(Debug, Copy, Clone)]
-pub struct tnum {
-    pub value: u64_,
-    pub mask: u64_,
-}
-pub mod bpf_reg_liveness {
-    pub type Type = ::aya_ebpf::cty::c_uint;
-    pub const REG_LIVE_NONE: Type = 0;
-    pub const REG_LIVE_READ32: Type = 1;
-    pub const REG_LIVE_READ64: Type = 2;
-    pub const REG_LIVE_READ: Type = 3;
-    pub const REG_LIVE_WRITTEN: Type = 4;
-    pub const REG_LIVE_DONE: Type = 8;
-}
-#[repr(C)]
-#[derive(Copy, Clone)]
-pub struct bpf_reg_state {
-    pub type_: bpf_reg_type::Type,
-    pub off: s32,
-    pub __bindgen_anon_1: bpf_reg_state__bindgen_ty_1,
-    pub var_off: tnum,
-    pub smin_value: s64,
-    pub smax_value: s64,
-    pub umin_value: u64_,
-    pub umax_value: u64_,
-    pub s32_min_value: s32,
-    pub s32_max_value: s32,
-    pub u32_min_value: u32_,
-    pub u32_max_value: u32_,
-    pub id: u32_,
-    pub ref_obj_id: u32_,
-    pub parent: *mut bpf_reg_state,
-    pub frameno: u32_,
-    pub subreg_def: s32,
-    pub live: bpf_reg_liveness::Type,
-    pub precise: bool_,
-}
-#[repr(C)]
-#[derive(Copy, Clone)]
-pub union bpf_reg_state__bindgen_ty_1 {
-    pub range: ::aya_ebpf::cty::c_int,
-    pub __bindgen_anon_1: bpf_reg_state__bindgen_ty_1__bindgen_ty_1,
-    pub __bindgen_anon_2: bpf_reg_state__bindgen_ty_1__bindgen_ty_2,
-    pub __bindgen_anon_3: bpf_reg_state__bindgen_ty_1__bindgen_ty_3,
-    pub dynptr: bpf_reg_state__bindgen_ty_1__bindgen_ty_4,
-    pub iter: bpf_reg_state__bindgen_ty_1__bindgen_ty_5,
-    pub raw: bpf_reg_state__bindgen_ty_1__bindgen_ty_6,
-    pub subprogno: u32_,
-}
-#[repr(C)]
-#[derive(Debug, Copy, Clone)]
-pub struct bpf_reg_state__bindgen_ty_1__bindgen_ty_1 {
-    pub map_ptr: *mut bpf_map,
-    pub map_uid: u32_,
-}
-#[repr(C)]
-#[derive(Debug, Copy, Clone)]
-pub struct bpf_reg_state__bindgen_ty_1__bindgen_ty_2 {
-    pub btf: *mut btf,
-    pub btf_id: u32_,
-}
-#[repr(C)]
-#[derive(Debug, Copy, Clone)]
-pub struct bpf_reg_state__bindgen_ty_1__bindgen_ty_3 {
-    pub mem_size: u32_,
-    pub dynptr_id: u32_,
-}
-#[repr(C)]
-#[derive(Debug, Copy, Clone)]
-pub struct bpf_reg_state__bindgen_ty_1__bindgen_ty_4 {
-    pub type_: bpf_dynptr_type::Type,
-    pub first_slot: bool_,
-}
-#[repr(C)]
-#[derive(Debug, Copy, Clone)]
-pub struct bpf_reg_state__bindgen_ty_1__bindgen_ty_5 {
-    pub btf: *mut btf,
-    pub btf_id: u32_,
-    pub _bitfield_align_1: [u32; 0],
-    pub _bitfield_1: __BindgenBitfieldUnit<[u8; 4usize]>,
-}
-impl bpf_reg_state__bindgen_ty_1__bindgen_ty_5 {
-    #[inline]
-    pub fn state(&self) -> bpf_iter_state::Type {
-        unsafe { ::core::mem::transmute(self._bitfield_1.get(0usize, 2u8) as u32) }
-    }
-    #[inline]
-    pub fn set_state(&mut self, val: bpf_iter_state::Type) {
-        unsafe {
-            let val: u32 = ::core::mem::transmute(val);
-            self._bitfield_1.set(0usize, 2u8, val as u64)
-        }
-    }
-    #[inline]
-    pub unsafe fn state_raw(this: *const Self) -> bpf_iter_state::Type {
-        unsafe {
-            ::core::mem::transmute(<__BindgenBitfieldUnit<[u8; 4usize]>>::raw_get(
-                ::core::ptr::addr_of!((*this)._bitfield_1),
-                0usize,
-                2u8,
-            ) as u32)
-        }
-    }
-    #[inline]
-    pub unsafe fn set_state_raw(this: *mut Self, val: bpf_iter_state::Type) {
-        unsafe {
-            let val: u32 = ::core::mem::transmute(val);
-            <__BindgenBitfieldUnit<[u8; 4usize]>>::raw_set(
-                ::core::ptr::addr_of_mut!((*this)._bitfield_1),
-                0usize,
-                2u8,
-                val as u64,
-            )
-        }
-    }
-    #[inline]
-    pub fn depth(&self) -> ::aya_ebpf::cty::c_int {
-        unsafe { ::core::mem::transmute(self._bitfield_1.get(2usize, 30u8) as u32) }
-    }
-    #[inline]
-    pub fn set_depth(&mut self, val: ::aya_ebpf::cty::c_int) {
-        unsafe {
-            let val: u32 = ::core::mem::transmute(val);
-            self._bitfield_1.set(2usize, 30u8, val as u64)
-        }
-    }
-    #[inline]
-    pub unsafe fn depth_raw(this: *const Self) -> ::aya_ebpf::cty::c_int {
-        unsafe {
-            ::core::mem::transmute(<__BindgenBitfieldUnit<[u8; 4usize]>>::raw_get(
-                ::core::ptr::addr_of!((*this)._bitfield_1),
-                2usize,
-                30u8,
-            ) as u32)
-        }
-    }
-    #[inline]
-    pub unsafe fn set_depth_raw(this: *mut Self, val: ::aya_ebpf::cty::c_int) {
-        unsafe {
-            let val: u32 = ::core::mem::transmute(val);
-            <__BindgenBitfieldUnit<[u8; 4usize]>>::raw_set(
-                ::core::ptr::addr_of_mut!((*this)._bitfield_1),
-                2usize,
-                30u8,
-                val as u64,
-            )
-        }
-    }
-    #[inline]
-    pub fn new_bitfield_1(
-        state: bpf_iter_state::Type,
-        depth: ::aya_ebpf::cty::c_int,
-    ) -> __BindgenBitfieldUnit<[u8; 4usize]> {
-        let mut __bindgen_bitfield_unit: __BindgenBitfieldUnit<[u8; 4usize]> = Default::default();
-        __bindgen_bitfield_unit.set(0usize, 2u8, {
-            let state: u32 = unsafe { ::core::mem::transmute(state) };
-            state as u64
-        });
-        __bindgen_bitfield_unit.set(2usize, 30u8, {
-            let depth: u32 = unsafe { ::core::mem::transmute(depth) };
-            depth as u64
-        });
-        __bindgen_bitfield_unit
-    }
-}
-#[repr(C)]
-#[derive(Debug, Copy, Clone)]
-pub struct bpf_reg_state__bindgen_ty_1__bindgen_ty_6 {
-    pub raw1: ::aya_ebpf::cty::c_ulong,
-    pub raw2: ::aya_ebpf::cty::c_ulong,
-}
-#[repr(C)]
-#[derive(Copy, Clone)]
-pub struct bpf_verifier_env {
-    pub insn_idx: u32_,
-    pub prev_insn_idx: u32_,
-    pub prog: *mut bpf_prog,
-    pub ops: *const bpf_verifier_ops,
-    pub attach_btf_mod: *mut module,
-    pub head: *mut bpf_verifier_stack_elem,
-    pub stack_size: ::aya_ebpf::cty::c_int,
-    pub strict_alignment: bool_,
-    pub test_state_freq: bool_,
-    pub test_reg_invariants: bool_,
-    pub cur_state: *mut bpf_verifier_state,
-    pub explored_states: *mut *mut bpf_verifier_state_list,
-    pub free_list: *mut bpf_verifier_state_list,
-    pub used_maps: [*mut bpf_map; 64usize],
-    pub used_btfs: [btf_mod_pair; 64usize],
-    pub used_map_cnt: u32_,
-    pub used_btf_cnt: u32_,
-    pub id_gen: u32_,
-    pub hidden_subprog_cnt: u32_,
-    pub exception_callback_subprog: ::aya_ebpf::cty::c_int,
-    pub explore_alu_limits: bool_,
-    pub allow_ptr_leaks: bool_,
-    pub allow_uninit_stack: bool_,
-    pub bpf_capable: bool_,
-    pub bypass_spec_v1: bool_,
-    pub bypass_spec_v4: bool_,
-    pub seen_direct_write: bool_,
-    pub seen_exception: bool_,
-    pub insn_aux_data: *mut bpf_insn_aux_data,
-    pub prev_linfo: *const bpf_line_info,
-    pub log: bpf_verifier_log,
-    pub subprog_info: [bpf_subprog_info; 258usize],
-    pub __bindgen_anon_1: bpf_verifier_env__bindgen_ty_1,
-    pub cfg: bpf_verifier_env__bindgen_ty_2,
-    pub bt: backtrack_state,
-    pub cur_hist_ent: *mut bpf_jmp_history_entry,
-    pub pass_cnt: u32_,
-    pub subprog_cnt: u32_,
-    pub prev_insn_processed: u32_,
-    pub insn_processed: u32_,
-    pub prev_jmps_processed: u32_,
-    pub jmps_processed: u32_,
-    pub verification_time: u64_,
-    pub max_states_per_insn: u32_,
-    pub total_states: u32_,
-    pub peak_states: u32_,
-    pub longest_mark_read_walk: u32_,
-    pub fd_array: bpfptr_t,
-    pub scratched_regs: u32_,
-    pub scratched_stack_slots: u64_,
-    pub prev_log_pos: u64_,
-    pub prev_insn_print_pos: u64_,
-    pub fake_reg: [bpf_reg_state; 2usize],
-    pub tmp_str_buf: [::aya_ebpf::cty::c_char; 320usize],
-}
-#[repr(C)]
-#[derive(Copy, Clone)]
-pub union bpf_verifier_env__bindgen_ty_1 {
-    pub idmap_scratch: bpf_idmap,
-    pub idset_scratch: bpf_idset,
-}
-#[repr(C)]
-#[derive(Debug, Copy, Clone)]
-pub struct bpf_verifier_env__bindgen_ty_2 {
-    pub insn_state: *mut ::aya_ebpf::cty::c_int,
-    pub insn_stack: *mut ::aya_ebpf::cty::c_int,
-    pub cur_stack: ::aya_ebpf::cty::c_int,
-}
-#[repr(C)]
-#[derive(Debug, Copy, Clone)]
-pub struct bpf_retval_range {
-    pub minval: s32,
-    pub maxval: s32,
-}
-#[repr(C)]
-#[derive(Copy, Clone)]
-pub struct bpf_func_state {
-    pub regs: [bpf_reg_state; 11usize],
-    pub callsite: ::aya_ebpf::cty::c_int,
-    pub frameno: u32_,
-    pub subprogno: u32_,
-    pub async_entry_cnt: u32_,
-    pub callback_ret_range: bpf_retval_range,
-    pub in_callback_fn: bool_,
-    pub in_async_callback_fn: bool_,
-    pub in_exception_callback_fn: bool_,
-    pub callback_depth: u32_,
-    pub acquired_refs: ::aya_ebpf::cty::c_int,
-    pub refs: *mut bpf_reference_state,
-    pub stack: *mut bpf_stack_state,
-    pub allocated_stack: ::aya_ebpf::cty::c_int,
-}
-pub mod bpf_access_type {
-    pub type Type = ::aya_ebpf::cty::c_uint;
-    pub const BPF_READ: Type = 1;
-    pub const BPF_WRITE: Type = 2;
-}
-#[repr(C)]
-#[derive(Copy, Clone)]
-pub struct bpf_insn_access_aux {
-    pub reg_type: bpf_reg_type::Type,
-    pub is_ldsx: bool_,
-    pub __bindgen_anon_1: bpf_insn_access_aux__bindgen_ty_1,
-    pub log: *mut bpf_verifier_log,
-    pub is_retval: bool_,
-}
-#[repr(C)]
-#[derive(Copy, Clone)]
-pub union bpf_insn_access_aux__bindgen_ty_1 {
-    pub ctx_field_size: ::aya_ebpf::cty::c_int,
-    pub __bindgen_anon_1: bpf_insn_access_aux__bindgen_ty_1__bindgen_ty_1,
-}
-#[repr(C)]
-#[derive(Debug, Copy, Clone)]
-pub struct bpf_insn_access_aux__bindgen_ty_1__bindgen_ty_1 {
-    pub btf: *mut btf,
-    pub btf_id: u32_,
-}
-#[repr(C)]
-#[derive(Debug, Copy, Clone)]
-pub struct bpf_verifier_ops {
-    pub get_func_proto: ::core::option::Option<
-        unsafe extern "C" fn(
-            arg1: bpf_func_id::Type,
-            arg2: *const bpf_prog,
-        ) -> *const bpf_func_proto,
-    >,
-    pub is_valid_access: ::core::option::Option<
-        unsafe extern "C" fn(
-            arg1: ::aya_ebpf::cty::c_int,
-            arg2: ::aya_ebpf::cty::c_int,
-            arg3: bpf_access_type::Type,
-            arg4: *const bpf_prog,
-            arg5: *mut bpf_insn_access_aux,
-        ) -> bool_,
-    >,
-    pub gen_prologue: ::core::option::Option<
-        unsafe extern "C" fn(
-            arg1: *mut bpf_insn,
-            arg2: bool_,
-            arg3: *const bpf_prog,
-        ) -> ::aya_ebpf::cty::c_int,
-    >,
-    pub gen_ld_abs: ::core::option::Option<
-        unsafe extern "C" fn(arg1: *const bpf_insn, arg2: *mut bpf_insn) -> ::aya_ebpf::cty::c_int,
-    >,
-    pub convert_ctx_access: ::core::option::Option<
-        unsafe extern "C" fn(
-            arg1: bpf_access_type::Type,
-            arg2: *const bpf_insn,
-            arg3: *mut bpf_insn,
-            arg4: *mut bpf_prog,
-            arg5: *mut u32_,
-        ) -> u32_,
-    >,
-    pub btf_struct_access: ::core::option::Option<
-        unsafe extern "C" fn(
-            arg1: *mut bpf_verifier_log,
-            arg2: *const bpf_reg_state,
-            arg3: ::aya_ebpf::cty::c_int,
-            arg4: ::aya_ebpf::cty::c_int,
-        ) -> ::aya_ebpf::cty::c_int,
-    >,
-}
-#[repr(C)]
-#[derive(Debug, Copy, Clone)]
-pub struct bpf_active_lock {
-    pub ptr: *mut ::aya_ebpf::cty::c_void,
-    pub id: u32_,
-}
-#[repr(C)]
-#[derive(Copy, Clone)]
-pub struct bpf_stack_state {
-    pub spilled_ptr: bpf_reg_state,
-    pub slot_type: [u8_; 8usize],
-}
-#[repr(C)]
-#[derive(Debug, Copy, Clone)]
-pub struct bpf_reference_state {
-    pub id: ::aya_ebpf::cty::c_int,
-    pub insn_idx: ::aya_ebpf::cty::c_int,
-    pub callback_ref: ::aya_ebpf::cty::c_int,
-}
-#[repr(C)]
-#[derive(Debug, Copy, Clone)]
-pub struct bpf_jmp_history_entry {
-    pub idx: u32_,
-    pub _bitfield_align_1: [u32; 0],
-    pub _bitfield_1: __BindgenBitfieldUnit<[u8; 4usize]>,
-}
-impl bpf_jmp_history_entry {
-    #[inline]
-    pub fn prev_idx(&self) -> u32_ {
-        unsafe { ::core::mem::transmute(self._bitfield_1.get(0usize, 22u8) as u32) }
-    }
-    #[inline]
-    pub fn set_prev_idx(&mut self, val: u32_) {
-        unsafe {
-            let val: u32 = ::core::mem::transmute(val);
-            self._bitfield_1.set(0usize, 22u8, val as u64)
-        }
-    }
-    #[inline]
-    pub unsafe fn prev_idx_raw(this: *const Self) -> u32_ {
-        unsafe {
-            ::core::mem::transmute(<__BindgenBitfieldUnit<[u8; 4usize]>>::raw_get(
-                ::core::ptr::addr_of!((*this)._bitfield_1),
-                0usize,
-                22u8,
-            ) as u32)
-        }
-    }
-    #[inline]
-    pub unsafe fn set_prev_idx_raw(this: *mut Self, val: u32_) {
-        unsafe {
-            let val: u32 = ::core::mem::transmute(val);
-            <__BindgenBitfieldUnit<[u8; 4usize]>>::raw_set(
-                ::core::ptr::addr_of_mut!((*this)._bitfield_1),
-                0usize,
-                22u8,
-                val as u64,
-            )
-        }
-    }
-    #[inline]
-    pub fn flags(&self) -> u32_ {
-        unsafe { ::core::mem::transmute(self._bitfield_1.get(22usize, 10u8) as u32) }
-    }
-    #[inline]
-    pub fn set_flags(&mut self, val: u32_) {
-        unsafe {
-            let val: u32 = ::core::mem::transmute(val);
-            self._bitfield_1.set(22usize, 10u8, val as u64)
-        }
-    }
-    #[inline]
-    pub unsafe fn flags_raw(this: *const Self) -> u32_ {
-        unsafe {
-            ::core::mem::transmute(<__BindgenBitfieldUnit<[u8; 4usize]>>::raw_get(
-                ::core::ptr::addr_of!((*this)._bitfield_1),
-                22usize,
-                10u8,
-            ) as u32)
-        }
-    }
-    #[inline]
-    pub unsafe fn set_flags_raw(this: *mut Self, val: u32_) {
-        unsafe {
-            let val: u32 = ::core::mem::transmute(val);
-            <__BindgenBitfieldUnit<[u8; 4usize]>>::raw_set(
-                ::core::ptr::addr_of_mut!((*this)._bitfield_1),
-                22usize,
-                10u8,
-                val as u64,
-            )
-        }
-    }
-    #[inline]
-    pub fn new_bitfield_1(prev_idx: u32_, flags: u32_) -> __BindgenBitfieldUnit<[u8; 4usize]> {
-        let mut __bindgen_bitfield_unit: __BindgenBitfieldUnit<[u8; 4usize]> = Default::default();
-        __bindgen_bitfield_unit.set(0usize, 22u8, {
-            let prev_idx: u32 = unsafe { ::core::mem::transmute(prev_idx) };
-            prev_idx as u64
-        });
-        __bindgen_bitfield_unit.set(22usize, 10u8, {
-            let flags: u32 = unsafe { ::core::mem::transmute(flags) };
-            flags as u64
-        });
-        __bindgen_bitfield_unit
-    }
-}
-#[repr(C)]
-#[derive(Debug, Copy, Clone)]
-pub struct bpf_verifier_state {
-    pub frame: [*mut bpf_func_state; 8usize],
-    pub parent: *mut bpf_verifier_state,
-    pub branches: u32_,
-    pub insn_idx: u32_,
-    pub curframe: u32_,
-    pub active_lock: bpf_active_lock,
-    pub speculative: bool_,
-    pub active_rcu_lock: bool_,
-    pub active_preempt_lock: u32_,
-    pub used_as_loop_entry: bool_,
-    pub in_sleepable: bool_,
-    pub first_insn_idx: u32_,
-    pub last_insn_idx: u32_,
-    pub loop_entry: *mut bpf_verifier_state,
-    pub jmp_history: *mut bpf_jmp_history_entry,
-    pub jmp_history_cnt: u32_,
-    pub dfs_depth: u32_,
-    pub callback_unroll_depth: u32_,
-    pub may_goto_depth: u32_,
-}
-#[repr(C)]
-#[derive(Debug, Copy, Clone)]
-pub struct bpf_verifier_state_list {
-    pub state: bpf_verifier_state,
-    pub next: *mut bpf_verifier_state_list,
-    pub miss_cnt: ::aya_ebpf::cty::c_int,
-    pub hit_cnt: ::aya_ebpf::cty::c_int,
-}
-#[repr(C)]
-#[derive(Debug, Copy, Clone)]
-pub struct bpf_loop_inline_state {
-    pub _bitfield_align_1: [u8; 0],
-    pub _bitfield_1: __BindgenBitfieldUnit<[u8; 1usize]>,
-    pub callback_subprogno: u32_,
-}
-impl bpf_loop_inline_state {
-    #[inline]
-    pub fn initialized(&self) -> ::aya_ebpf::cty::c_uint {
-        unsafe { ::core::mem::transmute(self._bitfield_1.get(0usize, 1u8) as u32) }
-    }
-    #[inline]
-    pub fn set_initialized(&mut self, val: ::aya_ebpf::cty::c_uint) {
-        unsafe {
-            let val: u32 = ::core::mem::transmute(val);
-            self._bitfield_1.set(0usize, 1u8, val as u64)
-        }
-    }
-    #[inline]
-    pub unsafe fn initialized_raw(this: *const Self) -> ::aya_ebpf::cty::c_uint {
-        unsafe {
-            ::core::mem::transmute(<__BindgenBitfieldUnit<[u8; 1usize]>>::raw_get(
-                ::core::ptr::addr_of!((*this)._bitfield_1),
-                0usize,
-                1u8,
-            ) as u32)
-        }
-    }
-    #[inline]
-    pub unsafe fn set_initialized_raw(this: *mut Self, val: ::aya_ebpf::cty::c_uint) {
-        unsafe {
-            let val: u32 = ::core::mem::transmute(val);
-            <__BindgenBitfieldUnit<[u8; 1usize]>>::raw_set(
-                ::core::ptr::addr_of_mut!((*this)._bitfield_1),
-                0usize,
-                1u8,
-                val as u64,
-            )
-        }
-    }
-    #[inline]
-    pub fn fit_for_inline(&self) -> ::aya_ebpf::cty::c_uint {
-        unsafe { ::core::mem::transmute(self._bitfield_1.get(1usize, 1u8) as u32) }
-    }
-    #[inline]
-    pub fn set_fit_for_inline(&mut self, val: ::aya_ebpf::cty::c_uint) {
-        unsafe {
-            let val: u32 = ::core::mem::transmute(val);
-            self._bitfield_1.set(1usize, 1u8, val as u64)
-        }
-    }
-    #[inline]
-    pub unsafe fn fit_for_inline_raw(this: *const Self) -> ::aya_ebpf::cty::c_uint {
-        unsafe {
-            ::core::mem::transmute(<__BindgenBitfieldUnit<[u8; 1usize]>>::raw_get(
-                ::core::ptr::addr_of!((*this)._bitfield_1),
-                1usize,
-                1u8,
-            ) as u32)
-        }
-    }
-    #[inline]
-    pub unsafe fn set_fit_for_inline_raw(this: *mut Self, val: ::aya_ebpf::cty::c_uint) {
-        unsafe {
-            let val: u32 = ::core::mem::transmute(val);
-            <__BindgenBitfieldUnit<[u8; 1usize]>>::raw_set(
-                ::core::ptr::addr_of_mut!((*this)._bitfield_1),
-                1usize,
-                1u8,
-                val as u64,
-            )
-        }
-    }
-    #[inline]
-    pub fn new_bitfield_1(
-        initialized: ::aya_ebpf::cty::c_uint,
-        fit_for_inline: ::aya_ebpf::cty::c_uint,
-    ) -> __BindgenBitfieldUnit<[u8; 1usize]> {
-        let mut __bindgen_bitfield_unit: __BindgenBitfieldUnit<[u8; 1usize]> = Default::default();
-        __bindgen_bitfield_unit.set(0usize, 1u8, {
-            let initialized: u32 = unsafe { ::core::mem::transmute(initialized) };
-            initialized as u64
-        });
-        __bindgen_bitfield_unit.set(1usize, 1u8, {
-            let fit_for_inline: u32 = unsafe { ::core::mem::transmute(fit_for_inline) };
-            fit_for_inline as u64
-        });
-        __bindgen_bitfield_unit
-    }
-}
-#[repr(C)]
-#[derive(Debug, Copy, Clone)]
-pub struct bpf_map_ptr_state {
-    pub map_ptr: *mut bpf_map,
-    pub poison: bool_,
-    pub unpriv: bool_,
-}
-#[repr(C)]
-#[derive(Copy, Clone)]
-pub struct bpf_insn_aux_data {
-    pub __bindgen_anon_1: bpf_insn_aux_data__bindgen_ty_1,
-    pub __bindgen_anon_2: bpf_insn_aux_data__bindgen_ty_2,
-    pub kptr_struct_meta: *mut btf_struct_meta,
-    pub map_key_state: u64_,
-    pub ctx_field_size: ::aya_ebpf::cty::c_int,
-    pub seen: u32_,
-    pub sanitize_stack_spill: bool_,
-    pub zext_dst: bool_,
-    pub needs_zext: bool_,
-    pub storage_get_func_atomic: bool_,
-    pub is_iter_next: bool_,
-    pub call_with_percpu_alloc_ptr: bool_,
-    pub alu_state: u8_,
-    pub orig_idx: ::aya_ebpf::cty::c_uint,
-    pub jmp_point: bool_,
-    pub prune_point: bool_,
-    pub force_checkpoint: bool_,
-    pub calls_callback: bool_,
-}
-#[repr(C)]
-#[derive(Copy, Clone)]
-pub union bpf_insn_aux_data__bindgen_ty_1 {
-    pub ptr_type: bpf_reg_type::Type,
-    pub map_ptr_state: bpf_map_ptr_state,
-    pub call_imm: s32,
-    pub alu_limit: u32_,
-    pub __bindgen_anon_1: bpf_insn_aux_data__bindgen_ty_1__bindgen_ty_1,
-    pub btf_var: bpf_insn_aux_data__bindgen_ty_1__bindgen_ty_2,
-    pub loop_inline_state: bpf_loop_inline_state,
-}
-#[repr(C)]
-#[derive(Debug, Copy, Clone)]
-pub struct bpf_insn_aux_data__bindgen_ty_1__bindgen_ty_1 {
-    pub map_index: u32_,
-    pub map_off: u32_,
-}
-#[repr(C)]
-#[derive(Copy, Clone)]
-pub struct bpf_insn_aux_data__bindgen_ty_1__bindgen_ty_2 {
-    pub reg_type: bpf_reg_type::Type,
-    pub __bindgen_anon_1: bpf_insn_aux_data__bindgen_ty_1__bindgen_ty_2__bindgen_ty_1,
-}
-#[repr(C)]
-#[derive(Copy, Clone)]
-pub union bpf_insn_aux_data__bindgen_ty_1__bindgen_ty_2__bindgen_ty_1 {
-    pub __bindgen_anon_1: bpf_insn_aux_data__bindgen_ty_1__bindgen_ty_2__bindgen_ty_1__bindgen_ty_1,
-    pub mem_size: u32_,
-}
-#[repr(C)]
-#[derive(Debug, Copy, Clone)]
-pub struct bpf_insn_aux_data__bindgen_ty_1__bindgen_ty_2__bindgen_ty_1__bindgen_ty_1 {
-    pub btf: *mut btf,
-    pub btf_id: u32_,
-}
-#[repr(C)]
-#[derive(Copy, Clone)]
-pub union bpf_insn_aux_data__bindgen_ty_2 {
-    pub obj_new_size: u64_,
-    pub insert_off: u64_,
-}
-#[repr(C)]
 #[derive(Copy, Clone)]
 pub struct bpf_local_storage_map_bucket {
     pub list: hlist_head,
@@ -38898,13 +39769,6 @@ pub struct bpf_local_storage_map_bucket {
 pub struct bpf_local_storage_data {
     pub smap: *mut bpf_local_storage_map,
     pub data: __IncompleteArrayField<u8_>,
-}
-#[repr(C)]
-#[derive(Debug, Copy, Clone)]
-pub struct btf_member {
-    pub name_off: __u32,
-    pub type_: __u32,
-    pub offset: __u32,
 }
 pub type __le16 = __u16;
 pub type __le64 = __u64;
@@ -38917,27 +39781,6 @@ pub struct xdp_md {
     pub ingress_ifindex: __u32,
     pub rx_queue_index: __u32,
     pub egress_ifindex: __u32,
-}
-#[repr(C)]
-#[derive(Debug)]
-pub struct bucket_table {
-    pub size: ::aya_ebpf::cty::c_uint,
-    pub nest: ::aya_ebpf::cty::c_uint,
-    pub hash_rnd: u32_,
-    pub walkers: list_head,
-    pub rcu: callback_head,
-    pub future_tbl: *mut bucket_table,
-    pub dep_map: lockdep_map,
-    pub _bitfield_align_1: [u8; 0],
-    pub _bitfield_1: __BindgenBitfieldUnit<[u8; 8usize]>,
-    pub buckets: __IncompleteArrayField<*mut rhash_lock_head>,
-}
-impl bucket_table {
-    #[inline]
-    pub fn new_bitfield_1() -> __BindgenBitfieldUnit<[u8; 8usize]> {
-        let mut __bindgen_bitfield_unit: __BindgenBitfieldUnit<[u8; 8usize]> = Default::default();
-        __bindgen_bitfield_unit
-    }
 }
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
@@ -38995,9 +39838,6 @@ pub struct xdp_txq_info {
 }
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
-pub struct rhash_lock_head {}
-#[repr(C)]
-#[derive(Debug, Copy, Clone)]
 pub struct bpf_mprog_fp {
     pub prog: *mut bpf_prog,
 }
@@ -39049,67 +39889,6 @@ pub struct bpf_kfunc_btf {
 pub struct bpf_kfunc_btf_tab {
     pub descs: [bpf_kfunc_btf; 256usize],
     pub nr_descs: u32_,
-}
-#[repr(C)]
-#[derive(Debug, Copy, Clone)]
-pub struct bpf_struct_ops {
-    pub verifier_ops: *const bpf_verifier_ops,
-    pub init:
-        ::core::option::Option<unsafe extern "C" fn(arg1: *mut btf) -> ::aya_ebpf::cty::c_int>,
-    pub check_member: ::core::option::Option<
-        unsafe extern "C" fn(
-            arg1: *const btf_type,
-            arg2: *const btf_member,
-            arg3: *const bpf_prog,
-        ) -> ::aya_ebpf::cty::c_int,
-    >,
-    pub init_member: ::core::option::Option<
-        unsafe extern "C" fn(
-            arg1: *const btf_type,
-            arg2: *const btf_member,
-            arg3: *mut ::aya_ebpf::cty::c_void,
-            arg4: *const ::aya_ebpf::cty::c_void,
-        ) -> ::aya_ebpf::cty::c_int,
-    >,
-    pub reg: ::core::option::Option<
-        unsafe extern "C" fn(
-            arg1: *mut ::aya_ebpf::cty::c_void,
-            arg2: *mut bpf_link,
-        ) -> ::aya_ebpf::cty::c_int,
-    >,
-    pub unreg: ::core::option::Option<
-        unsafe extern "C" fn(arg1: *mut ::aya_ebpf::cty::c_void, arg2: *mut bpf_link),
-    >,
-    pub update: ::core::option::Option<
-        unsafe extern "C" fn(
-            arg1: *mut ::aya_ebpf::cty::c_void,
-            arg2: *mut ::aya_ebpf::cty::c_void,
-            arg3: *mut bpf_link,
-        ) -> ::aya_ebpf::cty::c_int,
-    >,
-    pub validate: ::core::option::Option<
-        unsafe extern "C" fn(arg1: *mut ::aya_ebpf::cty::c_void) -> ::aya_ebpf::cty::c_int,
-    >,
-    pub cfi_stubs: *mut ::aya_ebpf::cty::c_void,
-    pub owner: *mut module,
-    pub name: *const ::aya_ebpf::cty::c_char,
-    pub func_models: [btf_func_model; 64usize],
-}
-#[repr(C)]
-#[derive(Debug, Copy, Clone)]
-pub struct bpf_struct_ops_arg_info {
-    pub info: *mut bpf_ctx_arg_aux,
-    pub cnt: u32_,
-}
-#[repr(C)]
-#[derive(Debug, Copy, Clone)]
-pub struct bpf_struct_ops_desc {
-    pub st_ops: *mut bpf_struct_ops,
-    pub type_: *const btf_type,
-    pub value_type: *const btf_type,
-    pub type_id: u32_,
-    pub value_id: u32_,
-    pub arg_info: *mut bpf_struct_ops_arg_info,
 }
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
@@ -39659,13 +40438,13 @@ pub struct prefix_info__bindgen_ty_1__bindgen_ty_1 {
 impl prefix_info__bindgen_ty_1__bindgen_ty_1 {
     #[inline]
     pub fn reserved(&self) -> __u8 {
-        unsafe { ::core::mem::transmute(self._bitfield_1.get(0usize, 6u8) as u8) }
+        unsafe { ::core::mem::transmute(self._bitfield_1.get(0usize, 4u8) as u8) }
     }
     #[inline]
     pub fn set_reserved(&mut self, val: __u8) {
         unsafe {
             let val: u8 = ::core::mem::transmute(val);
-            self._bitfield_1.set(0usize, 6u8, val as u64)
+            self._bitfield_1.set(0usize, 4u8, val as u64)
         }
     }
     #[inline]
@@ -39674,7 +40453,7 @@ impl prefix_info__bindgen_ty_1__bindgen_ty_1 {
             ::core::mem::transmute(<__BindgenBitfieldUnit<[u8; 1usize]>>::raw_get(
                 ::core::ptr::addr_of!((*this)._bitfield_1),
                 0usize,
-                6u8,
+                4u8,
             ) as u8)
         }
     }
@@ -39685,7 +40464,73 @@ impl prefix_info__bindgen_ty_1__bindgen_ty_1 {
             <__BindgenBitfieldUnit<[u8; 1usize]>>::raw_set(
                 ::core::ptr::addr_of_mut!((*this)._bitfield_1),
                 0usize,
-                6u8,
+                4u8,
+                val as u64,
+            )
+        }
+    }
+    #[inline]
+    pub fn preferpd(&self) -> __u8 {
+        unsafe { ::core::mem::transmute(self._bitfield_1.get(4usize, 1u8) as u8) }
+    }
+    #[inline]
+    pub fn set_preferpd(&mut self, val: __u8) {
+        unsafe {
+            let val: u8 = ::core::mem::transmute(val);
+            self._bitfield_1.set(4usize, 1u8, val as u64)
+        }
+    }
+    #[inline]
+    pub unsafe fn preferpd_raw(this: *const Self) -> __u8 {
+        unsafe {
+            ::core::mem::transmute(<__BindgenBitfieldUnit<[u8; 1usize]>>::raw_get(
+                ::core::ptr::addr_of!((*this)._bitfield_1),
+                4usize,
+                1u8,
+            ) as u8)
+        }
+    }
+    #[inline]
+    pub unsafe fn set_preferpd_raw(this: *mut Self, val: __u8) {
+        unsafe {
+            let val: u8 = ::core::mem::transmute(val);
+            <__BindgenBitfieldUnit<[u8; 1usize]>>::raw_set(
+                ::core::ptr::addr_of_mut!((*this)._bitfield_1),
+                4usize,
+                1u8,
+                val as u64,
+            )
+        }
+    }
+    #[inline]
+    pub fn routeraddr(&self) -> __u8 {
+        unsafe { ::core::mem::transmute(self._bitfield_1.get(5usize, 1u8) as u8) }
+    }
+    #[inline]
+    pub fn set_routeraddr(&mut self, val: __u8) {
+        unsafe {
+            let val: u8 = ::core::mem::transmute(val);
+            self._bitfield_1.set(5usize, 1u8, val as u64)
+        }
+    }
+    #[inline]
+    pub unsafe fn routeraddr_raw(this: *const Self) -> __u8 {
+        unsafe {
+            ::core::mem::transmute(<__BindgenBitfieldUnit<[u8; 1usize]>>::raw_get(
+                ::core::ptr::addr_of!((*this)._bitfield_1),
+                5usize,
+                1u8,
+            ) as u8)
+        }
+    }
+    #[inline]
+    pub unsafe fn set_routeraddr_raw(this: *mut Self, val: __u8) {
+        unsafe {
+            let val: u8 = ::core::mem::transmute(val);
+            <__BindgenBitfieldUnit<[u8; 1usize]>>::raw_set(
+                ::core::ptr::addr_of_mut!((*this)._bitfield_1),
+                5usize,
+                1u8,
                 val as u64,
             )
         }
@@ -39759,13 +40604,23 @@ impl prefix_info__bindgen_ty_1__bindgen_ty_1 {
     #[inline]
     pub fn new_bitfield_1(
         reserved: __u8,
+        preferpd: __u8,
+        routeraddr: __u8,
         autoconf: __u8,
         onlink: __u8,
     ) -> __BindgenBitfieldUnit<[u8; 1usize]> {
         let mut __bindgen_bitfield_unit: __BindgenBitfieldUnit<[u8; 1usize]> = Default::default();
-        __bindgen_bitfield_unit.set(0usize, 6u8, {
+        __bindgen_bitfield_unit.set(0usize, 4u8, {
             let reserved: u8 = unsafe { ::core::mem::transmute(reserved) };
             reserved as u64
+        });
+        __bindgen_bitfield_unit.set(4usize, 1u8, {
+            let preferpd: u8 = unsafe { ::core::mem::transmute(preferpd) };
+            preferpd as u64
+        });
+        __bindgen_bitfield_unit.set(5usize, 1u8, {
+            let routeraddr: u8 = unsafe { ::core::mem::transmute(routeraddr) };
+            routeraddr as u64
         });
         __bindgen_bitfield_unit.set(6usize, 1u8, {
             let autoconf: u8 = unsafe { ::core::mem::transmute(autoconf) };
@@ -40054,8 +40909,9 @@ pub struct uprobe {
     pub register_rwsem: rw_semaphore,
     pub consumer_rwsem: rw_semaphore,
     pub pending_list: list_head,
-    pub consumers: *mut uprobe_consumer,
+    pub consumers: list_head,
     pub inode: *mut inode,
+    pub rcu: callback_head,
     pub offset: loff_t,
     pub ref_ctr_offset: loff_t,
     pub flags: ::aya_ebpf::cty::c_ulong,
@@ -40067,8 +40923,7 @@ pub struct xol_area {
     pub wq: wait_queue_head_t,
     pub slot_count: atomic_t,
     pub bitmap: *mut ::aya_ebpf::cty::c_ulong,
-    pub xol_mapping: vm_special_mapping,
-    pub pages: [*mut page; 2usize],
+    pub page: *mut page,
     pub vaddr: ::aya_ebpf::cty::c_ulong,
 }
 #[repr(C)]
@@ -40196,6 +41051,103 @@ pub struct kmem_cache {
     pub useroffset: ::aya_ebpf::cty::c_uint,
     pub usersize: ::aya_ebpf::cty::c_uint,
     pub node: [*mut kmem_cache_node; 64usize],
+}
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct fileattr {
+    pub flags: u32_,
+    pub fsx_xflags: u32_,
+    pub fsx_extsize: u32_,
+    pub fsx_nextents: u32_,
+    pub fsx_projid: u32_,
+    pub fsx_cowextsize: u32_,
+    pub _bitfield_align_1: [u8; 0],
+    pub _bitfield_1: __BindgenBitfieldUnit<[u8; 1usize]>,
+    pub __bindgen_padding_0: [u8; 3usize],
+}
+impl fileattr {
+    #[inline]
+    pub fn flags_valid(&self) -> bool_ {
+        unsafe { ::core::mem::transmute(self._bitfield_1.get(0usize, 1u8) as u8) }
+    }
+    #[inline]
+    pub fn set_flags_valid(&mut self, val: bool_) {
+        unsafe {
+            let val: u8 = ::core::mem::transmute(val);
+            self._bitfield_1.set(0usize, 1u8, val as u64)
+        }
+    }
+    #[inline]
+    pub unsafe fn flags_valid_raw(this: *const Self) -> bool_ {
+        unsafe {
+            ::core::mem::transmute(<__BindgenBitfieldUnit<[u8; 1usize]>>::raw_get(
+                ::core::ptr::addr_of!((*this)._bitfield_1),
+                0usize,
+                1u8,
+            ) as u8)
+        }
+    }
+    #[inline]
+    pub unsafe fn set_flags_valid_raw(this: *mut Self, val: bool_) {
+        unsafe {
+            let val: u8 = ::core::mem::transmute(val);
+            <__BindgenBitfieldUnit<[u8; 1usize]>>::raw_set(
+                ::core::ptr::addr_of_mut!((*this)._bitfield_1),
+                0usize,
+                1u8,
+                val as u64,
+            )
+        }
+    }
+    #[inline]
+    pub fn fsx_valid(&self) -> bool_ {
+        unsafe { ::core::mem::transmute(self._bitfield_1.get(1usize, 1u8) as u8) }
+    }
+    #[inline]
+    pub fn set_fsx_valid(&mut self, val: bool_) {
+        unsafe {
+            let val: u8 = ::core::mem::transmute(val);
+            self._bitfield_1.set(1usize, 1u8, val as u64)
+        }
+    }
+    #[inline]
+    pub unsafe fn fsx_valid_raw(this: *const Self) -> bool_ {
+        unsafe {
+            ::core::mem::transmute(<__BindgenBitfieldUnit<[u8; 1usize]>>::raw_get(
+                ::core::ptr::addr_of!((*this)._bitfield_1),
+                1usize,
+                1u8,
+            ) as u8)
+        }
+    }
+    #[inline]
+    pub unsafe fn set_fsx_valid_raw(this: *mut Self, val: bool_) {
+        unsafe {
+            let val: u8 = ::core::mem::transmute(val);
+            <__BindgenBitfieldUnit<[u8; 1usize]>>::raw_set(
+                ::core::ptr::addr_of_mut!((*this)._bitfield_1),
+                1usize,
+                1u8,
+                val as u64,
+            )
+        }
+    }
+    #[inline]
+    pub fn new_bitfield_1(
+        flags_valid: bool_,
+        fsx_valid: bool_,
+    ) -> __BindgenBitfieldUnit<[u8; 1usize]> {
+        let mut __bindgen_bitfield_unit: __BindgenBitfieldUnit<[u8; 1usize]> = Default::default();
+        __bindgen_bitfield_unit.set(0usize, 1u8, {
+            let flags_valid: u8 = unsafe { ::core::mem::transmute(flags_valid) };
+            flags_valid as u64
+        });
+        __bindgen_bitfield_unit.set(1usize, 1u8, {
+            let fsx_valid: u8 = unsafe { ::core::mem::transmute(fsx_valid) };
+            fsx_valid as u64
+        });
+        __bindgen_bitfield_unit
+    }
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -40516,25 +41468,25 @@ pub struct memory_tier {
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct lruvec_stats_percpu {
-    pub state: [::aya_ebpf::cty::c_long; 27usize],
-    pub state_prev: [::aya_ebpf::cty::c_long; 27usize],
+    pub state: [::aya_ebpf::cty::c_long; 31usize],
+    pub state_prev: [::aya_ebpf::cty::c_long; 31usize],
 }
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct lruvec_stats {
-    pub state: [::aya_ebpf::cty::c_long; 27usize],
-    pub state_local: [::aya_ebpf::cty::c_long; 27usize],
-    pub state_pending: [::aya_ebpf::cty::c_long; 27usize],
+    pub state: [::aya_ebpf::cty::c_long; 31usize],
+    pub state_local: [::aya_ebpf::cty::c_long; 31usize],
+    pub state_pending: [::aya_ebpf::cty::c_long; 31usize],
 }
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct memcg_vmstats {
-    pub state: [::aya_ebpf::cty::c_long; 34usize],
-    pub events: [::aya_ebpf::cty::c_ulong; 22usize],
-    pub state_local: [::aya_ebpf::cty::c_long; 34usize],
-    pub events_local: [::aya_ebpf::cty::c_ulong; 22usize],
-    pub state_pending: [::aya_ebpf::cty::c_long; 34usize],
-    pub events_pending: [::aya_ebpf::cty::c_ulong; 22usize],
+    pub state: [::aya_ebpf::cty::c_long; 38usize],
+    pub events: [::aya_ebpf::cty::c_ulong; 25usize],
+    pub state_local: [::aya_ebpf::cty::c_long; 38usize],
+    pub events_local: [::aya_ebpf::cty::c_ulong; 25usize],
+    pub state_pending: [::aya_ebpf::cty::c_long; 38usize],
+    pub events_pending: [::aya_ebpf::cty::c_ulong; 25usize],
     pub stats_updates: atomic64_t,
 }
 #[repr(C)]
@@ -40543,21 +41495,12 @@ pub struct memcg_vmstats_percpu {
     pub stats_updates: ::aya_ebpf::cty::c_uint,
     pub parent: *mut memcg_vmstats_percpu,
     pub vmstats: *mut memcg_vmstats,
-    pub state: [::aya_ebpf::cty::c_long; 34usize],
-    pub events: [::aya_ebpf::cty::c_ulong; 22usize],
-    pub state_prev: [::aya_ebpf::cty::c_long; 34usize],
-    pub events_prev: [::aya_ebpf::cty::c_ulong; 22usize],
-    pub nr_page_events: ::aya_ebpf::cty::c_ulong,
-    pub targets: [::aya_ebpf::cty::c_ulong; 2usize],
+    pub state: [::aya_ebpf::cty::c_long; 38usize],
+    pub events: [::aya_ebpf::cty::c_ulong; 25usize],
+    pub state_prev: [::aya_ebpf::cty::c_long; 38usize],
+    pub events_prev: [::aya_ebpf::cty::c_ulong; 25usize],
     pub _bitfield_align_1: [u8; 0],
-    pub _bitfield_1: __BindgenBitfieldUnit<[u8; 16usize]>,
-}
-impl memcg_vmstats_percpu {
-    #[inline]
-    pub fn new_bitfield_1() -> __BindgenBitfieldUnit<[u8; 16usize]> {
-        let mut __bindgen_bitfield_unit: __BindgenBitfieldUnit<[u8; 16usize]> = Default::default();
-        __bindgen_bitfield_unit
-    }
+    pub _bitfield_1: __BindgenBitfieldUnit<[u8; 56usize]>,
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -42350,9 +43293,10 @@ pub struct rpc_xprt_ops {
 #[repr(C)]
 #[derive(Copy, Clone)]
 pub struct svc_serv {
-    pub sv_program: *mut svc_program,
+    pub sv_programs: *mut svc_program,
     pub sv_stats: *mut svc_stat,
     pub sv_lock: spinlock_t,
+    pub sv_nprogs: ::aya_ebpf::cty::c_uint,
     pub sv_nrthreads: ::aya_ebpf::cty::c_uint,
     pub sv_maxconn: ::aya_ebpf::cty::c_uint,
     pub sv_max_payload: ::aya_ebpf::cty::c_uint,
@@ -42473,7 +43417,6 @@ pub mod svc_auth_status {
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct svc_program {
-    pub pg_next: *mut svc_program,
     pub pg_prog: u32_,
     pub pg_lovers: ::aya_ebpf::cty::c_uint,
     pub pg_hivers: ::aya_ebpf::cty::c_uint,
@@ -42996,8 +43939,7 @@ pub struct nfs_server {
     pub roc_rpcwaitq: rpc_wait_queue,
     pub pnfs_ld_data: *mut ::aya_ebpf::cty::c_void,
     pub state_owners: rb_root,
-    pub openowner_id: ida,
-    pub lockowner_id: ida,
+    pub owner_ctr: atomic64_t,
     pub state_owners_lru: list_head,
     pub layouts: list_head,
     pub delegations: list_head,
@@ -43039,6 +43981,14 @@ pub struct nfs4_slot_table {
 #[derive(Debug, Copy, Clone)]
 pub struct nfs4_session {
     _unused: [u8; 0],
+}
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct nfs_uuid_t {
+    pub uuid: uuid_t,
+    pub list: list_head,
+    pub net: *mut net,
+    pub dom: *mut auth_domain,
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -43091,6 +44041,10 @@ pub struct nfs_client {
     pub cl_net: *mut net,
     pub pending_cb_stateids: list_head,
     pub rcu: callback_head,
+    pub cl_nfssvc_boot: timespec64,
+    pub cl_boot_lock: seqlock_t,
+    pub cl_uuid: nfs_uuid_t,
+    pub cl_localio_lock: spinlock_t,
 }
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
@@ -43770,72 +44724,6 @@ pub struct nfs_access_entry {
 }
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
-pub struct nfs4_minor_version_ops {
-    pub minor_version: u32_,
-    pub init_caps: ::aya_ebpf::cty::c_uint,
-    pub init_client: ::core::option::Option<
-        unsafe extern "C" fn(arg1: *mut nfs_client) -> ::aya_ebpf::cty::c_int,
-    >,
-    pub shutdown_client: ::core::option::Option<unsafe extern "C" fn(arg1: *mut nfs_client)>,
-    pub match_stateid: ::core::option::Option<
-        unsafe extern "C" fn(arg1: *const nfs4_stateid, arg2: *const nfs4_stateid) -> bool_,
-    >,
-    pub find_root_sec: ::core::option::Option<
-        unsafe extern "C" fn(
-            arg1: *mut nfs_server,
-            arg2: *mut nfs_fh,
-            arg3: *mut nfs_fsinfo,
-        ) -> ::aya_ebpf::cty::c_int,
-    >,
-    pub free_lock_state: ::core::option::Option<
-        unsafe extern "C" fn(arg1: *mut nfs_server, arg2: *mut nfs4_lock_state),
-    >,
-    pub test_and_free_expired: ::core::option::Option<
-        unsafe extern "C" fn(
-            arg1: *mut nfs_server,
-            arg2: *const nfs4_stateid,
-            arg3: *const cred,
-        ) -> ::aya_ebpf::cty::c_int,
-    >,
-    pub alloc_seqid: ::core::option::Option<
-        unsafe extern "C" fn(arg1: *mut nfs_seqid_counter, arg2: gfp_t) -> *mut nfs_seqid,
-    >,
-    pub session_trunk: ::core::option::Option<
-        unsafe extern "C" fn(
-            arg1: *mut rpc_clnt,
-            arg2: *mut rpc_xprt,
-            arg3: *mut ::aya_ebpf::cty::c_void,
-        ),
-    >,
-    pub call_sync_ops: *const rpc_call_ops,
-    pub reboot_recovery_ops: *const nfs4_state_recovery_ops,
-    pub nograce_recovery_ops: *const nfs4_state_recovery_ops,
-    pub state_renewal_ops: *const nfs4_state_maintenance_ops,
-    pub mig_recovery_ops: *const nfs4_mig_recovery_ops,
-}
-#[repr(C)]
-#[derive(Copy, Clone)]
-pub struct nfs4_state {
-    pub open_states: list_head,
-    pub inode_states: list_head,
-    pub lock_states: list_head,
-    pub owner: *mut nfs4_state_owner,
-    pub inode: *mut inode,
-    pub flags: ::aya_ebpf::cty::c_ulong,
-    pub state_lock: spinlock_t,
-    pub seqlock: seqlock_t,
-    pub stateid: nfs4_stateid,
-    pub open_stateid: nfs4_stateid,
-    pub n_rdonly: ::aya_ebpf::cty::c_uint,
-    pub n_wronly: ::aya_ebpf::cty::c_uint,
-    pub n_rdwr: ::aya_ebpf::cty::c_uint,
-    pub state: fmode_t,
-    pub count: refcount_t,
-    pub waitq: wait_queue_head_t,
-    pub callback_head: callback_head,
-}
-#[repr(C)]
-#[derive(Debug, Copy, Clone)]
 pub struct cache_head {
     pub cache_list: hlist_node,
     pub expiry_time: time64_t,
@@ -43941,10 +44829,77 @@ pub struct svc_rqst {
     pub rq_gssclient: *mut auth_domain,
     pub rq_task: *mut task_struct,
     pub rq_bc_net: *mut net,
+    pub rq_err: ::aya_ebpf::cty::c_int,
     pub bc_to_initval: ::aya_ebpf::cty::c_ulong,
     pub bc_to_retries: ::aya_ebpf::cty::c_uint,
     pub rq_lease_breaker: *mut *mut ::aya_ebpf::cty::c_void,
     pub rq_status_counter: ::aya_ebpf::cty::c_uint,
+}
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct nfs4_minor_version_ops {
+    pub minor_version: u32_,
+    pub init_caps: ::aya_ebpf::cty::c_uint,
+    pub init_client: ::core::option::Option<
+        unsafe extern "C" fn(arg1: *mut nfs_client) -> ::aya_ebpf::cty::c_int,
+    >,
+    pub shutdown_client: ::core::option::Option<unsafe extern "C" fn(arg1: *mut nfs_client)>,
+    pub match_stateid: ::core::option::Option<
+        unsafe extern "C" fn(arg1: *const nfs4_stateid, arg2: *const nfs4_stateid) -> bool_,
+    >,
+    pub find_root_sec: ::core::option::Option<
+        unsafe extern "C" fn(
+            arg1: *mut nfs_server,
+            arg2: *mut nfs_fh,
+            arg3: *mut nfs_fsinfo,
+        ) -> ::aya_ebpf::cty::c_int,
+    >,
+    pub free_lock_state: ::core::option::Option<
+        unsafe extern "C" fn(arg1: *mut nfs_server, arg2: *mut nfs4_lock_state),
+    >,
+    pub test_and_free_expired: ::core::option::Option<
+        unsafe extern "C" fn(
+            arg1: *mut nfs_server,
+            arg2: *const nfs4_stateid,
+            arg3: *const cred,
+        ) -> ::aya_ebpf::cty::c_int,
+    >,
+    pub alloc_seqid: ::core::option::Option<
+        unsafe extern "C" fn(arg1: *mut nfs_seqid_counter, arg2: gfp_t) -> *mut nfs_seqid,
+    >,
+    pub session_trunk: ::core::option::Option<
+        unsafe extern "C" fn(
+            arg1: *mut rpc_clnt,
+            arg2: *mut rpc_xprt,
+            arg3: *mut ::aya_ebpf::cty::c_void,
+        ),
+    >,
+    pub call_sync_ops: *const rpc_call_ops,
+    pub reboot_recovery_ops: *const nfs4_state_recovery_ops,
+    pub nograce_recovery_ops: *const nfs4_state_recovery_ops,
+    pub state_renewal_ops: *const nfs4_state_maintenance_ops,
+    pub mig_recovery_ops: *const nfs4_mig_recovery_ops,
+}
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct nfs4_state {
+    pub open_states: list_head,
+    pub inode_states: list_head,
+    pub lock_states: list_head,
+    pub owner: *mut nfs4_state_owner,
+    pub inode: *mut inode,
+    pub flags: ::aya_ebpf::cty::c_ulong,
+    pub state_lock: spinlock_t,
+    pub seqlock: seqlock_t,
+    pub stateid: nfs4_stateid,
+    pub open_stateid: nfs4_stateid,
+    pub n_rdonly: ::aya_ebpf::cty::c_uint,
+    pub n_wronly: ::aya_ebpf::cty::c_uint,
+    pub n_rdwr: ::aya_ebpf::cty::c_uint,
+    pub state: fmode_t,
+    pub count: refcount_t,
+    pub waitq: wait_queue_head_t,
+    pub callback_head: callback_head,
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -44026,7 +44981,7 @@ pub struct svc_version {
 #[derive(Copy, Clone)]
 pub struct nfs_seqid_counter {
     pub create_time: ktime_t,
-    pub owner_id: ::aya_ebpf::cty::c_int,
+    pub owner_id: u64_,
     pub flags: ::aya_ebpf::cty::c_int,
     pub counter: u32_,
     pub lock: spinlock_t,
@@ -46079,7 +47034,6 @@ pub struct xfrm_policy {
     pub family: u16_,
     pub security: *mut xfrm_sec_ctx,
     pub xfrm_vec: [xfrm_tmpl; 6usize],
-    pub bydst_inexact_list: hlist_node,
     pub rcu: callback_head,
     pub xdo: xfrm_dev_offload,
 }
@@ -46952,8 +47906,10 @@ pub struct io_rsrc_node {
 #[derive(Debug)]
 pub struct io_mapped_ubuf {
     pub ubuf: u64_,
-    pub ubuf_end: u64_,
+    pub len: ::aya_ebpf::cty::c_uint,
     pub nr_bvecs: ::aya_ebpf::cty::c_uint,
+    pub folio_shift: ::aya_ebpf::cty::c_uint,
+    pub refs: refcount_t,
     pub acct_pages: ::aya_ebpf::cty::c_ulong,
     pub bvec: __IncompleteArrayField<bio_vec>,
 }
@@ -47001,9 +47957,8 @@ pub struct io_buffer_list {
     pub nr_entries: __u16,
     pub head: __u16,
     pub mask: __u16,
+    pub flags: __u16,
     pub refs: atomic_t,
-    pub is_buf_ring: __u8,
-    pub is_mmap: __u8,
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -47043,7 +47998,7 @@ pub struct io_ev_fd {
     pub _bitfield_align_1: [u8; 0],
     pub _bitfield_1: __BindgenBitfieldUnit<[u8; 1usize]>,
     pub rcu: callback_head,
-    pub refs: atomic_t,
+    pub refs: refcount_t,
     pub ops: atomic_t,
 }
 impl io_ev_fd {
@@ -47691,7 +48646,7 @@ pub struct ib_device_ops {
             arg4: u64_,
             arg5: ::aya_ebpf::cty::c_int,
             arg6: ::aya_ebpf::cty::c_int,
-            arg7: *mut ib_udata,
+            arg7: *mut uverbs_attr_bundle,
         ) -> *mut ib_mr,
     >,
     pub rereg_user_mr: ::core::option::Option<
@@ -50069,6 +51024,13 @@ pub struct gpio_desc_label {
     pub rh: callback_head,
     pub str_: __IncompleteArrayField<::aya_ebpf::cty::c_char>,
 }
+pub mod led_brightness {
+    pub type Type = ::aya_ebpf::cty::c_uint;
+    pub const LED_OFF: Type = 0;
+    pub const LED_ON: Type = 1;
+    pub const LED_HALF: Type = 127;
+    pub const LED_FULL: Type = 255;
+}
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct pm_domain_data {
@@ -50507,13 +51469,6 @@ pub struct tty_audit_buf {
     pub valid: usize,
     pub data: *mut u8_,
 }
-pub mod led_brightness {
-    pub type Type = ::aya_ebpf::cty::c_uint;
-    pub const LED_OFF: Type = 0;
-    pub const LED_ON: Type = 1;
-    pub const LED_HALF: Type = 127;
-    pub const LED_FULL: Type = 255;
-}
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct timer_rand_state {
@@ -50942,6 +51897,7 @@ pub struct phy_device {
     pub mdio: mdio_device,
     pub drv: *const phy_driver,
     pub devlink: *mut device_link,
+    pub phyindex: u32_,
     pub phy_id: u32_,
     pub c45_ids: phy_c45_device_ids,
     pub _bitfield_align_1: [u8; 0],
@@ -54995,8 +55951,9 @@ pub struct sfp_upstream_ops {
             arg2: *mut phy_device,
         ) -> ::aya_ebpf::cty::c_int,
     >,
-    pub disconnect_phy:
-        ::core::option::Option<unsafe extern "C" fn(arg1: *mut ::aya_ebpf::cty::c_void)>,
+    pub disconnect_phy: ::core::option::Option<
+        unsafe extern "C" fn(arg1: *mut ::aya_ebpf::cty::c_void, arg2: *mut phy_device),
+    >,
 }
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
@@ -55243,6 +56200,7 @@ pub struct pp_alloc_cache {
 #[derive(Debug, Copy, Clone)]
 pub struct page_pool_params_slow {
     pub netdev: *mut net_device,
+    pub queue_idx: ::aya_ebpf::cty::c_uint,
     pub flags: ::aya_ebpf::cty::c_uint,
     pub init_callback: ::core::option::Option<
         unsafe extern "C" fn(arg1: netmem_ref, arg2: *mut ::aya_ebpf::cty::c_void),
@@ -55277,13 +56235,14 @@ pub struct page_pool {
     pub _bitfield_align_4: [u8; 0],
     pub _bitfield_4: __BindgenBitfieldUnit<[u8; 56usize]>,
     pub ring: ptr_ring,
+    pub mp_priv: *mut ::aya_ebpf::cty::c_void,
     pub pages_state_release_cnt: atomic_t,
     pub user_cnt: refcount_t,
     pub destroy_cnt: u64_,
     pub slow: page_pool_params_slow,
     pub user: page_pool__bindgen_ty_2,
     pub _bitfield_align_5: [u8; 0],
-    pub _bitfield_5: __BindgenBitfieldUnit<[u8; 48usize]>,
+    pub _bitfield_5: __BindgenBitfieldUnit<[u8; 40usize]>,
 }
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
@@ -58937,7 +59896,7 @@ pub struct nh_res_bucket {
 pub struct nh_grp_entry {
     pub nh: *mut nexthop,
     pub stats: *mut nh_grp_entry_stats,
-    pub weight: u8_,
+    pub weight: u16_,
     pub __bindgen_anon_1: nh_grp_entry__bindgen_ty_1,
     pub nh_list: list_head,
     pub nh_parent: *mut nexthop,
@@ -59600,6 +60559,11 @@ pub struct netpoll_info {
 }
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
+pub struct pp_memory_provider_params {
+    pub mp_priv: *mut ::aya_ebpf::cty::c_void,
+}
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
 pub struct netdev_rx_queue {
     pub xdp_rxq: xdp_rxq_info,
     pub rps_map: *mut rps_map,
@@ -59609,13 +60573,14 @@ pub struct netdev_rx_queue {
     pub dev_tracker: netdevice_tracker,
     pub pool: *mut xsk_buff_pool,
     pub napi: *mut napi_struct,
+    pub mp_params: pp_memory_provider_params,
     pub _bitfield_align_1: [u8; 0],
-    pub _bitfield_1: __BindgenBitfieldUnit<[u8; 24usize]>,
+    pub _bitfield_1: __BindgenBitfieldUnit<[u8; 16usize]>,
 }
 impl netdev_rx_queue {
     #[inline]
-    pub fn new_bitfield_1() -> __BindgenBitfieldUnit<[u8; 24usize]> {
-        let mut __bindgen_bitfield_unit: __BindgenBitfieldUnit<[u8; 24usize]> = Default::default();
+    pub fn new_bitfield_1() -> __BindgenBitfieldUnit<[u8; 16usize]> {
+        let mut __bindgen_bitfield_unit: __BindgenBitfieldUnit<[u8; 16usize]> = Default::default();
         __bindgen_bitfield_unit
     }
 }
@@ -59645,6 +60610,12 @@ pub struct in_device {
     pub arp_parms: *mut neigh_parms,
     pub cnf: ipv4_devconf,
     pub callback_head: callback_head,
+}
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct phy_link_topology {
+    pub phys: xarray,
+    pub next_phy_index: u32_,
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -61572,9 +62543,6 @@ pub struct wireless_dev {
     pub ap_unexpected_nlportid: u32_,
     pub owner_nlportid: u32_,
     pub nl_owner_dead: bool_,
-    pub cac_started: bool_,
-    pub cac_start_time: ::aya_ebpf::cty::c_ulong,
-    pub cac_time_ms: ::aya_ebpf::cty::c_uint,
     pub wext: wireless_dev__bindgen_ty_1,
     pub cqm_rssi_work: wiphy_work,
     pub cqm_config: *mut cfg80211_cqm_config,
@@ -61654,6 +62622,9 @@ pub struct wireless_dev__bindgen_ty_2__bindgen_ty_5 {
 pub struct wireless_dev__bindgen_ty_3 {
     pub addr: [u8_; 6usize],
     pub __bindgen_anon_1: wireless_dev__bindgen_ty_3__bindgen_ty_1,
+    pub cac_started: bool_,
+    pub cac_start_time: ::aya_ebpf::cty::c_ulong,
+    pub cac_time_ms: ::aya_ebpf::cty::c_uint,
 }
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -62919,7 +63890,7 @@ pub struct xdp_ring {
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct mptcp_mib {
-    pub mibs: [::aya_ebpf::cty::c_ulong; 63usize],
+    pub mibs: [::aya_ebpf::cty::c_ulong; 71usize],
 }
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
